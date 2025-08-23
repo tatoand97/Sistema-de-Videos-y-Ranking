@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Base de datos
+  database:
+    build: ./Respository
+    environment:
+      POSTGRES_DB: videos_ranking
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_SSL_MODE: require
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Workers
+  admin-cache:
+    build: ./Workers/AdminCache
+    depends_on:
+      - database
+
+  audio-removal:
+    build: ./Workers/AudioRemoval
+    depends_on:
+      - database
+
+  edit-video:
+    build: ./Workers/EditVideo
+    depends_on:
+      - database
+
+  states-machine:
+    build: ./Workers/StatesMachine
+    depends_on:
+      - database
+
+  trim-video:
+    build: ./Workers/TrimVideo
+    depends_on:
+      - database
+
+  watermarking:
+    build: ./Workers/Watermarking
+    depends_on:
+      - database
+
+  # API
+  api:
+    build: ./Api
+    ports:
+      - "8443:8443"
+    depends_on:
+      - database
+
+  # Client
+  client:
+    build: ./Client
+    ports:
+      - "3443:3443"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
