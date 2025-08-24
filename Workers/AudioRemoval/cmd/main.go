@@ -20,7 +20,7 @@ func main() {
 	}
 
 	messageHandler := adapters.NewMessageHandler(container.ProcessVideoUC)
-	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL)
+	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
 	if err != nil {
 		logrus.Fatal("Failed to connect to RabbitMQ:", err)
 	}

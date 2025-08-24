@@ -1,6 +1,9 @@
 package infrastructure
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type Config struct {
 	RabbitMQURL     string
@@ -10,9 +13,25 @@ type Config struct {
 	RawBucket       string
 	ProcessedBucket string
 	QueueName       string
+	MaxRetries      int
+	QueueMaxLength  int
 }
 
 func LoadConfig() *Config {
+	maxRetries := 3 // default value
+	if retries := os.Getenv("MAX_RETRIES"); retries != "" {
+		if parsed, err := strconv.Atoi(retries); err == nil {
+			maxRetries = parsed
+		}
+	}
+	
+	queueMaxLength := 1000 // default value
+	if maxLength := os.Getenv("QUEUE_MAX_LENGTH"); maxLength != "" {
+		if parsed, err := strconv.Atoi(maxLength); err == nil {
+			queueMaxLength = parsed
+		}
+	}
+	
 	return &Config{
 		RabbitMQURL:     os.Getenv("RABBITMQ_URL"),
 		MinIOEndpoint:   os.Getenv("MINIO_ENDPOINT"),
@@ -21,5 +40,7 @@ func LoadConfig() *Config {
 		RawBucket:       os.Getenv("RAW_BUCKET"),
 		ProcessedBucket: os.Getenv("PROCESSED_BUCKET"),
 		QueueName:       os.Getenv("QUEUE_NAME"),
+		MaxRetries:      maxRetries,
+		QueueMaxLength:  queueMaxLength,
 	}
 }
