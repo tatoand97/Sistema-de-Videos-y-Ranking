@@ -1,4 +1,2 @@
-﻿FROM alpine:latest
+﻿FROM postgres:alpine
 LABEL authors="Juan"
-
-ENTRYPOINT ["top", "-b"]
