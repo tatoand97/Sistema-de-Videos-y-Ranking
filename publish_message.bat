@@ -1,0 +1,2 @@
+@echo off
+curl -u admin:password -H "content-type:application/json" -X POST -d "{\"properties\":{},\"routing_key\":\"audio_removal_queue\",\"payload\":\"{\\\"video_id\\\":\\\"test_001\\\",\\\"input_file\\\":\\\"sample.mp4\\\",\\\"output_file\\\":\\\"sample_no_audio.mp4\\\"}\",\"payload_encoding\":\"string\"}" http://localhost:15672/api/exchanges/%%2F/amq.default/publish

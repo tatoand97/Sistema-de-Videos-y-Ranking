@@ -1,0 +1,408 @@
+﻿No puedo generar un archivo de texto directamente, pero puedo proporcionarte el contenido del PDF en formato de texto plano para que puedas copiarlo y pegarlo.
+
+Aquí está el contenido completo del documento:
+
+
+Universidad de los Andes Colombia MISO MISO - Maestria en Ingenieria de Software Desarrollo de Software en la nube Entrega No. 1 Implementación de una API REST escalable con orquestación de tareas asincronas para el procesamiento de archivos
+
+
+Objetivos
+
+Diseñar e implementar una aplicación web escalable, orientada a la gestión de archivos y al procesamiento asíncrono de tareas, que garantice un desempeño eficiente, escalable, y que soporte de manera confiable la concurrencia de múltiples usuarios.
+
+Desarrollar una API RESTful escalable y segura para la gestión de usuarios y recursos, con contratos documentados en OpenAPI, autenticación y autorización basada en tokens.
+
+
+
+Implementar un sistema de procesamiento asíncrono que permita la ejecución de tareas en segundo plano de manera eficiente y confiable, incorporando colas de mensajes, mecanismos de reintento con backoff, y manejo de fallos mediante Dead Letter Queues.
+
+
+Administrar el almacenamiento de archivos garantizando seguridad, eficiencia y disponibilidad.
+
+Orquestar el despliegue de la aplicación en un entorno basado en contenedores que asegure su portabilidad, resiliencia y escalabilidad, mediante prácticas de CI/CD, pruebas automatizadas.
+
+Documentar la arquitectura del sistema, incluyendo los diagramas de niveles (C4), las decisiones de diseño, los contratos de la API, los diagramas de despliegue.
+
+Implementar el frontend de la aplicación, una interfaz web sencilla, integrada con la API.
+
+
+Tiempo de dedicación
+
+La presente entrega, correspondiente a la fase desarrollo, está programada para un periodo de dos semanas. Durante este tiempo, cada estudiante deberá destinar las horas asignadas en la planificación semanal. Se recuerda la importancia de conformar equipos de trabajo de acuerdo con las directrices establecidas en el curso, como condición clave para el éxito de la actividad.
+
+
+
+
+Componentes de la evaluación
+
+La distribución de la calificación de la entrega está distribuida de la siguiente manera:
+
+
+Diseño e implementación de la API RESTful (40%)
+
+Implementación de endpoints: conforme a lo establecido en la sección especificación del API REST.
+
+Gestión de solicitudes y respuestas: aplicación rigurosa de códigos de estado HTTP y definición estructurada de las respuestas.
+
+Validación y manejo de errores: establecimiento de reglas de validación y generación de reportes de error consistentes y alineados con las mejores prácticas.
+
+
+
+Autenticación y seguridad (5%)
+
+Implementación de JWT: incorporación de tokens para los procesos de autenticación y autorización de usuarios.
+
+Protección de endpoints: aseguramiento de rutas críticas mediante la verificación de permisos y controles de acceso.
+
+
+Procesamiento asíncrono de tareas (15%)
+
+Configuración del sistema de gestión de tareas asíncronas (por ejemplo, Asynq o Machinery): integración efectiva con el broker de mensajería seleccionado.
+
+Implementación y monitoreo de tareas asíncronas, garantizando su ejecución eficiente y trazabilidad.
+
+
+
+Consideración de Apache Kafka como alternativa válida: su arquitectura distribuida y orientada a eventos permite gestionar grandes volúmenes de mensajes con alta disponibilidad, tolerancia a fallos y escalabilidad horizontal, lo que la convierte en una opción robusta frente a sistemas tradicionales de message brokering.
+
+
+Manejo de errores y reintentos: definición de estrategias para la atención de fallos en la ejecución de tareas asíncronas.
+
+
+Gestión y almacenamiento de archivos (5%)
+
+Almacenamiento seguro: gestión eficiente y confiable de los archivos cargados por los usuarios, garantizando integridad y confidencialidad.
+
+Conversión y procesamiento: implementación de la lógica de transformación de archivos conforme a los requisitos funcionales y técnicos definidos.
+
+Acceso y descarga: provisión de mecanismos seguros y controlados para la recuperación de archivos procesados.
+
+Se recomienda la implementación de una capa de abstracción para el almacenamiento de archivos. Adoptar este patrón de diseño, definiendo una interfaz clara (como IStorageService) y utilizando la inyección de dependencias en la aplicación. Este enfoque desacopla por completo la lógica de negocio de los detalles de la infraestructura de almacenamiento. En la práctica, esto garantiza que la futura migración de un sistema de archivos local a un servicio de almacenamiento en la nube, como AWS S3, sea un proceso simple y de bajo riesgo que no requerirá modificaciones en el código de la API. Además, esta arquitectura mejora la mantenibilidad del código y simplifica drásticamente la creación de pruebas unitarias.
+
+
+
+
+
+
+Implementación del frontend (10%)
+
+Desarrollo de vistas y componentes: conforme a la especificación de Ul de su preferencia (apóyese en herramientas de IA Generativa).
+
+Gestión de interacción y estado: implementación de flujos de usuario, formularios y validaciones en cliente, manejo consistente de errores y notificaciones, y enrutamiento interno.
+
+Integración con la API y seguridad en cliente: consumo de endpoints definidos, tratamiento de sesiones y tokens.
+
+
+
+
+Despliegue y entorno de ejecución (10%)
+
+Uso de Docker y Docker Compose: configuración apropiada del entorno de despliegue, garantizando portabilidad y consistencia entre entornos.
+
+Configuración de Gunicorn/Uvicorn y Nginx: implementación adecuada de servidores de aplicación y servidor proxy inverso para entornos de producción, asegurando rendimiento y estabilidad.
+
+
+Documentación (10%)
+
+Modelo de datos: inclusión del modelo de datos de la aplicación, representado mediante un diagrama Entidad-Relación (ERD) o, en su defecto, a través de una especificación detallada de las entidades, atributos y relaciones del sistema.
+
+
+
+Documentación de la API: elaboración y centralización de la documentación de los endpoints, así como la ejecución de pruebas correspondientes, mediante Postman.
+
+
+
+Diagrama de componentes: representación de los principales elementos de la arquitectura, considerando backend, worker, broker y base de datos.
+
+
+Diagrama de flujo de procesos: descripción detallada de las etapas de carga, procesamiento y entrega de un archivo.
+
+Despliegue y documentación: representación de la infraestructura de ejecución (máquinas virtuales, contenedores Docker y servicios activos) acompañada de una guía clara, estructurada y reproducible que facilite la réplica del entorno en diferentes contextos.
+
+Reporte de análisis de SonarQube: donde se evidencien los resultados del último análisis sobre la rama principal del proyecto.
+
+Debe mostrar, al menos:
+
+Métricas de Bugs, Vulnerabilidades y Code Smells.
+
+Nivel de Cobertura de pruebas unitarias (%).
+
+Duplicación de código (%).
+
+Estado del Quality Gate (aprobado/rechazado).
+
+
+Plan de pruebas de carga (5%)
+
+Diseño de un plan de pruebas que evalúe el comportamiento y desempeño de la aplicación bajo distintos niveles de concurrencia y volumen de solicitudes. El plan deberá incluir la definición de métricas clave (latencia, throughput, utilización de recursos y tasa de errores), así como la interpretación de resultados para identificar posibles cuellos de botella y proponer mejoras en la escalabilidad y estabilidad del sistema.
+
+
+
+Sugerencias para los equipos
+
+
+Planificación: Antes de comenzar, es fundamental diseñar la arquitectura del sistema y planificar las tareas a realizar.
+
+
+Buenas prácticas: Adoptar estándares de codificación y seguir patrones de diseño reconocidos.
+
+
+Pruebas continuas: Implementar pruebas unitarias y de integración que contribuyan a la calidad del código.
+
+
+Documentación: Mantener una documentación actualizada facilita el mantenimiento y la escalabilidad del proyecto.
+
+
+Formato de entrega
+
+
+Respecto a la documentación, se recomienda:
+
+Estructuración de la información: organizar los contenidos siguiendo las pautas definidas en la sección anterior, asegurando la inclusión de todos los elementos esenciales.
+
+En el archivo principal
+
+README.md del repositorio, registre el nombre completo y el correo Uniandes de cada integrante del curso.
+
+Repositorio y organización de entregas: alojar toda la documentación en el repositorio de Github, dentro de un directorio dedicado (
+
+/docs/Entrega_1), y referenciarla en el archivo README.md para facilitar su acceso. Esta misma estructura deberá utilizarse en las entregas posteriores.
+
+
+
+Sustentación en video: en la ruta
+
+/sustentacion/Entrega_1, incluya el enlace a la video sustentación correspondiente a la entrega, asegurando que sea accesible y funcione correctamente.
+
+Colecciones de Postman y validación automatizada: crear un directorio específico (
+
+/collections) para las colecciones de Postman que contengan las solicitudes y pruebas correspondientes. Dichas colecciones deberán exportarse en formato JSON y almacenarse en el repositorio. La ejecución automatizada de estas pruebas debe validarse mediante herramientas como el CLI
+
+
+newman, manteniendo esta estructura en las entregas posteriores.
+
+
+Incluir un conjunto de pruebas automatizadas (unitarias) que validen el correcto funcionamiento de la aplicación.
+
+
+Archivo .gitignore: Incluir un archivo .gitignore adecuado para excluir archivos y directorios que no deban ser versionados.
+
+
+Publicar una versión (release) del código fuente en el repositorio del grupo en GitHub, utilizando etiquetas (tags) que sigan el formato de versionado semántico (por ejemplo, v1.0.0) y proporcionando una descripción detallada de los cambios incluidos en dicha versión.
+
+
+Infraestructura requerida para el despliegue
+
+Despliegue en contenedores: la aplicación debe ejecutarse en contenedores Docker para garantizar portabilidad y consistencia.
+
+Sistema operativo base: Ubuntu según los requerimientos del proyecto.
+
+Automatización: proveer un archivo
+
+docker-compose.yml que orqueste todos los servicios y permita el despliegue completo con docker compose up.
+
+Estas medidas buscan optimizar el proceso de despliegue, facilitando la gestión de la aplicación.
+
+
+Notas:
+
+Esta fase no incluye el uso de proveedores de nube pública; dicha implementación será abordada en la siguiente etapa del proyecto.
+
+Utilice ambientes virtuales para su desarrollo local y valide que su configuración de Docker funcione correctamente en uno de los sistemas operativos indicados; de ser necesario utilice un hipervisor gratuito u open source. Se recomienda Oracle VM VirtualBox.
+
+Los tutores del curso pueden solicitar una sustentación síncrona y para esto se requiere la aplicación en ejecución.
+
+
+Recomendaciones y consideraciones
+
+El backend de la aplicación web debe desarrollarse utilizando el lenguaje de programación Go.
+
+Para su ejecución en un entorno local, la aplicación debe contar al menos con los siguientes componentes:
+
+Sistema operativo: Ubuntu Server 24.04 LTS.
+
+Lenguaje del backend: Golang.
+
+Framework: Gin o Echo.
+
+Base de datos: PostgreSQL.
+
+Gestión de tareas asíncronas: Asynq o Machinery con Redis o RabbitMQ como message brokers.
+
+Alternativa: uso de Apache Kafka en lugar de Asynq o Machinery, lo que implica una arquitectura basada en el modelo publish/subscribe.
+
+A nivel del frontend utilice las tecnologías de su preferencia.
+
+Servidor web: Nginx, configurado como proxy inverso.
+
+
+Escenario de negocio y requisitos de la aplicación
+
+
+Contexto
+
+La
+
+Asociación Nacional de Baloncesto (ANB) busca una plataforma para que jóvenes talentos suban videos de sus habilidades y sean votados por el público y un jurado. Al finalizar, los jugadores con más votos en cada ciudad serán seleccionados para un torneo de exhibición.
+
+
+
+
+Requerimientos de la ANB
+
+Los jugadores podrán registrarse, crear un perfil y subir sus videos de prueba.
+
+La plataforma deberá realizar procesamiento automático de los videos cargados:
+
+Recorte de duración a un máximo de 30 segundos.
+
+Ajuste de resolución y formato de aspecto.
+
+Agregar una marca de agua de ANB.
+
+Eliminar audio.
+
+El público podrá ver los videos y votar.
+
+Se generará un ranking dinámico, mostrando los jugadores más votados.
+
+Las votaciones deben ser controladas para evitar fraudes.
+
+El sistema debe habilitar la conversión de archivos de video de manera asíncrona o mediante procesos batch.
+
+Una vez culminado el procesamiento, el estado del archivo debe actualizarse automáticamente a "processed".
+
+
+
+Impacto esperado
+
+La plataforma democratizará el acceso al proceso de selección de talentos, reduciendo barreras geográficas y económicas.
+
+
+Alcance del proyecto
+
+
+Registro de jugadores: Se requiere información como nombre, apellidos, ciudad, país, correo electrónico.
+
+
+Carga de videos: Los jugadores subirán videos cortos de entre 20 y 60 segundos, en calidad 1080p o superior.
+
+
+Procesamiento de videos: Los videos serán procesados en segundo plano para evitar bloqueos.  El procesamiento incluye:
+
+Recortar a un máximo de 30 segundos.
+
+Ajustar a una relación de aspecto 16:9 y resolución 720p.
+
+Incluir una cortinilla de apertura y cierre con el logo de la ANB (máximo 5 segundos extra).
+
+
+Votación: El público en general podrá votar por sus videos favoritos.
+
+
+Ranking: Un ranking dinámico revelará a los jugadores mejor posicionados.
+
+
+Descripción funcional de los servicios
+
+
+Gestión de usuarios (autenticación y registro)
+
+
+Registro de Jugadores: El sistema debe permitir el registro con verificación de correo electrónico único y cifrado de contraseñas mediante hashing. Se solicitan dos campos de contraseña para validar que coincidan, pero solo se almacena uno.
+
+
+
+Inicio de Sesión: Los usuarios se autentican con correo y contraseña. El sistema devuelve un token JWT que debe usarse en solicitudes posteriores. Se deben implementar mecanismos de expiración.
+
+
+
+
+Gestión de videos (carga, procesamiento y acceso)
+
+
+Carga de video: El sistema permite a los jugadores subir un video que se almacenará y se registrará automáticamente una tarea de procesamiento asíncrono. El video tendrá un estado inicial de "uploaded" y luego "processed" al finalizar la tarea. El API responde inmediatamente después de encolar la tarea, sin esperar el procesamiento.
+
+
+
+
+Consultar mis videos: Permite al jugador ver una lista de sus videos, su estado y las URLs de acceso.
+
+
+Consultar detalle de un video específico: Permite recuperar los detalles de un video, incluyendo las URLs de descarga.
+
+
+Eliminar video subido: Permite a un jugador eliminar su video si no ha sido publicado para votación o aún no ha sido procesado.
+
+
+Sistema de votación pública
+
+
+Listar videos disponibles para votar: Lista todos los videos públicos habilitados para votación.
+
+
+Emitir voto por un video: Un usuario registrado puede votar por un video específico, pero solo una vez por video.
+
+
+Ranking de jugadores
+
+
+Consultar tabla de clasificación: Provee un ranking actualizado de los jugadores por número de votos. Se recomienda usar una estrategia de
+
+caching (ej. Redis) para los resultados del ranking.
+
+
+Especificación del API REST
+
+Endpoint	Método	Descripción	Autenticación	Notas
+/api/auth/signup	POST	Registro de nuevos jugadores.	No
+Valida email único y confirmación de contraseña.
+
+/api/auth/login	POST	Autenticación y generación de token JWT.	No
+Devuelve token JWT.
+
+/api/videos/upload	POST	Permite subir un video.	Sí (JWT)
+Inicia un proceso asíncrono.
+
+/api/videos	GET	Lista los videos del usuario.	Sí (JWT)
+Muestra estado "uploaded" o "processed".
+
+/api/videos/{video_id}	GET	Obtiene el detalle de un video específico.	Sí (JWT)
+Incluye URLs.
+
+/api/videos/{video_id}	DELETE	Elimina un video propio.	Sí (JWT)
+Solo si es permitido.
+
+/api/public/videos	GET	Lista videos públicos para votación.	Opcional
+/api/public/videos/{video_id}/vote	POST	Emite un voto por un video público.	Sí (JWT)
+Limita un voto por usuario por video.
+
+/api/public/rankings	GET	Muestra el ranking actual.	No
+Soporta paginación y filtros.
+
+
+Exportar a Hojas de cálculo
+Consideraciones adicionales
+El backend debe obtener la identidad del usuario del token JWT, no de la solicitud.
+
+El procesamiento de videos debe ser un proceso asíncrono y distribuido que se ejecute en segundo plano, consultando periódicamente la base de datos.
+
+Se debe usar Postman para la validación y documentación de los endpoints, creando un directorio
+
+/collections en el repositorio. Se recomienda el uso de Newman para la validación automatizada.
+
+
+
+Se requiere un archivo
+
+postman_environment.json con las variables necesarias para la ejecución.
+
+Se deben implementar pruebas unitarias para los componentes principales.
+
+Se debe configurar un
+
+pipeline de CI/CD en GitHub Actions para ejecutar pruebas unitarias, construir la aplicación y validar la calidad del código con SonarQube.
+
+Se debe entregar un plan de pruebas de capacidad en un archivo
+
+plan_de_pruebas.md en la carpeta /capacity-planning.

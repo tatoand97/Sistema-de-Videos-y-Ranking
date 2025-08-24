@@ -1,0 +1,46 @@
+﻿graph TD
+    subgraph Usuarios
+        User[👩‍💻 Jugador / Votante]
+    end
+
+    subgraph "Sistema ANB"
+        Frontend[🌐 Frontend SPA]
+        Nginx[🛡️ Nginx Proxy]
+       
+        subgraph "Backend (Go)"
+            API[🚀 API REST Gin/Echo]
+            subgraph Workers
+                AdminCache[👷 Worker Admin Cache]
+                AudioRemoval[👷 Worker Audio Removal]
+                EditVideo[👷 Worker Edit Video]
+                StateMachine[👷 Worker State Machine]
+                TrimVideo[👷 Worker Trim Video]
+                Watermarking[👷 Worker Watermarking]
+            end
+        end
+
+        subgraph Almacenamiento
+            DB[(🗄️ PostgreSQL)]
+            Redis[(Redis)]
+            Broker[(RabbitMQ)]            
+            FileStorage[📂 Imagen docker MinIO]
+        end
+    end
+
+    User -- "Navega y Vota" --> Frontend
+    Frontend -- "Peticiones HTTP/S" --> Nginx
+    Nginx --> API
+    API -- "Escribe/Lee" --> DB
+    API -- "Encola Tarea" --> Broker
+    API -- "Consulta Cache" --> Redis
+    API -- "Guarda Video" --> FileStorage
+    Broker -- "Envía Tarea Específica" --> TrimVideo
+    Broker -- "Envía Tarea Específica" --> AudioRemoval
+    Broker -- "Envía Tarea Específica" --> Watermarking
+    Broker -- "Envía Tarea Específica" --> EditVideo
+    TrimVideo -- "Procesa" --> StateMachine
+    AudioRemoval -- "Procesa" --> StateMachine
+    Watermarking -- "Procesa" --> StateMachine
+    EditVideo -- "Procesa" --> StateMachine
+    StateMachine -- "Guarda Video y Actualiza Estado" --> FileStorage & DB
+    AdminCache -- "Actualiza Cache" --> Redis
