@@ -1,0 +1,36 @@
+{
+  "users": [
+    { "name": "admin", "password": "admin", "tags": "administrator" }
+  ],
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "permissions": [
+    { "user": "admin", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*" }
+  ],
+  "exchanges": [
+    { "name": "orders.dlx", "vhost": "/", "type": "direct", "durable": true }
+  ],
+  "queues": [
+    { "name": "orders.dlq", "vhost": "/", "durable": true },
+    {
+      "name": "orders",
+      "vhost": "/",
+      "durable": true,
+      "arguments": {
+        "x-dead-letter-exchange": "orders.dlx",
+        "x-dead-letter-routing-key": "orders.dead",
+        "x-message-ttl": 60000
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "orders.dlx",
+      "vhost": "/",
+      "destination": "orders.dlq",
+      "destination_type": "queue",
+      "routing_key": "orders.dead"
+    }
+  ]
+}
