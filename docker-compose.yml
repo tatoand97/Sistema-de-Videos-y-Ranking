@@ -38,9 +38,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: appdb
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: videorank
     ports: ["5432:5432"]
     volumes: [pg-data:/var/lib/postgresql/data]
     restart: unless-stopped
@@ -49,6 +49,43 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  migrate:
+    image: migrate/migrate:4
+    container_name: app_migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    environment:
+      DATABASE_URL: postgres://app_user:app_password@db:5432/videorank?sslmode=disable
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        /usr/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
+    restart: "no"
+
+  api:
+    build:
+      context: ./Api
+    container_name: app_api
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      # Ajusta estos nombres a lo que lea tu config.FromEnv()
+      DATABASE_URL: postgres://app_user:app_password@db:5432/videorank?sslmode=disable
+      JWT_SECRET: super_ultra_secreto_cambialo
+      PORT: "8080"
+      API_PORT: "8080"         # por si tu config usa API_PORT
+      CORS_ORIGIN: "*"
+      UPLOAD_DIR: "/uploads"
+    ports: ["8080:8080"]
+    volumes: [api_uploads:/uploads]
+
 
   minio:
     image: minio/minio:latest
@@ -131,3 +168,4 @@ volumes:
   loki-data:
   grafana-data:
   prometheus-data:
+  api_uploads:
