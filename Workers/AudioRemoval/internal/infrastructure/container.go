@@ -28,7 +28,7 @@ func NewContainer(config *Config) (*Container, error) {
 
 	videoRepo := adapters.NewVideoRepository()
 	storageRepo := adapters.NewStorageRepository(storage)
-	processingService := services.NewFFmpegVideoProcessingService()
+	processingService := services.NewMP4VideoProcessingService()
 	notificationService := services.NewLogNotificationService()
 
 	processVideoUC := usecases.NewProcessVideoUseCase(
