@@ -24,7 +24,6 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret stri
 	authGroup := router.Group("/")
 	authGroup.Use(jwtMiddleware(secret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
-
 }
 
 func jwtMiddleware(secret string) gin.HandlerFunc {

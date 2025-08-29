@@ -1,4 +1,4 @@
-package main_videork
+package main
 
 import (
 	"log"
@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 
 	postgresrepo "main_viderk/internal/infrastructure/repository"
-	"main_viderk/internal/infrastructure/storage"
 	"main_viderk/internal/presentation"
 )
 
@@ -43,21 +42,14 @@ func main() {
 
 	// Initialize repositories
 	userRepo := postgresrepo.NewUserRepository(db)
-	categoryRepo := postgresrepo.NewCategoryRepository(db)
-	taskRepo := postgresrepo.NewTaskRepository(db)
 
 	// Initialize services
-	fileWriter := storage.NewStaticFileWriter("./static")
-	authService := useCase.NewAuthService(userRepo, fileWriter, jwtSecret)
-	categoryService := useCase.NewCategoryService(categoryRepo)
-	taskService := useCase.NewTaskService(taskRepo)
+	authService := useCase.NewAuthService(userRepo, jwtSecret)
 
 	// Setup Gin router
 	r := gin.Default()
 
-	r.Static("/static", "./static")
-
-	presentation.NewRouter(r, authService, categoryService, taskService, jwtSecret)
+	presentation.NewRouter(r, authService, jwtSecret)
 
 	port := os.Getenv("PORT")
 	if port == "" {
