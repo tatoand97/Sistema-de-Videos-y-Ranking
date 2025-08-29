@@ -1,6 +1,6 @@
 package ports
 
-import "main_prj/internal/domain"
+import "main_viderk/internal/domain"
 
 type AuthService interface {
 	Register(username, email, password string, profileImagePath *string) (*domain.User, error)

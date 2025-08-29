@@ -6,8 +6,8 @@ func SetupRouter(hUsers *UsersHandler, corsOrigin, jwtSecret string) *gin.Engine
 	r := gin.Default()
 	r.Use(CORSMiddleware(corsOrigin))
 
-	r.POST("/usuarios", hUsers.Register)
-	r.POST("/usuarios/iniciar-sesion", hUsers.Login)
+	r.POST("/api/auth/signup", hUsers.Register)
+	r.POST("/api/auth/login", hUsers.Login)
 
 	auth := r.Group("/api", AuthRequired(jwtSecret))
 	{

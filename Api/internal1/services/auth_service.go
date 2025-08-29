@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"main_prj/internal/domain"
-	"main_prj/internal/ports"
+	"main_viderk/internal/domain"
+	"main_viderk/internal/ports"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"

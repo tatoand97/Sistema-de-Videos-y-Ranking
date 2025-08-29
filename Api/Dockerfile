@@ -1,10 +1,10 @@
 ﻿# Build stage
 FROM golang:1.24-alpine AS build
-WORKDIR /src
+WORKDIR /Api
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o main_videork ./Api/cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o main_videork ./cmd/api
 
 # Run stage
 FROM alpine:3.19

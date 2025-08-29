@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"main_prj/internal/domain"
-	"main_prj/internal/ports"
+	"main_viderk/internal/domain"
+	"main_viderk/internal/ports"
 )
 
 type userRepo struct{ db *sql.DB }

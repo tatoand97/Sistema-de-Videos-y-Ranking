@@ -1,6 +1,4 @@
-﻿version: "3.9"
-
-services:
+﻿services:
   redis:
     image: redis:7-alpine
     command: ["redis-server","--appendonly","yes"]
@@ -54,12 +52,12 @@ services:
     image: migrate/migrate:4
     container_name: app_migrate
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     volumes:
       - ./migrations:/migrations:ro
     environment:
-      DATABASE_URL: postgres://app_user:app_password@db:5432/videorank?sslmode=disable
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -71,14 +69,14 @@ services:
       context: ./Api
     container_name: app_api
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
     environment:
       # Ajusta estos nombres a lo que lea tu config.FromEnv()
-      DATABASE_URL: postgres://app_user:app_password@db:5432/videorank?sslmode=disable
-      JWT_SECRET: super_ultra_secreto_cambialo
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+      JWT_SECRET: 6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn
       PORT: "8080"
       API_PORT: "8080"         # por si tu config usa API_PORT
       CORS_ORIGIN: "*"

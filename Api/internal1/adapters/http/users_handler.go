@@ -1,7 +1,7 @@
 package http
 
 import (
-	"main_prj/internal/ports"
+	"main_viderk/internal/ports"
 	"net/http"
 	"path/filepath"
 
