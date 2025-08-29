@@ -2,7 +2,7 @@ package presentation
 
 import (
 	"fmt"
-	"main_viderk/internal/application/useCase"
+	"main_videork/internal/application/useCase"
 	"net/http"
 	"strconv"
 	"strings"

@@ -1,8 +1,8 @@
 package presentation
 
 import (
-	"main_viderk/internal/application/useCase"
-	"main_viderk/internal/domain/entities"
+	"main_videork/internal/application/useCase"
+	"main_videork/internal/domain/entities"
 	"net/http"
 	"strings"
 
@@ -50,7 +50,7 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		return
 	}
 
-	user, err := handler.service.Register(context.Request.Context(), request.FirstName, request.LastName, request.Email, request.Password1, request.Password2, request.City, request.Country, imageData)
+	user, err := handler.service.Register(context.Request.Context(), request.FirstName, request.LastName, request.Email, request.Password1)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

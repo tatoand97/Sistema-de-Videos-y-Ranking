@@ -43,7 +43,7 @@
     volumes: [pg-data:/var/lib/postgresql/data]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER"]
+      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -54,15 +54,18 @@
     depends_on:
       postgres:
         condition: service_healthy
+    # MONTA TU CARPETA REAL:
     volumes:
-      - ./migrations:/migrations:ro
+      - ./Api/internal/infrastructure/migrations:/migrations:ro
     environment:
       DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        /usr/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
+    entrypoint: ["/bin/sh","-c"]
+    command: |
+      echo "Listing /migrations to verify mount:" \
+      && ls -la /migrations \
+      && /usr/local/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
     restart: "no"
+
 
   api:
     build:

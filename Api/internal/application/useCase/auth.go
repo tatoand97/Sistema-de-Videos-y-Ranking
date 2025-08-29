@@ -3,8 +3,8 @@ package useCase
 import (
 	"context"
 	"errors"
-	"main_viderk/internal/domain/entities"
-	"main_viderk/internal/domain/interfaces"
+	"main_videork/internal/domain/entities"
+	"main_videork/internal/domain/interfaces"
 	"strconv"
 	"sync"
 	"time"

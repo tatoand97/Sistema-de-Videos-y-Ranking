@@ -8,8 +8,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main_videork ./cmd/api
 
 # Run stage
 FROM alpine:3.19
-WORKDIR /app
-COPY --from=build /src/main_videork ./main_videork
+
+COPY --from=build /Api/main_videork ./main_videork
 COPY internal/infrastructure/migrations internal/infrastructure/migrations
 COPY static static
 EXPOSE 8080

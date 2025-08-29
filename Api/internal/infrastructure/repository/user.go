@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"main_viderk/internal/domain/entities"
-	"main_viderk/internal/domain/interfaces"
+	"main_videork/internal/domain/entities"
+	"main_videork/internal/domain/interfaces"
 
 	"gorm.io/gorm"
 )
