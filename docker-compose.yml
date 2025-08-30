@@ -1,6 +1,4 @@
-﻿version: "3.9"
-
-services:
+﻿services:
   redis:
     image: redis:7-alpine
     command: ["redis-server","--appendonly","yes"]
@@ -38,17 +36,54 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: appdb
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: videorank
     ports: ["5432:5432"]
     volumes: [pg-data:/var/lib/postgresql/data]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER"]
+      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  migrate:
+    image: migrate/migrate:4
+    container_name: app_migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # MONTA TU CARPETA REAL:
+    volumes:
+      - ./Api/internal/infrastructure/migrations:/migrations:ro
+    environment:
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+    entrypoint: ["/bin/sh","-c"]
+    command: |
+      echo "Listing /migrations to verify mount:" \
+      && ls -la /migrations \
+      && /usr/local/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
+    restart: "no"
+
+
+  api:
+    build:
+      context: ./Api
+    container_name: app_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+      JWT_SECRET: 6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn
+      PORT: "8080"
+      CORS_ORIGIN: "*"
+      UPLOAD_DIR: "/uploads"
+    volumes: [api_uploads:/uploads]
+
 
   minio:
     image: minio/minio:latest
@@ -134,13 +169,14 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    depends_on: [grafana, jaeger, minio, rabbitmq, prometheus]
+    depends_on: [api, grafana, jaeger, minio, rabbitmq, prometheus]
     ports:
-      - "8080:8080" # Grafana
+      - "8080:8080" # API Proxy
       - "8081:8081" # Jaeger
       - "8082:8082" # MinIO Console
       - "8083:8083" # RabbitMQ UI
-      - "8084:8084" # Prometheus (opcional)
+      - "8084:8084" # Prometheus
+      - "8085:8085" # Grafana
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
@@ -172,3 +208,4 @@ volumes:
   loki-data:
   grafana-data:
   prometheus-data:
+  api_uploads:
