@@ -77,14 +77,11 @@
       migrate:
         condition: service_completed_successfully
     environment:
-      # Ajusta estos nombres a lo que lea tu config.FromEnv()
       DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
       JWT_SECRET: 6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn
       PORT: "8080"
-      API_PORT: "8080"         # por si tu config usa API_PORT
       CORS_ORIGIN: "*"
       UPLOAD_DIR: "/uploads"
-    ports: ["8080:8080"]
     volumes: [api_uploads:/uploads]
 
 
@@ -120,7 +117,7 @@
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
-    ports: ["9000:9000"]
+    ports: ["3000:3000"]
     volumes: [grafana-data:/var/lib/grafana]
     depends_on: [loki, prometheus]
     restart: unless-stopped
@@ -151,12 +148,12 @@
     image: nginx:1.27-alpine
     depends_on: [api, grafana, jaeger, minio, rabbitmq, prometheus]
     ports:
-      - "8080:8080" # Api
-      - "9000:9000" # Grafana
+      - "8080:8080" # API Proxy
       - "8081:8081" # Jaeger
       - "8082:8082" # MinIO Console
       - "8083:8083" # RabbitMQ UI
-      - "8084:8084" # Prometheus (opcional)
+      - "8084:8084" # Prometheus
+      - "8085:8085" # Grafana
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
