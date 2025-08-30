@@ -2,17 +2,14 @@ package presentation
 
 import (
 	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain/entities"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type AuthHandlers struct {
 	service *useCase.AuthService
-	DB      *gorm.DB
 }
 
 func NewAuthHandlers(service *useCase.AuthService) *AuthHandlers {
@@ -25,8 +22,8 @@ type registerRequest struct {
 	Email     string `json:"email" form:"email" binding:"required"`
 	Password1 string `json:"password1" form:"password1" binding:"required"`
 	Password2 string `json:"password2" form:"password2" binding:"required"`
-	City      string `json:"city" form:"city" binding:"required"`
-	Country   string `json:"country" form:"country" binding:"required"`
+	City      string `json:"city" form:"city"`
+	Country   string `json:"country" form:"country"`
 }
 
 func (handler *AuthHandlers) Register(context *gin.Context) {
@@ -38,9 +35,12 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 
 	email := strings.ToLower(strings.TrimSpace(request.Email))
 
-	var count int64
-	handler.DB.Model(&entities.User{}).Where("email = ?", email).Count(&count)
-	if count > 0 {
+	exists, err := handler.service.EmailExists(context.Request.Context(), email)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if exists {
 		context.JSON(http.StatusConflict, gin.H{"error": "email_already_in_use"})
 		return
 	}
@@ -66,7 +66,7 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 }
 
 type loginRequest struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -76,7 +76,7 @@ func (handler *AuthHandlers) Login(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	token, err := handler.service.Login(context.Request.Context(), request.Username, request.Password)
+	token, err := handler.service.Login(context.Request.Context(), request.Email, request.Password)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

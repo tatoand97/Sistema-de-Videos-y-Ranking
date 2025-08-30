@@ -1,4 +1,4 @@
-package main_videork
+package main
 
 import (
 	"log"

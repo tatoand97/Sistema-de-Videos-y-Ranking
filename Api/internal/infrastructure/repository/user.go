@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"main_videork/internal/domain"
 	"main_videork/internal/domain/entities"
 	"main_videork/internal/domain/interfaces"
 
@@ -23,6 +25,9 @@ func (r *userRepository) Create(ctx context.Context, user *entities.User) error 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
 	var user entities.User
 	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
 		return nil, err
 	}
 	return &user, nil

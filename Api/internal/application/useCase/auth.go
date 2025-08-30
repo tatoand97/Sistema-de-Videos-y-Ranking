@@ -3,6 +3,7 @@ package useCase
 import (
 	"context"
 	"errors"
+	"main_videork/internal/domain"
 	"main_videork/internal/domain/entities"
 	"main_videork/internal/domain/interfaces"
 	"strconv"
@@ -69,4 +70,16 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 	}
 	s.invalidTokens.Store(token, struct{}{})
 	return nil
+}
+
+func (s *AuthService) EmailExists(ctx context.Context, email string) (bool, error) {
+	_, err := s.repo.GetByEmail(ctx, email)
+	switch {
+	case err == nil:
+		return true, nil
+	case errors.Is(err, domain.ErrNotFound):
+		return false, nil
+	default:
+		return false, err
+	}
 }

@@ -120,7 +120,7 @@
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
-    ports: ["3000:3000"]
+    ports: ["9000:9000"]
     volumes: [grafana-data:/var/lib/grafana]
     depends_on: [loki, prometheus]
     restart: unless-stopped
@@ -149,9 +149,10 @@
 
   nginx:
     image: nginx:1.27-alpine
-    depends_on: [grafana, jaeger, minio, rabbitmq, prometheus]
+    depends_on: [api, grafana, jaeger, minio, rabbitmq, prometheus]
     ports:
-      - "8080:8080" # Grafana
+      - "8080:8080" # Api
+      - "9000:9000" # Grafana
       - "8081:8081" # Jaeger
       - "8082:8082" # MinIO Console
       - "8083:8083" # RabbitMQ UI
