@@ -81,7 +81,23 @@ func (r *RabbitMQConsumer) StartConsuming(queueName string, handler ports.Messag
 					msg.Nack(false, false) // Send to DLQ
 				} else {
 					logrus.Infof("Retrying message (attempt %d/%d)", retryCount+1, r.maxRetries)
-					msg.Nack(false, true) // Requeue
+					// Publish with incremented retry count
+					headers := amqp.Table{}
+					if msg.Headers != nil {
+						for k, v := range msg.Headers {
+							headers[k] = v
+						}
+					}
+					headers["x-retry-count"] = strconv.Itoa(retryCount + 1)
+					
+					err := r.channel.Publish("", msg.RoutingKey, false, false, amqp.Publishing{
+						Headers: headers,
+						Body:    msg.Body,
+					})
+					if err != nil {
+						logrus.Error("Failed to republish message:", err)
+					}
+					msg.Ack(false) // Ack original message
 				}
 			} else {
 				msg.Ack(false)
