@@ -76,6 +76,8 @@
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
       JWT_SECRET: 6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn
@@ -83,6 +85,12 @@
       CORS_ORIGIN: "*"
       UPLOAD_DIR: "/uploads"
     volumes: [api_uploads:/uploads]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 
   minio:
@@ -94,6 +102,30 @@
     ports: ["9000:9000","9001:9001"]
     volumes: [minio-data:/data]
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MinIO bucket creation
+  minio-buckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set myminio http://minio:9000 minio minio12345; do
+        echo 'Waiting for MinIO to be ready...'
+        sleep 2
+      done;
+      /usr/bin/mc mb myminio/raw-videos-audio-removal --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos-audio-removal --ignore-existing;
+      echo 'Buckets created successfully';
+      exit 0;
+      "
+    restart: "no"
 
   loki:
     image: grafana/loki:2.9.8
@@ -108,7 +140,9 @@
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail-config.yml:/etc/promtail/config.yml:ro
-    depends_on: [loki]
+    depends_on:
+      loki:
+        condition: service_started
     restart: unless-stopped
 
   grafana:
@@ -119,8 +153,17 @@
       GF_USERS_ALLOW_SIGN_UP: "false"
     ports: ["3000:3000"]
     volumes: [grafana-data:/var/lib/grafana]
-    depends_on: [loki, prometheus]
+    depends_on:
+      loki:
+        condition: service_started
+      prometheus:
+        condition: service_started
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   jaeger:
     image: jaegertracing/all-in-one:1.60
@@ -146,7 +189,19 @@
 
   nginx:
     image: nginx:1.27-alpine
-    depends_on: [api, grafana, jaeger, minio, rabbitmq, prometheus]
+    depends_on:
+      api:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
     ports:
       - "8080:8080" # API Proxy
       - "8081:8081" # Jaeger
@@ -156,6 +211,31 @@
       - "8085:8085" # Grafana
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AudioRemoval Worker
+  audio-removal:
+    build: ./Workers/AudioRemoval
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
+    environment:
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minio
+      - MINIO_SECRET_KEY=minio12345
+      - RAW_BUCKET=raw-videos-audio-removal
+      - PROCESSED_BUCKET=processed-videos-audio-removal
+      - QUEUE_NAME=audio_removal_queue
     restart: unless-stopped
 
 volumes:
