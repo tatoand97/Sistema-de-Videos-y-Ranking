@@ -28,18 +28,5 @@ go.work.sum
 .env
 
 # Editor/IDE
- .idea/
- .vscode/
-
-# Go build output
-bin/
-*.log
-
-# Editor swap/temporary files
-*~
-*.swp
-*.tmp
-
-# Docker/Dev
-docker-compose.override.yml
-.env.local
+.idea/
+# .vscode/
