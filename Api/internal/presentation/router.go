@@ -22,8 +22,8 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret stri
 	router.POST("/api/auth/signup", authHandlers.Register)
 	router.POST("/api/auth/login", authHandlers.Login)
 
-	authGroup := router.Group("/")
-	authGroup.Use(jwtMiddleware(secret))
+       authGroup := router.Group("/")
+       authGroup.Use(jwtMiddleware(authService, secret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
 	authGroup.GET("/api/me", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -32,27 +32,32 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret stri
 
 }
 
-func jwtMiddleware(secret string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		auth := c.GetHeader("Authorization")
-		parts := strings.Fields(auth)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token requerido"})
-			return
-		}
-		tokenStr := parts[1]
+func jwtMiddleware(authService *useCase.AuthService, secret string) gin.HandlerFunc {
+       return func(c *gin.Context) {
+               auth := c.GetHeader("Authorization")
+               parts := strings.Fields(auth)
+               if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+                       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token requerido"})
+                       return
+               }
+               tokenStr := parts[1]
 
-		claims := &jwt.RegisteredClaims{}
-		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
-			if t.Method != jwt.SigningMethodHS256 {
-				return nil, fmt.Errorf("algoritmo inválido")
-			}
-			return []byte(secret), nil
-		})
-		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token inválido"})
-			return
-		}
+               if authService.IsTokenInvalid(tokenStr) {
+                       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token inválido"})
+                       return
+               }
+
+               claims := &jwt.RegisteredClaims{}
+               token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+                       if t.Method != jwt.SigningMethodHS256 {
+                               return nil, fmt.Errorf("algoritmo inválido")
+                       }
+                       return []byte(secret), nil
+               })
+               if err != nil || !token.Valid {
+                       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token inválido"})
+                       return
+               }
 
 		now := time.Now()
 		// Verifica expiración

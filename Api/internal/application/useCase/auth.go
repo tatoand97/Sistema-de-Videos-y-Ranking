@@ -72,17 +72,27 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 }
 
 func (s *AuthService) Logout(ctx context.Context, token string) error {
-	if token == "" {
-		return errors.New("empty token")
-	}
-	s.invalidTokens.Store(token, struct{}{})
-	return nil
+        if token == "" {
+                return errors.New("empty token")
+        }
+        s.invalidTokens.Store(token, struct{}{})
+        return nil
+}
+
+// IsTokenInvalid returns true if the given token has been marked as invalid.
+// It checks the in-memory store populated on logout requests.
+func (s *AuthService) IsTokenInvalid(token string) bool {
+        if token == "" {
+                return false
+        }
+        _, exists := s.invalidTokens.Load(token)
+        return exists
 }
 
 func (s *AuthService) EmailExists(ctx context.Context, email string) (bool, error) {
-	_, err := s.repo.GetByEmail(ctx, email)
-	switch {
-	case err == nil:
+        _, err := s.repo.GetByEmail(ctx, email)
+        switch {
+        case err == nil:
 		return true, nil
 	case errors.Is(err, domain.ErrNotFound):
 		return false, nil
