@@ -1,20 +1,21 @@
 package presentation
 
 import (
-	"fmt"
+	"main_videork/internal/application/useCase"
 	"net/http"
-	"path/filepath"
-	"time"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 // VideoHandlers manages video related endpoints.
-type VideoHandlers struct{}
+type VideoHandlers struct {
+	uploadUC *useCase.UploadVideoUseCase
+}
 
 // NewVideoHandlers creates a new VideoHandlers instance.
-func NewVideoHandlers() *VideoHandlers {
-	return &VideoHandlers{}
+func NewVideoHandlers(uploadUC *useCase.UploadVideoUseCase) *VideoHandlers {
+	return &VideoHandlers{uploadUC: uploadUC}
 }
 
 // Upload handles receiving a video file and a title via multipart form.
@@ -31,17 +32,31 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		return
 	}
 
-	ext := filepath.Ext(file.Filename)
-	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-	dst := filepath.Join("static", filename)
+	playerIDStr := c.PostForm("player_id")
+	playerID, err := strconv.ParseUint(playerIDStr, 10, 64)
+	if err != nil || playerID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "player_id is required and must be a valid uint"})
+		return
+	}
 
-	if err := c.SaveUploadedFile(file, dst); err != nil {
+	statusIDStr := c.PostForm("status_id")
+	statusID, err := strconv.ParseUint(statusIDStr, 10, 64)
+	if err != nil || statusID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "status_id is required and must be a valid uint"})
+		return
+	}
+
+	input := useCase.UploadVideoInput{
+		PlayerID:   uint(playerID),
+		Title:      title,
+		FileHeader: file,
+		StatusID:   uint(statusID),
+	}
+	output, err := h.uploadUC.Execute(c.Request.Context(), input)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"title": title,
-		"file":  filename,
-	})
+	c.JSON(http.StatusOK, output)
 }

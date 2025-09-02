@@ -12,9 +12,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret string) {
+func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret string, uploadVideoUC *useCase.UploadVideoUseCase) {
 	authHandlers := NewAuthHandlers(authService)
-	videoHandlers := NewVideoHandlers()
+	videoHandlers := NewVideoHandlers(uploadVideoUC)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
