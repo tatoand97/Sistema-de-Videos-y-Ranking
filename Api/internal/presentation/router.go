@@ -12,8 +12,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret string) {
+func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret string, uploadVideoUC *useCase.UploadVideoUseCase) {
 	authHandlers := NewAuthHandlers(authService)
+	videoHandlers := NewVideoHandlers(uploadVideoUC)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -22,15 +23,16 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret stri
 	router.POST("/api/auth/login", authHandlers.Login)
 
 	authGroup := router.Group("/")
-	authGroup.Use(jwtMiddleware(secret))
+	authGroup.Use(jwtMiddleware(authService, secret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
 	authGroup.GET("/api/me", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	authGroup.POST("/api/videos/upload", videoHandlers.Upload)
 
 }
 
-func jwtMiddleware(secret string) gin.HandlerFunc {
+func jwtMiddleware(authService *useCase.AuthService, secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")
 		parts := strings.Fields(auth)
@@ -39,6 +41,11 @@ func jwtMiddleware(secret string) gin.HandlerFunc {
 			return
 		}
 		tokenStr := parts[1]
+
+		if authService.IsTokenInvalid(tokenStr) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token inválido"})
+			return
+		}
 
 		claims := &jwt.RegisteredClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {

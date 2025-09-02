@@ -41,7 +41,7 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		return
 	}
 	if exists {
-		context.JSON(http.StatusConflict, gin.H{"error": "email_already_in_use"})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "email_already_in_use"})
 		return
 	}
 
@@ -50,7 +50,15 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		return
 	}
 
-	user, err := handler.service.Register(context.Request.Context(), request.FirstName, request.LastName, request.Email, request.Password1)
+	user, err := handler.service.Register(
+		context.Request.Context(),
+		request.FirstName,
+		request.LastName,
+		email,
+		request.Password1,
+		request.City,
+		request.Country,
+	)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -61,7 +69,8 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		"first_name": user.FirstName,
 		"last_name":  user.LastName,
 		"email":      user.Email,
-		"password":   user.PasswordHash,
+		"city":       user.City,
+		"country":    user.Country,
 	})
 }
 
@@ -76,12 +85,16 @@ func (handler *AuthHandlers) Login(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	token, err := handler.service.Login(context.Request.Context(), request.Email, request.Password)
+	token, expiresIn, err := handler.service.Login(context.Request.Context(), request.Email, request.Password)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	context.JSON(http.StatusOK, gin.H{"token": token})
+	context.JSON(http.StatusOK, gin.H{
+		"token_type":   "Bearer",
+		"expires_in":   expiresIn,
+		"access_token": token,
+	})
 }
 
 func (handler *AuthHandlers) Logout(context *gin.Context) {

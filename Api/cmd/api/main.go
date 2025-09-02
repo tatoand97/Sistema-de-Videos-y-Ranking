@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"main_videork/internal/application/useCase"
+	"main_videork/internal/infrastructure/storage"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +43,29 @@ func main() {
 
 	// Initialize repositories
 	userRepo := postgresrepo.NewUserRepository(db)
+	videoRepo := postgresrepo.NewVideoRepository(db)
+
+	// Configuración de MinIO desde variables de entorno
+	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
+	minioAccessKey := os.Getenv("MINIO_ACCESS_KEY")
+	minioSecretKey := os.Getenv("MINIO_SECRET_KEY")
+	minioBucket := os.Getenv("MINIO_BUCKET")
+	minioUseSSL := os.Getenv("MINIO_USE_SSL") == "true"
+
+	minioCfg := storage.MinioConfig{
+		Endpoint:  minioEndpoint,
+		AccessKey: minioAccessKey,
+		SecretKey: minioSecretKey,
+		UseSSL:    minioUseSSL,
+		Bucket:    minioBucket,
+	}
+	videoStorage, err := storage.NewMinioVideoStorage(minioCfg)
+	if err != nil {
+		log.Fatalf("minio storage init failed: %v", err)
+	}
+
+	// Initialize use cases
+	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
 
 	// Initialize services
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
@@ -51,7 +75,7 @@ func main() {
 
 	r.Static("/static", "./static")
 
-	presentation.NewRouter(r, authService, jwtSecret)
+	presentation.NewRouter(r, authService, jwtSecret, uploadVideoUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {
