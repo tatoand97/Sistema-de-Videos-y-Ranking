@@ -1,10 +1,13 @@
 package useCase
 
 import (
+	"bytes"
 	"context"
 	"mime/multipart"
 	"time"
 
+	"io"
+	"main_videork/internal/application/validations"
 	"main_videork/internal/domain/entities"
 	"main_videork/internal/domain/interfaces"
 )
@@ -39,13 +42,27 @@ func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInpu
 	}
 	defer file.Close()
 
+	// Leer el archivo en memoria para validación
+	fileBytes := make([]byte, input.FileHeader.Size)
+	if _, err := io.ReadFull(file, fileBytes); err != nil {
+		return nil, err
+	}
+
+	// Validar MP4 (tamaño, resolución, brand)
+	if _, _, err := validations.CheckMP4(fileBytes); err != nil {
+		return nil, err
+	}
+
+	// Volver a crear un reader para el guardado (ya que file está consumido)
+	reader := bytes.NewReader(fileBytes)
+
 	objectName := input.FileHeader.Filename
 	contentType := input.FileHeader.Header.Get("Content-Type")
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
 
-	url, err := uc.storage.Save(ctx, objectName, file, input.FileHeader.Size, contentType)
+	url, err := uc.storage.Save(ctx, objectName, reader, input.FileHeader.Size, contentType)
 	if err != nil {
 		return nil, err
 	}
