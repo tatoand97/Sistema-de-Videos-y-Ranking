@@ -1,4 +1,4 @@
-﻿services:
+services:
   redis:
     image: redis:7-alpine
     command: ["redis-server","--appendonly","yes"]
@@ -127,6 +127,20 @@
       "
     restart: "no"
 
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      sh -c "
+      mc alias set local http://minio:9000 minio minio12345 &&
+      mc mb -p local/raw-videos-audio-removal || true &&
+      mc mb -p local/processed-videos-audio-removal || true &&
+      mc mb -p local/raw-videos-trim || true &&
+      mc mb -p local/processed-videos-trim || true
+      "
+    restart: "no"
+
   loki:
     image: grafana/loki:2.9.8
     command: ["-config.file=/etc/loki/local-config.yaml"]
@@ -237,6 +251,55 @@
       - PROCESSED_BUCKET=processed-videos-audio-removal
       - QUEUE_NAME=audio_removal_queue
     restart: unless-stopped
+
+  # -----------------------------
+  # Workers
+  # -----------------------------
+
+  trim-video:
+    build:
+      context: ./Workers/TrimVideo
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/TrimVideo/.env
+  
+  edit-video:
+    build:
+      context: ./Workers/EditVideo
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/EditVideo/.env
+
+  watermarking:
+    build:
+      context: ./Workers/Watermarking
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/Watermarking/.env
+  
+  gossip-open-close:
+    build:
+      context: ./Workers/gossipOpenClose
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/gossipOpenClose/.env
+
 
 volumes:
   redis-data:
