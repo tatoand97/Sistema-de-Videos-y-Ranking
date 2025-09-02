@@ -3,6 +3,7 @@ package useCase
 import (
 	"bytes"
 	"context"
+	"errors"
 	"mime/multipart"
 	"time"
 
@@ -13,11 +14,15 @@ import (
 )
 
 type UploadVideoInput struct {
-	PlayerID   uint
 	Title      string
 	FileHeader *multipart.FileHeader
 	StatusID   uint
 }
+
+type contextKey string
+
+// UserIDContextKey is the key used to store the authenticated user's ID in the context.
+const UserIDContextKey contextKey = "userID"
 
 type UploadVideoOutput struct {
 	VideoID      uint
@@ -36,6 +41,12 @@ func NewUploadVideoUseCase(videoRepo interfaces.VideoRepository, storage interfa
 }
 
 func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInput) (*UploadVideoOutput, error) {
+	val := ctx.Value(UserIDContextKey)
+	userID, ok := val.(uint)
+	if !ok || userID == 0 {
+		return nil, errors.New("userID missing in context")
+	}
+
 	file, err := input.FileHeader.Open()
 	if err != nil {
 		return nil, err
@@ -69,7 +80,7 @@ func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInpu
 
 	now := time.Now()
 	video := &entities.Video{
-		PlayerID:     input.PlayerID,
+		PlayerID:     userID,
 		Title:        input.Title,
 		OriginalFile: url,
 		StatusID:     input.StatusID,
