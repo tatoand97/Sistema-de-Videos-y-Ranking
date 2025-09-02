@@ -80,7 +80,7 @@ func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInpu
 
 	now := time.Now()
 	video := &entities.Video{
-		PlayerID:     userID,
+		UserID:       userID,
 		Title:        input.Title,
 		OriginalFile: url,
 		StatusID:     input.StatusID,
