@@ -1,4 +1,4 @@
-﻿services:
+services:
   redis:
     image: redis:7-alpine
     command: ["redis-server","--appendonly","yes"]
@@ -164,6 +164,55 @@
       - PROCESSED_BUCKET=processed-videos-audio-removal
       - QUEUE_NAME=audio_removal_queue
     restart: unless-stopped
+
+  # -----------------------------
+  # Workers
+  # -----------------------------
+
+  trim-video:
+    build:
+      context: ./Workers/TrimVideo
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/TrimVideo/.env
+  
+  edit-video:
+    build:
+      context: ./Workers/EditVideo
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/EditVideo/.env
+
+  watermarking:
+    build:
+      context: ./Workers/Watermarking
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/Watermarking/.env
+  
+  gossip-open-close:
+    build:
+      context: ./Workers/gossipOpenClose
+    depends_on:
+      - rabbitmq
+      - minio
+      - minio-init
+    restart: unless-stopped
+    env_file:
+      - ./Workers/gossipOpenClose/.env
+
 
 volumes:
   redis-data:
