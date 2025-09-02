@@ -24,7 +24,20 @@
                                         ]
                                 }
                         },
-                        "response": []
+                        "response": [
+                                {
+                                        "name": "Email ya registrado",
+                                        "status": "Bad Request",
+                                        "code": 400,
+                                        "header": [
+                                                {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                }
+                                        ],
+                                        "body": "{\n  \"error\": \"email_already_in_use\"\n}"
+                                }
+                        ]
                 },
                 {
                         "name": "Health (health)",
@@ -42,7 +55,9 @@
                                         ]
                                 }
                         },
-                        "response": []
+                        "response": [
+                                
+                        ]
                 },
                 {
                         "name": "Auth / Register",
@@ -71,7 +86,20 @@
                                         ]
                                 }
                         },
-                        "response": []
+                        "response": [
+                                {
+                                        "name": "Email ya registrado",
+                                        "status": "Bad Request",
+                                        "code": 400,
+                                        "header": [
+                                                {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                }
+                                        ],
+                                        "body": "{\n  \"error\": \"email_already_in_use\"\n}"
+                                }
+                        ]
                 },
                 {
                         "name": "Auth / Login",

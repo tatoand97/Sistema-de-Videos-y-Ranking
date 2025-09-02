@@ -41,7 +41,7 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		return
 	}
 	if exists {
-		context.JSON(http.StatusConflict, gin.H{"error": "email_already_in_use"})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "email_already_in_use"})
 		return
 	}
 
