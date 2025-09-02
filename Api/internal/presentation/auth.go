@@ -50,7 +50,15 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		return
 	}
 
-	user, err := handler.service.Register(context.Request.Context(), request.FirstName, request.LastName, request.Email, request.Password1)
+	user, err := handler.service.Register(
+		context.Request.Context(),
+		request.FirstName,
+		request.LastName,
+		email,
+		request.Password1,
+		request.City,
+		request.Country,
+	)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -61,7 +69,8 @@ func (handler *AuthHandlers) Register(context *gin.Context) {
 		"first_name": user.FirstName,
 		"last_name":  user.LastName,
 		"email":      user.Email,
-		"password":   user.PasswordHash,
+		"city":       user.City,
+		"country":    user.Country,
 	})
 }
 

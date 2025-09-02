@@ -24,7 +24,7 @@ func NewAuthService(repo interfaces.UserRepository, secret string) *AuthService 
 	return &AuthService{repo: repo, jwtSecret: secret}
 }
 
-func (s *AuthService) Register(ctx context.Context, firstName, lastName, email, password string) (*entities.User, error) {
+func (s *AuthService) Register(ctx context.Context, firstName, lastName, email, password, city, country string) (*entities.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -35,6 +35,8 @@ func (s *AuthService) Register(ctx context.Context, firstName, lastName, email, 
 		LastName:     lastName,
 		Email:        email,
 		PasswordHash: string(hash),
+		City:         city,
+		Country:      country,
 	}
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, err
