@@ -76,12 +76,16 @@ func (handler *AuthHandlers) Login(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	token, err := handler.service.Login(context.Request.Context(), request.Email, request.Password)
+	token, expiresIn, err := handler.service.Login(context.Request.Context(), request.Email, request.Password)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	context.JSON(http.StatusOK, gin.H{"token": token})
+	context.JSON(http.StatusOK, gin.H{
+		"token_type":   "Bearer",
+		"expires_in":   expiresIn,
+		"access_token": token,
+	})
 }
 
 func (handler *AuthHandlers) Logout(context *gin.Context) {

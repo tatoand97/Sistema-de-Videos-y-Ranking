@@ -42,26 +42,31 @@ func (s *AuthService) Register(ctx context.Context, firstName, lastName, email, 
 	return user, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (string, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (string, int64, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
+		return "", 0, errors.New("invalid credentials")
 	}
 
+	const tokenDuration = time.Hour
 	now := time.Now()
 	claims := jwt.RegisteredClaims{
 		Subject:   strconv.FormatUint(uint64(user.UserId), 10),
-		ExpiresAt: jwt.NewNumericDate(now.Add(1 * time.Hour)),
+		ExpiresAt: jwt.NewNumericDate(now.Add(tokenDuration)),
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.jwtSecret))
+	signed, err := token.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return "", 0, err
+	}
+	return signed, int64(tokenDuration.Seconds()), nil
 }
 
 func (s *AuthService) Logout(ctx context.Context, token string) error {
