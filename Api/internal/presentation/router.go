@@ -14,6 +14,7 @@ import (
 
 func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret string) {
 	authHandlers := NewAuthHandlers(authService)
+	videoHandlers := NewVideoHandlers()
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -27,6 +28,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret stri
 	authGroup.GET("/api/me", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	authGroup.POST("/api/videos", videoHandlers.Upload)
 
 }
 
