@@ -19,7 +19,7 @@ func NewAuthHandlers(service *useCase.AuthService) *AuthHandlers {
 type registerRequest struct {
 	FirstName string `json:"first_name" form:"first_name" binding:"required"`
 	LastName  string `json:"last_name" form:"last_name" binding:"required"`
-	Email     string `json:"email" form:"email" binding:"required"`
+	Email     string `json:"email" form:"email" binding:"required,email"`
 	Password1 string `json:"password1" form:"password1" binding:"required"`
 	Password2 string `json:"password2" form:"password2" binding:"required"`
 	City      string `json:"city" form:"city"`
@@ -28,7 +28,7 @@ type registerRequest struct {
 
 func (handler *AuthHandlers) Register(context *gin.Context) {
 	var request registerRequest
-	if err := context.ShouldBind(&request); err != nil {
+	if err := context.ShouldBindJSON(&request); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
