@@ -120,8 +120,8 @@
         echo 'Waiting for MinIO to be ready...'
         sleep 2
       done;
-      /usr/bin/mc mb myminio/raw-videos-audio-removal --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-audio-removal --ignore-existing;
+      /usr/bin/mc mb myminio/raw-videos --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos --ignore-existing;
       echo 'Buckets created successfully';
       exit 0;
       "
@@ -233,9 +233,29 @@
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minio
       - MINIO_SECRET_KEY=minio12345
-      - RAW_BUCKET=raw-videos-audio-removal
-      - PROCESSED_BUCKET=processed-videos-audio-removal
+      - RAW_BUCKET=raw-videos
+      - PROCESSED_BUCKET=processed-videos
       - QUEUE_NAME=audio_removal_queue
+    restart: unless-stopped
+
+  # CurtainInjector Worker
+  curtain-injector:
+    build: ./Workers/CurtainInjector
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
+    environment:
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minio
+      - MINIO_SECRET_KEY=minio12345
+      - RAW_BUCKET=raw-videos
+      - PROCESSED_BUCKET=processed-videos
+      - QUEUE_NAME=curtain_injection_queue
     restart: unless-stopped
 
 volumes:

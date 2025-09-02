@@ -1,0 +1,51 @@
+package infrastructure
+
+import (
+	"curtaininjector/internal/adapters"
+	"curtaininjector/internal/application/services"
+	"curtaininjector/internal/application/usecases"
+	"curtaininjector/internal/domain"
+)
+
+type Container struct {
+	Config              *Config
+	VideoRepo           domain.VideoRepository
+	StorageRepo         domain.StorageRepository
+	ProcessingService   domain.VideoProcessingService
+	NotificationService domain.NotificationService
+	ProcessVideoUC      *usecases.ProcessVideoUseCase
+}
+
+func NewContainer(config *Config) (*Container, error) {
+	storage, err := adapters.NewMinIOStorage(
+		config.MinIOEndpoint,
+		config.MinIOAccessKey,
+		config.MinIOSecretKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	videoRepo := adapters.NewVideoRepository()
+	storageRepo := adapters.NewStorageRepository(storage)
+	processingService := services.NewCurtainInjectionService()
+	notificationService := services.NewLogNotificationService()
+
+	processVideoUC := usecases.NewProcessVideoUseCase(
+		videoRepo,
+		storageRepo,
+		processingService,
+		notificationService,
+		config.RawBucket,
+		config.ProcessedBucket,
+	)
+
+	return &Container{
+		Config:              config,
+		VideoRepo:           videoRepo,
+		StorageRepo:         storageRepo,
+		ProcessingService:   processingService,
+		NotificationService: notificationService,
+		ProcessVideoUC:      processVideoUC,
+	}, nil
+}
