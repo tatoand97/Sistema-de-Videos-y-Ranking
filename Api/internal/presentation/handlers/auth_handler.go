@@ -1,4 +1,4 @@
-package presentation
+package handlers
 
 import (
 	"main_videork/internal/application/useCase"

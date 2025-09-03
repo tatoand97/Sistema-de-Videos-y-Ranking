@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"main_videork/internal/presentation/handlers"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,6 @@ import (
 	"main_videork/internal/application/useCase"
 	postgresrepo "main_videork/internal/infrastructure/repository"
 	"main_videork/internal/infrastructure/storage"
-	"main_videork/internal/presentation"
 )
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 
 	r := gin.Default()
 	r.Static("/static", "./static")
-	presentation.NewRouter(r, authService, userService, jwtSecret, uploadVideoUC)
+	handlers.NewRouter(r, authService, userService, jwtSecret, uploadVideoUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {
