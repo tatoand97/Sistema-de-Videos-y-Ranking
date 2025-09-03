@@ -17,8 +17,8 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     ports:
-      - "5672:5672"     # AMQP
-      - "15672:15672"   # UI
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - rabbitmq-logs:/var/log/rabbitmq
@@ -31,6 +31,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -45,13 +46,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   migrate:
     image: migrate/migrate:4
     container_name: app_migrate
     depends_on:
       postgres:
         condition: service_healthy
-    # MONTA TU CARPETA REAL:
     volumes:
       - ./Api/internal/infrastructure/migrations:/migrations:ro
     environment:
@@ -63,7 +64,6 @@ services:
       && /usr/local/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
     restart: "no"
 
-
   api:
     build:
       context: ./Api
@@ -71,24 +71,30 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
       JWT_SECRET: 6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn
       PORT: "8080"
       CORS_ORIGIN: "*"
       UPLOAD_DIR: "/uploads"
-    volumes: [api_uploads:/uploads]
+
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      MINIO_BUCKET: raw-videos-audio-removal
+      MINIO_USE_SSL: "false"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: [ "CMD","wget","--no-verbose","--tries=1","--spider","http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
-
 
   minio:
     image: minio/minio:latest
@@ -105,7 +111,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # MinIO bucket creation
   minio-buckets:
     image: minio/mc
     depends_on:
@@ -123,6 +128,7 @@ services:
       exit 0;
       "
     restart: "no"
+
   nginx:
     image: nginx:1.27-alpine
     depends_on:
@@ -145,7 +151,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # AudioRemoval Worker
   audio-removal:
     build: ./Workers/AudioRemoval
     depends_on:
@@ -165,28 +170,30 @@ services:
       - QUEUE_NAME=audio_removal_queue
     restart: unless-stopped
 
-  # -----------------------------
-  # Workers
-  # -----------------------------
-
   trim-video:
     build:
       context: ./Workers/TrimVideo
     depends_on:
-      - rabbitmq
-      - minio
-      - minio-init
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
     restart: unless-stopped
     env_file:
       - ./Workers/TrimVideo/.env
-  
+
   edit-video:
     build:
       context: ./Workers/EditVideo
     depends_on:
-      - rabbitmq
-      - minio
-      - minio-init
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
     restart: unless-stopped
     env_file:
       - ./Workers/EditVideo/.env
@@ -195,24 +202,29 @@ services:
     build:
       context: ./Workers/Watermarking
     depends_on:
-      - rabbitmq
-      - minio
-      - minio-init
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
     restart: unless-stopped
     env_file:
       - ./Workers/Watermarking/.env
-  
+
   gossip-open-close:
     build:
       context: ./Workers/gossipOpenClose
     depends_on:
-      - rabbitmq
-      - minio
-      - minio-init
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_completed_successfully
     restart: unless-stopped
     env_file:
       - ./Workers/gossipOpenClose/.env
-
 
 volumes:
   redis-data:
@@ -220,4 +232,3 @@ volumes:
   rabbitmq-logs:
   pg-data:
   minio-data:
-  api_uploads:

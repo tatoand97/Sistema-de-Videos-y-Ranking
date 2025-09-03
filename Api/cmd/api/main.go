@@ -1,9 +1,8 @@
 package main
 
 import (
+	"errors"
 	"log"
-	"main_videork/internal/application/useCase"
-	"main_videork/internal/infrastructure/storage"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +12,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"main_videork/internal/application/useCase"
 	postgresrepo "main_videork/internal/infrastructure/repository"
+	"main_videork/internal/infrastructure/storage"
 	"main_videork/internal/presentation"
 )
 
@@ -23,11 +24,20 @@ func main() {
 		dsn = "postgres://app_user:app_password@localhost:5432/videorank?sslmode=disable"
 	}
 
-	m, err := migrate.New("file://internal/infrastructure/migrations", dsn)
+	migPath := "file://Api/internal/infrastructure/migrations"
+
+	m, err := migrate.New(migPath, dsn)
 	if err != nil {
 		log.Fatalf("migrate init failed: %v", err)
 	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	defer func() {
+		srcErr, dbErr := m.Close()
+		if srcErr != nil || dbErr != nil {
+			log.Printf("migrate close warnings: src=%v db=%v", srcErr, dbErr)
+		}
+	}()
+
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		log.Fatalf("migrate up failed: %v", err)
 	}
 
@@ -41,47 +51,32 @@ func main() {
 		jwtSecret = "secret"
 	}
 
-	// Initialize repositories
 	userRepo := postgresrepo.NewUserRepository(db)
 	videoRepo := postgresrepo.NewVideoRepository(db)
 
-	// Configuración de MinIO desde variables de entorno
-	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
-	minioAccessKey := os.Getenv("MINIO_ACCESS_KEY")
-	minioSecretKey := os.Getenv("MINIO_SECRET_KEY")
-	minioBucket := os.Getenv("MINIO_BUCKET")
-	minioUseSSL := os.Getenv("MINIO_USE_SSL") == "true"
-
 	minioCfg := storage.MinioConfig{
-		Endpoint:  minioEndpoint,
-		AccessKey: minioAccessKey,
-		SecretKey: minioSecretKey,
-		UseSSL:    minioUseSSL,
-		Bucket:    minioBucket,
+		Endpoint:  os.Getenv("MINIO_ENDPOINT"),   // e.g. "localhost:9000"
+		AccessKey: os.Getenv("MINIO_ACCESS_KEY"), // e.g. "minio"
+		SecretKey: os.Getenv("MINIO_SECRET_KEY"), // e.g. "minio12345"
+		UseSSL:    os.Getenv("MINIO_USE_SSL") == "true",
+		Bucket:    os.Getenv("MINIO_BUCKET"),
 	}
 	videoStorage, err := storage.NewMinioVideoStorage(minioCfg)
 	if err != nil {
 		log.Fatalf("minio storage init failed: %v", err)
 	}
 
-	// Initialize use cases
 	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
-
-	// Initialize services
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 
-	// Setup Gin router
 	r := gin.Default()
-
 	r.Static("/static", "./static")
-
 	presentation.NewRouter(r, authService, jwtSecret, uploadVideoUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
