@@ -8,39 +8,7 @@
         },
         "item": [
                 {
-                        "name": "Health (status)",
-                        "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                        "raw": "http://localhost:8080/status",
-                                        "protocol": "http",
-                                        "host": [
-                                                "localhost"
-                                        ],
-                                        "port": "8080",
-                                        "path": [
-                                                "status"
-                                        ]
-                                }
-                        },
-                        "response": [
-                                {
-                                        "name": "Email ya registrado",
-                                        "status": "Bad Request",
-                                        "code": 400,
-                                        "header": [
-                                                {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                }
-                                        ],
-                                        "body": "{\n  \"error\": \"email_already_in_use\"\n}"
-                                }
-                        ]
-                },
-                {
-                        "name": "Health (health)",
+                        "name": "Health",
                         "request": {
                                 "method": "GET",
                                 "header": [],
@@ -55,9 +23,7 @@
                                         ]
                                 }
                         },
-                        "response": [
-                                
-                        ]
+                        "response": []
                 },
                 {
                         "name": "Auth / Register",
@@ -211,6 +177,51 @@
                                                 "api",
                                                 "auth",
                                                 "logout"
+                                        ]
+                                }
+                        },
+                        "response": []
+                },
+                {
+                        "name": "Videos / Upload (protected)",
+                        "request": {
+                                "method": "POST",
+                                "header": [
+                                        {
+                                                "key": "Authorization",
+                                                "value": "Bearer {{jwt}}"
+                                        }
+                                ],
+                                "body": {
+                                        "mode": "formdata",
+                                        "formdata": [
+                                                {
+                                                        "key": "title",
+                                                        "value": "Example title",
+                                                        "type": "text"
+                                                },
+                                                {
+                                                        "key": "status_id",
+                                                        "value": "1",
+                                                        "type": "text"
+                                                },
+                                                {
+                                                        "key": "video",
+                                                        "type": "file",
+                                                        "src": ""
+                                                }
+                                        ]
+                                },
+                                "url": {
+                                        "raw": "{{host}}:{{port}}/api/videos/upload",
+                                        "host": [
+                                                "{{host}}"
+                                        ],
+                                        "port": "{{port}}",
+                                        "path": [
+                                                "api",
+                                                "videos",
+                                                "upload"
                                         ]
                                 }
                         },
