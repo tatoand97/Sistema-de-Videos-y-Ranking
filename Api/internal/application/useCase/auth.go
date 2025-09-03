@@ -3,8 +3,6 @@ package useCase
 import (
 	"context"
 	"errors"
-	"main_videork/internal/domain"
-	"main_videork/internal/domain/entities"
 	"main_videork/internal/domain/interfaces"
 	"strconv"
 	"sync"
@@ -24,26 +22,6 @@ func NewAuthService(repo interfaces.UserRepository, secret string) *AuthService 
 	return &AuthService{repo: repo, jwtSecret: secret}
 }
 
-func (s *AuthService) Register(ctx context.Context, firstName, lastName, email, password, city, country string) (*entities.User, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-
-	user := &entities.User{
-		FirstName:    firstName,
-		LastName:     lastName,
-		Email:        email,
-		PasswordHash: string(hash),
-		City:         city,
-		Country:      country,
-	}
-	if err := s.repo.Create(ctx, user); err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
 func (s *AuthService) Login(ctx context.Context, email, password string) (string, int64, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
@@ -57,7 +35,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	const tokenDuration = time.Hour
 	now := time.Now()
 	claims := jwt.RegisteredClaims{
-		Subject:   strconv.FormatUint(uint64(user.UserId), 10),
+		Subject:   strconv.Itoa(user.UserID),
 		ExpiresAt: jwt.NewNumericDate(now.Add(tokenDuration)),
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),
@@ -71,32 +49,18 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	return signed, int64(tokenDuration.Seconds()), nil
 }
 
-func (s *AuthService) Logout(ctx context.Context, token string) error {
-        if token == "" {
-                return errors.New("empty token")
-        }
-        s.invalidTokens.Store(token, struct{}{})
-        return nil
-}
-
-// IsTokenInvalid returns true if the given token has been marked as invalid.
-// It checks the in-memory store populated on logout requests.
-func (s *AuthService) IsTokenInvalid(token string) bool {
-        if token == "" {
-                return false
-        }
-        _, exists := s.invalidTokens.Load(token)
-        return exists
-}
-
-func (s *AuthService) EmailExists(ctx context.Context, email string) (bool, error) {
-        _, err := s.repo.GetByEmail(ctx, email)
-        switch {
-        case err == nil:
-		return true, nil
-	case errors.Is(err, domain.ErrNotFound):
-		return false, nil
-	default:
-		return false, err
+func (s *AuthService) Logout(token string) error {
+	if token == "" {
+		return errors.New("empty token")
 	}
+	s.invalidTokens.Store(token, struct{}{})
+	return nil
+}
+
+func (s *AuthService) IsTokenInvalid(token string) bool {
+	if token == "" {
+		return false
+	}
+	_, exists := s.invalidTokens.Load(token)
+	return exists
 }

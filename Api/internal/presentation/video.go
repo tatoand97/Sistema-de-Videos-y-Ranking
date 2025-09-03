@@ -9,17 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// VideoHandlers manages video related endpoints.
 type VideoHandlers struct {
 	uploadUC *useCase.UploadVideoUseCase
 }
 
-// NewVideoHandlers creates a new VideoHandlers instance.
 func NewVideoHandlers(uploadUC *useCase.UploadVideoUseCase) *VideoHandlers {
 	return &VideoHandlers{uploadUC: uploadUC}
 }
 
-// Upload handles receiving a video file and a title via multipart form.
 func (h *VideoHandlers) Upload(c *gin.Context) {
 	title := c.PostForm("title")
 	if title == "" {

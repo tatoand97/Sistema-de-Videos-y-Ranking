@@ -20,7 +20,7 @@ func NewUserRepository(db *gorm.DB) interfaces.UserRepository {
 
 func (r *userRepository) Create(ctx context.Context, user *entities.User) error {
 	return r.db.WithContext(ctx).
-		Select("FirstName", "LastName", "Email", "PasswordHash", "City", "Country").
+		Select("FirstName", "LastName", "Email", "PasswordHash", "CityID").
 		Create(user).Error
 }
 
