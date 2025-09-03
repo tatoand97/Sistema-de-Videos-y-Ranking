@@ -34,3 +34,18 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*entitie
 	}
 	return &user, nil
 }
+
+func (r *userRepository) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	var perms []string
+	err := r.db.WithContext(ctx).
+		Table("privilege p").
+		Select("DISTINCT p.name").
+		Joins("JOIN role_privilege rp ON rp.privilege_id = p.privilege_id").
+		Joins("JOIN user_role ur ON ur.role_id = rp.role_id").
+		Where("ur.user_id = ?", userID).
+		Scan(&perms).Error
+	if err != nil {
+		return nil, err
+	}
+	return perms, nil
+}
