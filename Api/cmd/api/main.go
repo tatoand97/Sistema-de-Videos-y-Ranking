@@ -68,10 +68,11 @@ func main() {
 
 	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
+	userService := useCase.NewUserService(userRepo)
 
 	r := gin.Default()
 	r.Static("/static", "./static")
-	presentation.NewRouter(r, authService, jwtSecret, uploadVideoUC)
+	presentation.NewRouter(r, authService, userService, jwtSecret, uploadVideoUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {
