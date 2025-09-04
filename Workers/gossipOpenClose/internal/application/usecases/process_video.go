@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"mime"
 	"os"
-	"path/filepath"
 	"strconv"
 
 	"gossipopenclose/internal/domain"
@@ -83,11 +82,7 @@ func (uc *OpenCloseUseCase) Execute(filename string) error {
 		return fmt.Errorf("process: %w", err)
 	}
 
-	outName := fmt.Sprintf("processed_%s", filename)
-	if ext := filepath.Ext(outName); ext == "" {
-		outName += ".mp4"
-	}
-	if err := uc.storageRepo.Upload(uc.processedBucket, outName, processedData); err != nil {
+	if err := uc.storageRepo.Upload(uc.processedBucket, filename, processedData); err != nil {
 		_ = uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("upload: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
     "mime"
     "time"
     "trimvideo/internal/domain"
+    "github.com/sirupsen/logrus"
 )
 
 type ProcessVideoUseCase struct {
@@ -50,8 +51,7 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 		return fmt.Errorf("processing: %w", err)
 	}
 
-	outName := fmt.Sprintf("processed_%s", filename)
-	if err := uc.storageRepo.Upload(uc.processedBucket, outName, processedData); err != nil {
+	if err := uc.storageRepo.Upload(uc.processedBucket, filename, processedData); err != nil {
 		_ = uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("upload: %w", err)
 	}
@@ -59,8 +59,16 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusCompleted); err != nil {
 		return fmt.Errorf("update final status: %w", err)
 	}
-	_ = mime.TypeByExtension(".mp4") // placeholder like AudioRemoval; could be used for content-type
 
-	_ = time.Now()
+	logrus.WithFields(logrus.Fields{
+		"video_id": video.ID,
+		"filename": filename,
+		"bucket_from": uc.rawBucket,
+		"bucket_to": uc.processedBucket,
+		"max_seconds": uc.maxSeconds,
+		"timestamp": time.Now().UTC(),
+	}).Info("TrimVideo processing completed successfully")
+
+	_ = mime.TypeByExtension(".mp4")
 	return nil
 }

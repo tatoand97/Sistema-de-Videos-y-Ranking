@@ -1,7 +1,5 @@
 FROM golang:1.21-alpine AS builder
-
 RUN apk add --no-cache git
-
 WORKDIR /app
 COPY go.mod go.sum ./
 COPY internal/ ./internal/
@@ -16,7 +14,6 @@ RUN mkdir -p /tmp && chmod 777 /tmp
 
 WORKDIR /app
 COPY --from=builder /app/audioremoval .
-COPY .env .
 
 USER nobody
 CMD ["./audioremoval"]

@@ -104,17 +104,17 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Insert Users (passwords are hashed with bcrypt cost 10)
 -- Password for all users: "Password123!"
-INSERT INTO users (first_name, last_name, email, password_hash) VALUES
-('Admin', 'Sistema', 'admin@videorank.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Carlos', 'Moderador', 'moderador@videorank.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Juan', 'Pérez', 'juan.perez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('María', 'García', 'maria.garcia@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Pedro', 'López', 'pedro.lopez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Ana', 'Martínez', 'ana.martinez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Luis', 'Rodríguez', 'luis.rodriguez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Carmen', 'Fernández', 'carmen.fernandez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Diego', 'González', 'diego.gonzalez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.'),
-('Sofia', 'Viewer', 'viewer@videorank.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.')
+INSERT INTO users (first_name, last_name, email, password_hash, city_id) VALUES
+('Admin', 'Sistema', 'admin@videorank.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Bogotá')),
+('Carlos', 'Moderador', 'moderador@videorank.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Madrid')),
+('Juan', 'Pérez', 'juan.perez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Bogotá')),
+('María', 'García', 'maria.garcia@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Medellín')),
+('Pedro', 'López', 'pedro.lopez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Buenos Aires')),
+('Ana', 'Martínez', 'ana.martinez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Ciudad de México')),
+('Luis', 'Rodríguez', 'luis.rodriguez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Madrid')),
+('Carmen', 'Fernández', 'carmen.fernandez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'São Paulo')),
+('Diego', 'González', 'diego.gonzalez@email.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Santiago')),
+('Sofia', 'Viewer', 'viewer@videorank.com', '$2a$10$dbG1mEbaLN9iCH9EmYflK.ddkyJ8aQhw52k5tkbwCzKoEktKOkiQ.', (SELECT city_id FROM city WHERE name = 'Lima'))
 ON CONFLICT (email) DO NOTHING;
 
 -- Assign Roles to Users
@@ -131,19 +131,8 @@ INSERT INTO user_role (user_id, role_id) VALUES
 ((SELECT user_id FROM users WHERE email = 'viewer@videorank.com'), (SELECT role_id FROM role WHERE name = 'viewer'))
 ON CONFLICT (user_id, role_id) DO NOTHING;
 
--- Insert Players (only for users with player role)
-INSERT INTO player (user_id, city_id) VALUES
-((SELECT user_id FROM users WHERE email = 'juan.perez@email.com'), (SELECT city_id FROM city WHERE name = 'Bogotá')),
-((SELECT user_id FROM users WHERE email = 'maria.garcia@email.com'), (SELECT city_id FROM city WHERE name = 'Medellín')),
-((SELECT user_id FROM users WHERE email = 'pedro.lopez@email.com'), (SELECT city_id FROM city WHERE name = 'Buenos Aires')),
-((SELECT user_id FROM users WHERE email = 'ana.martinez@email.com'), (SELECT city_id FROM city WHERE name = 'Ciudad de México')),
-((SELECT user_id FROM users WHERE email = 'luis.rodriguez@email.com'), (SELECT city_id FROM city WHERE name = 'Madrid')),
-((SELECT user_id FROM users WHERE email = 'carmen.fernandez@email.com'), (SELECT city_id FROM city WHERE name = 'São Paulo')),
-((SELECT user_id FROM users WHERE email = 'diego.gonzalez@email.com'), (SELECT city_id FROM city WHERE name = 'Santiago'))
-ON CONFLICT (user_id) DO NOTHING;
-
 -- Insert Sample Videos
-INSERT INTO video (player_id, title, original_file, processed_file, status_id) VALUES
+INSERT INTO video (user_id, title, original_file, processed_file, status_id) VALUES
 ((SELECT user_id FROM users WHERE email = 'juan.perez@email.com'), 'Jugada defensiva destacada', 'juan_video_001.mp4', 'juan_video_001_anb_processed.mp4', (SELECT status_id FROM video_status WHERE name = 'processed')),
 ((SELECT user_id FROM users WHERE email = 'juan.perez@email.com'), 'Triple desde media cancha', 'juan_video_002.mp4', NULL, (SELECT status_id FROM video_status WHERE name = 'removing_audio')),
 ((SELECT user_id FROM users WHERE email = 'maria.garcia@email.com'), 'Estrategia ofensiva avanzada', 'maria_video_001.mp4', 'maria_video_001_anb_processed.mp4', (SELECT status_id FROM video_status WHERE name = 'processed')),

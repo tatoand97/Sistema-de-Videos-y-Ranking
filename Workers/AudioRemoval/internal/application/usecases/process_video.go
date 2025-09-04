@@ -53,8 +53,7 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 		return fmt.Errorf("failed to process video: %w", err)
 	}
 
-	outputFilename := fmt.Sprintf("processed_%s", filename)
-	if err := uc.storageRepo.Upload(uc.processedBucket, outputFilename, processedData); err != nil {
+	if err := uc.storageRepo.Upload(uc.processedBucket, filename, processedData); err != nil {
 		uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("failed to upload processed video: %w", err)
 	}
