@@ -24,7 +24,7 @@ func main() {
 		dsn = "postgres://app_user:app_password@localhost:5432/videorank?sslmode=disable"
 	}
 
-	migPath := "file://Api/internal/infrastructure/migrations"
+	migPath := "file://internal/infrastructure/migrations"
 
 	m, err := migrate.New(migPath, dsn)
 	if err != nil {

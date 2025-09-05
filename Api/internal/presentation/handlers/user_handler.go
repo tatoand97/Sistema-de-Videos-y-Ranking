@@ -28,7 +28,6 @@ func (handler *UserHandlers) Register(context *gin.Context) {
 
 	email := strings.ToLower(strings.TrimSpace(request.Email))
 
-	// Comprobar existencia del email con UserService
 	if _, err := handler.service.GetByEmail(context.Request.Context(), email); err == nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "email_already_in_use"})
 		return
