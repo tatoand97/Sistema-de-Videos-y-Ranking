@@ -72,7 +72,7 @@ func main() {
 
 	r := gin.Default()
 	r.Static("/static", "./static")
-	handlers.NewRouter(r, authService, userService, userRepo, jwtSecret, uploadVideoUC)
+	handlers.NewRouter(r, authService, userService, jwtSecret, uploadVideoUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {

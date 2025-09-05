@@ -12,6 +12,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type AuthClaims struct {
+	jwt.RegisteredClaims
+	Permissions []string `json:"perms"`
+}
+
 type AuthService struct {
 	repo          interfaces.UserRepository
 	jwtSecret     string
@@ -32,13 +37,21 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", 0, errors.New("invalid credentials")
 	}
 
+	perms, err := s.repo.GetPermissions(ctx, user.UserID)
+	if err != nil {
+		return "", 0, err
+	}
+
 	const tokenDuration = time.Hour
 	now := time.Now()
-	claims := jwt.RegisteredClaims{
-		Subject:   strconv.Itoa(user.UserID),
-		ExpiresAt: jwt.NewNumericDate(now.Add(tokenDuration)),
-		IssuedAt:  jwt.NewNumericDate(now),
-		NotBefore: jwt.NewNumericDate(now),
+	claims := AuthClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   strconv.Itoa(user.UserID),
+			ExpiresAt: jwt.NewNumericDate(now.Add(tokenDuration)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+		},
+		Permissions: perms,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
