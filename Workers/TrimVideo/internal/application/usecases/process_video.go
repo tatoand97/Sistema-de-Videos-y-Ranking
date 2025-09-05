@@ -2,7 +2,6 @@ package usecases
 
 import (
     "fmt"
-    "mime"
     "time"
     "trimvideo/internal/domain"
     "github.com/sirupsen/logrus"
@@ -12,6 +11,7 @@ type ProcessVideoUseCase struct {
 	videoRepo            domain.VideoRepository
 	storageRepo          domain.StorageRepository
 	processingService    domain.VideoProcessingService
+	notificationService  domain.NotificationService
 	rawBucket            string
 	processedBucket      string
 	maxSeconds           int
@@ -21,6 +21,7 @@ func NewProcessVideoUseCase(
 	videoRepo domain.VideoRepository,
 	storageRepo domain.StorageRepository,
 	processingService domain.VideoProcessingService,
+	notificationService domain.NotificationService,
 	rawBucket, processedBucket string,
 	maxSeconds int,
 ) *ProcessVideoUseCase {
@@ -28,6 +29,7 @@ func NewProcessVideoUseCase(
 		videoRepo: videoRepo,
 		storageRepo: storageRepo,
 		processingService: processingService,
+		notificationService: notificationService,
 		rawBucket: rawBucket,
 		processedBucket: processedBucket,
 		maxSeconds: maxSeconds,
@@ -60,6 +62,11 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 		return fmt.Errorf("update final status: %w", err)
 	}
 
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+		logrus.Errorf("Failed to notify state machine: %v", err)
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"video_id": video.ID,
 		"filename": filename,
@@ -69,6 +76,5 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 		"timestamp": time.Now().UTC(),
 	}).Info("TrimVideo processing completed successfully")
 
-	_ = mime.TypeByExtension(".mp4")
 	return nil
 }

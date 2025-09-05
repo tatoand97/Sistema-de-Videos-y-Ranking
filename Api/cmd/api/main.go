@@ -5,6 +5,7 @@ import (
 	"main_videork/internal/application/useCase"
 	"main_videork/internal/infrastructure/storage"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -72,6 +73,17 @@ func main() {
 
 	// Setup Gin router
 	r := gin.Default()
+
+	// Configurar proxies confiables
+	if trustedProxies := os.Getenv("TRUSTED_PROXIES"); trustedProxies != "" {
+		proxies := strings.Split(trustedProxies, ",")
+		for i, proxy := range proxies {
+			proxies[i] = strings.TrimSpace(proxy)
+		}
+		r.SetTrustedProxies(proxies)
+	} else {
+		r.SetTrustedProxies(nil)
+	}
 
 	r.Static("/static", "./static")
 

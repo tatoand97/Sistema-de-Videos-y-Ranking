@@ -13,17 +13,22 @@ type VideoMessage struct {
 }
 
 type OrchestrateVideoUseCase struct {
-	videoRepo domain.VideoRepository
-	publisher domain.MessagePublisher
+	videoRepo         domain.VideoRepository
+	publisher         domain.MessagePublisher
+	editVideoQueue    string
+	audioRemovalQueue string
 }
 
 func NewOrchestrateVideoUseCase(
 	videoRepo domain.VideoRepository,
 	publisher domain.MessagePublisher,
+	editVideoQueue, audioRemovalQueue string,
 ) *OrchestrateVideoUseCase {
 	return &OrchestrateVideoUseCase{
-		videoRepo: videoRepo,
-		publisher: publisher,
+		videoRepo:         videoRepo,
+		publisher:         publisher,
+		editVideoQueue:    editVideoQueue,
+		audioRemovalQueue: audioRemovalQueue,
 	}
 }
 
@@ -60,6 +65,63 @@ func (uc *OrchestrateVideoUseCase) Execute(filename string) error {
 		"next_queue":  "trim_video_queue",
 		"timestamp":   time.Now().UTC(),
 	}).Info("StatesMachine: Message published to TrimVideo queue")
+
+	return nil
+}
+
+func (uc *OrchestrateVideoUseCase) HandleTrimCompleted(videoID, filename string) error {
+	logrus.WithFields(logrus.Fields{
+		"video_id":  videoID,
+		"filename":  filename,
+		"timestamp": time.Now().UTC(),
+		"stage":     "trim_completed",
+	}).Info("StatesMachine: TrimVideo completed, sending to EditVideo")
+
+	message := VideoMessage{Filename: filename}
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("marshal message: %w", err)
+	}
+
+	if err := uc.publisher.PublishMessage(uc.editVideoQueue, messageBytes); err != nil {
+		return fmt.Errorf("publish to edit_video_queue: %w", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id":   videoID,
+		"filename":   filename,
+		"next_queue": uc.editVideoQueue,
+		"timestamp":  time.Now().UTC(),
+	}).Info("StatesMachine: Message published to EditVideo queue")
+
+	return nil
+}
+
+func (uc *OrchestrateVideoUseCase) HandleEditCompleted(videoID, filename string) error {
+	logrus.WithFields(logrus.Fields{
+		"video_id":  videoID,
+		"filename":  filename,
+		"timestamp": time.Now().UTC(),
+		"stage":     "edit_completed",
+		"result":    "success",
+	}).Info("StatesMachine: EditVideo completed successfully, sending to AudioRemoval")
+
+	message := VideoMessage{Filename: filename}
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("marshal message: %w", err)
+	}
+
+	if err := uc.publisher.PublishMessage(uc.audioRemovalQueue, messageBytes); err != nil {
+		return fmt.Errorf("publish to audio_removal_queue: %w", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id":   videoID,
+		"filename":   filename,
+		"next_queue": uc.audioRemovalQueue,
+		"timestamp":  time.Now().UTC(),
+	}).Info("StatesMachine: Message published to AudioRemoval queue")
 
 	return nil
 }

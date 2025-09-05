@@ -32,6 +32,9 @@ services:
   postgres:
     image: postgres:16-alpine
     env_file: .env
+    environment:
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
     ports: ["5432:5432"]
     volumes: [pg-data:/var/lib/postgresql/data]
     restart: unless-stopped
@@ -98,9 +101,10 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+    env_file: .env
     entrypoint: >
       /bin/sh -c "
-      until /usr/bin/mc alias set myminio http://minio:9000 minio minio12345; do
+      until /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
         echo 'Waiting for MinIO to be ready...'
         sleep 2
       done;
@@ -151,6 +155,7 @@ services:
       - RAW_BUCKET=raw-videos
       - PROCESSED_BUCKET=processed-videos-trim
       - QUEUE_NAME=trim_video_queue
+      - STATE_MACHINE_QUEUE=states_machine_queue
       - MAX_SECONDS=30
     restart: unless-stopped
 
@@ -169,6 +174,7 @@ services:
       - RAW_BUCKET=processed-videos-trim
       - PROCESSED_BUCKET=processed-videos-edit
       - QUEUE_NAME=edit_video_queue
+      - STATE_MACHINE_QUEUE=states_machine_queue
       - MAX_SECONDS=30
     restart: unless-stopped
 
@@ -187,6 +193,7 @@ services:
       - RAW_BUCKET=processed-videos-edit
       - PROCESSED_BUCKET=processed-videos-audio-removal
       - QUEUE_NAME=audio_removal_queue
+      - STATE_MACHINE_QUEUE=states_machine_queue
     restart: unless-stopped
 
   # Watermarking Worker (4º - processed-videos-audio-removal → processed-videos-watermarking)
@@ -204,6 +211,7 @@ services:
       - RAW_BUCKET=processed-videos-audio-removal
       - PROCESSED_BUCKET=processed-videos-watermarking
       - QUEUE_NAME=watermarking_queue
+      - STATE_MACHINE_QUEUE=states_machine_queue
       - MAX_SECONDS=30
     restart: unless-stopped
 
@@ -213,10 +221,19 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     env_file: .env
     environment:
       - QUEUE_NAME=states_machine_queue
+      - EDIT_VIDEO_QUEUE=edit_video_queue
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "statesmachine"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # GossipOpenClose Worker (5º - processed-videos-watermarking → processed-videos)
   gossip-open-close:

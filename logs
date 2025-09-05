@@ -1,0 +1,151 @@
+app_migrate          | 
+audio-removal-1      | time="2025-09-05T04:19:40Z" level=info msg="AudioRemoval worker started. Waiting for messages..."
+minio-buckets-1      | Added `myminio` successfully.
+redis-1              | 1:C 05 Sep 2025 04:19:08.683 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis-1              | 1:C 05 Sep 2025 04:19:08.683 * Redis version=7.4.5, bits=64, commit=00000000, modified=0, pid=1, just started
+trim-video-1         | time="2025-09-05T04:19:40Z" level=info msg="Consumiendo cola trim_video_queue (maxlen=1000)"
+rabbitmq-1           | 2025-09-05 04:25:04.817356+00:00 [info] <0.600.0> Successfully set permissions for user 'admin' in virtual host '/' to '.*', '.*', '.*'[0m
+rabbitmq-1           | 2025-09-05 04:25:04.817594+00:00 [info] <0.254.0> Importing concurrently 1 exchanges...[0m
+rabbitmq-1           | 2025-09-05 04:25:04.818288+00:00 [info] <0.254.0> Importing concurrently 4 queues...[0m
+rabbitmq-1           | 2025-09-05 04:25:04.826770+00:00 [info] <0.254.0> Importing concurrently 1 bindings...[0m
+rabbitmq-1           | 2025-09-05 04:25:04.881704+00:00 [info] <0.631.0> Resetting node maintenance status[0m
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0> Deprecated features: `management_metrics_collection`: Feature `management_metrics_collection` is deprecated.[0m
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0> By default, this feature can still be used for now.[0m
+minio-1              | INFO: WARNING: MINIO_ACCESS_KEY and MINIO_SECRET_KEY are deprecated.
+postgres-1           | 2025-09-05 04:19:10.697 UTC [41] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgres-1           | 2025-09-05 04:19:10.706 UTC [44] LOG:  database system was shut down at 2025-09-05 04:19:10 UTC
+postgres-1           | 2025-09-05 04:19:10.713 UTC [41] LOG:  database system is ready to accept connections
+postgres-1           |  done
+postgres-1           | server started
+minio-1              |          Please use MINIO_ROOT_USER and MINIO_ROOT_PASSWORD
+minio-1              | INFO: Formatting 1st pool, 1 set(s), 1 drives per set.
+postgres-1           | CREATE DATABASE
+postgres-1           | 
+postgres-1           | 
+postgres-1           | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+postgres-1           | 
+postgres-1           | waiting for server to shut down....2025-09-05 04:19:10.875 UTC [41] LOG:  received fast shutdown request
+postgres-1           | 2025-09-05 04:19:10.885 UTC [41] LOG:  aborting any active transactions
+minio-buckets-1      | Bucket created successfully `myminio/raw-videos`.
+minio-buckets-1      | Bucket created successfully `myminio/processed-videos-trim`.
+app_api              | [GIN] 2025/09/05 - 04:19:50 | 200 |      46.473µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:20:20 | 200 |      75.511µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:20:51 | 200 |     205.854µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:21:21 | 200 |     222.734µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:21:51 | 200 |      87.917µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:22:21 | 200 |      58.821µs |             ::1 | GET      "/health"
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0> Its use will not be permitted by default in a future minor RabbitMQ version and the feature will be removed from a future major RabbitMQ version; actual versions to be determined.[0m
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0> To continue using this feature when it is not permitted by default, set the following parameter in your configuration:[0m
+trim-video-1         | time="2025-09-05T04:24:54Z" level=info msg="TrimVideo worker started. Waiting for messages..."
+edit-video-1         | time="2025-09-05T04:19:40Z" level=info msg="Consumiendo cola edit_video_queue (maxlen=1000)"
+edit-video-1         | time="2025-09-05T04:24:54Z" level=info msg="EditVideo worker started. Waiting for messages..."
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.26290366 +0000 UTC"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+nginx-1              | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+nginx-1              | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+nginx-1              | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+watermarking-1       | time="2025-09-05T04:19:40Z" level=info msg="Consumiendo cola watermarking_queue (maxlen=1000)"
+watermarking-1       | time="2025-09-05T04:24:54Z" level=info msg="Watermarking worker started. Waiting for messages..."
+postgres-1           | 2025-09-05 04:19:10.889 UTC [41] LOG:  background worker "logical replication launcher" (PID 47) exited with exit code 1
+postgres-1           | 2025-09-05 04:19:10.890 UTC [42] LOG:  shutting down
+postgres-1           | 2025-09-05 04:19:10.898 UTC [42] LOG:  checkpoint starting: shutdown immediate
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+minio-1              | INFO: WARNING: Host local has more than 0 drives of set. A host failure will result in data becoming unavailable.
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.263405398 +0000 UTC"
+minio-1              | MinIO Object Storage Server
+redis-1              | 1:C 05 Sep 2025 04:19:08.683 * Configuration loaded
+redis-1              | 1:M 05 Sep 2025 04:19:08.684 * monotonic clock: POSIX clock_gettime
+redis-1              | 1:M 05 Sep 2025 04:19:08.685 * Running mode=standalone, port=6379.
+redis-1              | 1:M 05 Sep 2025 04:19:08.686 * Server initialized
+redis-1              | 1:M 05 Sep 2025 04:19:08.692 * Creating AOF base file appendonly.aof.1.base.rdb on server start
+redis-1              | 1:M 05 Sep 2025 04:19:08.712 * Creating AOF incr file appendonly.aof.1.incr.aof on server start
+redis-1              | 1:M 05 Sep 2025 04:19:08.712 * Ready to accept connections tcp
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+minio-1              | Copyright: 2015-2025 MinIO, Inc.
+minio-buckets-1      | Bucket created successfully `myminio/processed-videos-edit`.
+minio-buckets-1      | Bucket created successfully `myminio/processed-videos-audio-removal`.
+minio-buckets-1      | Bucket created successfully `myminio/processed-videos-watermarking`.
+minio-buckets-1      | Bucket created successfully `myminio/processed-videos`.
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0>     "deprecated_features.permit.management_metrics_collection = true"[0m
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0> To test RabbitMQ as if the feature was removed, set this in your configuration:[0m
+rabbitmq-1           | [38;5;214m2025-09-05 04:25:05.456982+00:00 [warning] <0.660.0>     "deprecated_features.permit.management_metrics_collection = false"[0m
+app_api              | [GIN] 2025/09/05 - 04:22:51 | 200 |      58.945µs |             ::1 | GET      "/health"
+rabbitmq-1           | 2025-09-05 04:25:12.440167+00:00 [info] <0.697.0> Management plugin: HTTP (non-TLS) listener started on port 15672[0m
+rabbitmq-1           | 2025-09-05 04:25:12.440367+00:00 [info] <0.729.0> Statistics database started.[0m
+rabbitmq-1           | 2025-09-05 04:25:12.440456+00:00 [info] <0.728.0> Starting worker pool 'management_worker_pool' with 3 processes in it[0m
+rabbitmq-1           | 2025-09-05 04:25:12.453690+00:00 [info] <0.747.0> Prometheus metrics: HTTP (non-TLS) listener started on port 15692[0m
+rabbitmq-1           | 2025-09-05 04:25:12.453909+00:00 [info] <0.631.0> Ready to start client connection listeners[0m
+rabbitmq-1           | 2025-09-05 04:25:12.456653+00:00 [info] <0.791.0> started TCP listener on [::]:5672[0m
+rabbitmq-1           |  completed with 5 plugins.
+rabbitmq-1           | 2025-09-05 04:25:12.771201+00:00 [info] <0.631.0> Server startup complete; 5 plugins started.[0m
+rabbitmq-1           | 2025-09-05 04:25:12.771201+00:00 [info] <0.631.0>  * rabbitmq_prometheus[0m
+rabbitmq-1           | 2025-09-05 04:25:12.771201+00:00 [info] <0.631.0>  * rabbitmq_federation[0m
+rabbitmq-1           | 2025-09-05 04:25:12.771201+00:00 [info] <0.631.0>  * rabbitmq_management[0m
+rabbitmq-1           | 2025-09-05 04:25:12.771201+00:00 [info] <0.631.0>  * rabbitmq_management_agent[0m
+rabbitmq-1           | 2025-09-05 04:25:12.771201+00:00 [info] <0.631.0>  * rabbitmq_web_dispatch[0m
+rabbitmq-1           | 2025-09-05 04:25:12.957589+00:00 [info] <0.9.0> Time to start RabbitMQ: 16266 ms[0m
+rabbitmq-1           | 2025-09-05 04:25:21.268969+00:00 [info] <0.804.0> accepting AMQP connection <0.804.0> (172.18.0.6:42814 -> 172.18.0.5:5672)[0m
+rabbitmq-1           | 2025-09-05 04:25:21.274810+00:00 [info] <0.804.0> connection <0.804.0> (172.18.0.6:42814 -> 172.18.0.5:5672): user 'admin' authenticated and granted access to vhost '/'[0m
+rabbitmq-1           | 2025-09-05 04:25:21.278427+00:00 [info] <0.817.0> accepting AMQP connection <0.817.0> (172.18.0.6:42820 -> 172.18.0.5:5672)[0m
+rabbitmq-1           | 2025-09-05 04:25:21.301150+00:00 [info] <0.817.0> connection <0.817.0> (172.18.0.6:42820 -> 172.18.0.5:5672): user 'admin' authenticated and granted access to vhost '/'[0m
+nginx-1              | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+minio-1              | License: GNU AGPLv3 - https://www.gnu.org/licenses/agpl-3.0.html
+minio-1              | Version: RELEASE.2025-07-23T15-54-02Z (go1.24.5 linux/amd64)
+minio-1              | 
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.264099335 +0000 UTC"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.2661455 +0000 UTC"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.267845228 +0000 UTC"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+minio-1              | API: http://172.18.0.4:9000  http://127.0.0.1:9000 
+minio-buckets-1      | Buckets created successfully
+app_api              | [GIN] 2025/09/05 - 04:23:21 | 200 |      35.411µs |             ::1 | GET      "/health"
+gossip-open-close-1  | time="2025-09-05T04:19:40Z" level=info msg="Consumiendo cola gossip_open_close_queue (maxlen=1000)"
+app_api              | [GIN] 2025/09/05 - 04:23:51 | 200 |      85.464µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:24:21 | 200 |      41.156µs |             ::1 | GET      "/health"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+minio-1              | WebUI: http://172.18.0.4:9001 http://127.0.0.1:9001  
+minio-1              | 
+gossip-open-close-1  | time="2025-09-05T04:24:54Z" level=info msg="gossipOpenClose worker started. Waiting for messages..."
+app_api              | [GIN] 2025/09/05 - 04:24:51 | 200 |      31.925µs |             ::1 | GET      "/health"
+app_api              | [GIN] 2025/09/05 - 04:25:21 | 200 |      58.777µs |             ::1 | GET      "/health"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.269285235 +0000 UTC"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine received filename: 'SmoothCriminal_MichaelJackson.mp4'"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=info msg="StatesMachine: Starting video processing orchestration" filename=SmoothCriminal_MichaelJackson.mp4 stage=orchestration_start timestamp="2025-09-05 04:24:54.270179004 +0000 UTC"
+states-machine-1     | time="2025-09-05T04:24:54Z" level=error msg="Error processing message: publish to trim_video_queue: Exception (504) Reason: \"channel/connection is not open\""
+states-machine-1     | time="2025-09-05T04:25:20Z" level=info msg="Shutting down StatesMachine worker..."
+states-machine-1     | Waiting for RabbitMQ...
+states-machine-1     | Connection to rabbitmq (172.18.0.5) 5672 port [tcp/amqp] succeeded!
+states-machine-1     | RabbitMQ is up - executing command
+states-machine-1     | Waiting for PostgreSQL...
+states-machine-1     | Connection to postgres (172.18.0.3) 5432 port [tcp/postgresql] succeeded!
+states-machine-1     | PostgreSQL is up - executing command
+states-machine-1     | time="2025-09-05T04:25:21Z" level=info msg="Consumiendo cola states_machine_queue (maxlen=1000)"
+states-machine-1     | time="2025-09-05T04:25:21Z" level=info msg="StatesMachine worker started. Waiting for messages..."
+nginx-1              | 10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+nginx-1              | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+nginx-1              | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+nginx-1              | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+nginx-1              | /docker-entrypoint.sh: Configuration complete; ready for start up
+postgres-1           | 2025-09-05 04:19:11.043 UTC [42] LOG:  checkpoint complete: wrote 926 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.020 s, sync=0.110 s, total=0.154 s; sync files=301, longest=0.003 s, average=0.001 s; distance=4272 kB, estimate=4272 kB; lsn=0/191E8C8, redo lsn=0/191E8C8
+postgres-1           | 2025-09-05 04:19:11.052 UTC [41] LOG:  database system is shut down
+postgres-1           |  done
+postgres-1           | server stopped
+postgres-1           | 
+postgres-1           | PostgreSQL init process complete; ready for start up.
+postgres-1           | 
+postgres-1           | 2025-09-05 04:19:11.135 UTC [1] LOG:  starting PostgreSQL 16.10 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
+postgres-1           | 2025-09-05 04:19:11.136 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgres-1           | 2025-09-05 04:19:11.136 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+postgres-1           | 2025-09-05 04:19:11.143 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgres-1           | 2025-09-05 04:19:11.153 UTC [57] LOG:  database system was shut down at 2025-09-05 04:19:11 UTC
+minio-1              | Docs: https://docs.min.io
+postgres-1           | 2025-09-05 04:19:11.163 UTC [1] LOG:  database system is ready to accept connections
+postgres-1           | 2025-09-05 04:24:11.158 UTC [55] LOG:  checkpoint starting: time
+postgres-1           | 2025-09-05 04:24:35.552 UTC [55] LOG:  checkpoint complete: wrote 245 buffers (1.5%); 0 WAL file(s) added, 0 removed, 0 recycled; write=24.289 s, sync=0.066 s, total=24.394 s; sync files=130, longest=0.003 s, average=0.001 s; distance=1012 kB, estimate=1012 kB; lsn=0/1A1BB88, redo lsn=0/1A1BB50

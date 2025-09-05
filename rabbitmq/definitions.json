@@ -9,7 +9,8 @@
     { "user": "admin", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*" }
   ],
   "exchanges": [
-    { "name": "orders.dlx", "vhost": "/", "type": "direct", "durable": true }
+    { "name": "orders.dlx", "vhost": "/", "type": "direct", "durable": true },
+    { "name": "audio_removal_queue.dlx", "vhost": "/", "type": "direct", "durable": true }
   ],
   "queues": [
     { "name": "orders.dlq", "vhost": "/", "durable": true },
@@ -21,6 +22,55 @@
         "x-dead-letter-exchange": "orders.dlx",
         "x-dead-letter-routing-key": "orders.dead",
         "x-message-ttl": 60000
+      }
+    },
+    { 
+      "name": "trim_video_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "edit_video_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "audio_removal_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000,
+        "x-dead-letter-exchange": "audio_removal_queue.dlx"
+      }
+    },
+    { 
+      "name": "watermarking_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "gossip_open_close_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "audio_removal_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
       }
     }
   ],

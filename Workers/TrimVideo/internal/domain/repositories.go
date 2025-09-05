@@ -9,3 +9,7 @@ type StorageRepository interface {
 	Download(bucket, filename string) ([]byte, error)
 	Upload(bucket, filename string, data []byte) error
 }
+
+type MessagePublisher interface {
+	PublishMessage(queueName string, message []byte) error
+}
