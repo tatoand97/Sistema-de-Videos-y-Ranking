@@ -3,7 +3,6 @@ package middlewares
 import (
 	"fmt"
 	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain/interfaces"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,7 +29,7 @@ func JWTMiddleware(authService *useCase.AuthService, secret string) gin.HandlerF
 			return
 		}
 
-		claims := &jwt.RegisteredClaims{}
+		claims := &useCase.AuthClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
 			if t.Method != jwt.SigningMethodHS256 {
 				return nil, fmt.Errorf("algoritmo inválido")
@@ -65,40 +64,8 @@ func JWTMiddleware(authService *useCase.AuthService, secret string) gin.HandlerF
 			return
 		}
 		c.Set("userID", uint(uid64))
+		c.Set("permissions", claims.Permissions)
 
-		c.Next()
-	}
-}
-
-// PermissionMiddleware verifies that the authenticated user has all required permissions.
-func PermissionMiddleware(userRepo interfaces.UserRepository, required ...string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		uidVal, ok := c.Get("userID")
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "userID missing"})
-			return
-		}
-		uid, ok := uidVal.(uint)
-		if !ok || uid == 0 {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "userID invalid"})
-			return
-		}
-
-		perms, err := userRepo.GetPermissions(c.Request.Context(), uid)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot load permissions"})
-			return
-		}
-		permSet := make(map[string]struct{}, len(perms))
-		for _, p := range perms {
-			permSet[p] = struct{}{}
-		}
-		for _, rp := range required {
-			if _, ok := permSet[rp]; !ok {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-				return
-			}
-		}
 		c.Next()
 	}
 }

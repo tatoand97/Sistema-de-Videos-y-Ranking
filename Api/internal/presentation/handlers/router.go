@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain/interfaces"
 	"main_videork/internal/presentation/middlewares"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, userRepo interfaces.UserRepository, secret string, uploadVideoUC *useCase.UploadVideoUseCase) {
+func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, secret string, uploadVideoUC *useCase.UploadVideoUseCase) {
 	authHandlers := NewAuthHandlers(authService)
 	userHandlers := NewUserHandlers(userService)
 	videoHandlers := NewVideoHandlers(uploadVideoUC)
@@ -28,7 +27,6 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	})
 
 	videoGroup := authGroup.Group("/api/videos")
-	videoGroup.Use(middlewares.PermissionMiddleware(userRepo, "upload_video"))
 	videoGroup.POST("/upload", videoHandlers.Upload)
 
 }

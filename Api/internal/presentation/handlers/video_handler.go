@@ -41,6 +41,28 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		return
 	}
 
+	permsVal, ok := c.Get("permissions")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "permissions missing in context"})
+		return
+	}
+	perms, ok := permsVal.([]string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid permissions in context"})
+		return
+	}
+	allowed := false
+	for _, p := range perms {
+		if p == "upload_video" {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	statusIDStr := c.PostForm("status_id")
 	statusID, err := strconv.ParseUint(statusIDStr, 10, 64)
 	if err != nil || statusID == 0 {
