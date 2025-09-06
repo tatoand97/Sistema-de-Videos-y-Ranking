@@ -68,3 +68,14 @@ func (r *videoRepository) GetByIDAndUser(ctx context.Context, id, userID uint) (
 	}
 	return &v, nil
 }
+
+func (r *videoRepository) Delete(ctx context.Context, id uint) error {
+	res := r.db.WithContext(ctx).Delete(&entities.Video{}, id)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}

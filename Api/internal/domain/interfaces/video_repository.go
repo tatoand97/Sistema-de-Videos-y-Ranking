@@ -15,4 +15,6 @@ type VideoRepository interface {
 	// GetByIDAndUser returns the video by id only if it belongs to userID.
 	// Returns domain.ErrNotFound if id does not exist, and domain.ErrForbidden if it exists but belongs to another user.
 	GetByIDAndUser(ctx context.Context, id, userID uint) (*entities.Video, error)
+	// Delete removes a video by id. Returns domain.ErrNotFound if it doesn't exist.
+	Delete(ctx context.Context, id uint) error
 }

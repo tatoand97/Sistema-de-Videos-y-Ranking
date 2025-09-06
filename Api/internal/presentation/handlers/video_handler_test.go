@@ -49,6 +49,15 @@ func (f *fakeVideoRepo) GetByIDAndUser(_ context.Context, id, userID uint) (*ent
 	return nil, domain.ErrNotFound
 }
 
+func (f *fakeVideoRepo) Delete(_ context.Context, id uint) error { // simple behavior: succeed if exists in list
+	for _, v := range f.list {
+		if v.VideoID == id {
+			return nil
+		}
+	}
+	return domain.ErrNotFound
+}
+
 type fakeStorage struct{}
 
 func (f *fakeStorage) Save(_ context.Context, _ string, _ io.Reader, _ int64, _ string) (string, error) {

@@ -130,3 +130,22 @@ func (uc *UploadsUseCase) ListUserVideos(ctx context.Context, userID uint) ([]*e
 func (uc *UploadsUseCase) GetUserVideoByID(ctx context.Context, userID, videoID uint) (*entities.Video, error) {
 	return uc.videoRepo.GetByIDAndUser(ctx, videoID, userID)
 }
+
+// DeleteUserVideoIfEligible deletes a user's own video if it meets business rules.
+// Rules: owner-only, and cannot delete if the video is already processed (published for voting).
+func (uc *UploadsUseCase) DeleteUserVideoIfEligible(ctx context.Context, userID, videoID uint) error {
+	// Ensure ownership and existence
+	v, err := uc.videoRepo.GetByIDAndUser(ctx, videoID, userID)
+	if err != nil {
+		return err
+	}
+	// Eligibility: not allowed if processed (published for voting)
+	if v.Status == string(entities.StatusProcessed) {
+		return domain.ErrInvalid
+	}
+	// Proceed to delete
+	if err := uc.videoRepo.Delete(ctx, videoID); err != nil {
+		return err
+	}
+	return nil
+}

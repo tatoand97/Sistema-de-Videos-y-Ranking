@@ -232,3 +232,60 @@ func (h *VideoHandlers) GetVideoDetail(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+// DeleteVideo handles DELETE /api/videos/:video_id (authenticated, own video only)
+func (h *VideoHandlers) DeleteVideo(c *gin.Context) {
+	// 1) Auth
+	uidVal, ok := c.Get("userID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
+		return
+	}
+	userID, ok := uidVal.(uint)
+	if !ok || userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
+		return
+	}
+
+	// 2) Path param
+	vidStr := c.Param("video_id")
+	if vidStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
+		return
+	}
+	var vidUint uint
+	{
+		parsed, err := strconv.ParseUint(vidStr, 10, 64)
+		if err != nil || parsed == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
+			return
+		}
+		vidUint = uint(parsed)
+	}
+
+	// 3-6) Execute delete with eligibility rules in use case
+	err := h.uploadsUC.DeleteUserVideoIfEligible(c.Request.Context(), userID, vidUint)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found", "message": "Video no encontrado."})
+			return
+		case errors.Is(err, domain.ErrForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden", "message": "Acceso denegado."})
+			return
+		case errors.Is(err, domain.ErrInvalid):
+			// Elegibilidad incumplida (p.ej., publicado para votación o procesado)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "No se puede eliminar: el video está publicado para votación o ya fue procesado."})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
+			return
+		}
+	}
+
+	// 7) Success 200 with exact body
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "El video ha sido eliminado exitosamente.",
+		"video_id": vidStr,
+	})
+}

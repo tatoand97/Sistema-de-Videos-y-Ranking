@@ -39,6 +39,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	videoGroup.GET("", videoHandlers.ListVideos)
 	videoGroup.POST("/upload", videoHandlers.Upload)
 	videoGroup.GET("/:video_id", videoHandlers.GetVideoDetail)
+	videoGroup.DELETE("/:video_id", videoHandlers.DeleteVideo)
 
 	// New: S3/MinIO POST Policy for direct uploads
 	authGroup.POST("/api/uploads", uploadsHandlers.CreatePostPolicy)
