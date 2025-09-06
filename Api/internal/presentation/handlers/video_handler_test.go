@@ -86,7 +86,7 @@ func TestListVideos_OK(t *testing.T) {
 		{VideoID: 1, UserID: 10, Title: "A", OriginalFile: "s3://orig/a.mp4", ProcessedFile: &processedURL, Status: string(entities.StatusProcessed), UploadedAt: now, ProcessedAt: &processed},
 		{VideoID: 2, UserID: 10, Title: "B", OriginalFile: "s3://orig/b.mp4", Status: string(entities.StatusUploaded), UploadedAt: now.Add(1 * time.Minute)},
 	}}
-	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{})
+	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{}, nil, "")
 	r := setupVideoRouter(uc, true)
 
 	w := httptest.NewRecorder()
@@ -113,7 +113,7 @@ func TestListVideos_OK(t *testing.T) {
 
 func TestListVideos_Empty(t *testing.T) {
 	repo := &fakeVideoRepo{list: []*entities.Video{}}
-	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{})
+	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{}, nil, "")
 	r := setupVideoRouter(uc, true)
 
 	w := httptest.NewRecorder()
@@ -134,7 +134,7 @@ func TestListVideos_Empty(t *testing.T) {
 
 func TestListVideos_RepoError(t *testing.T) {
 	repo := &fakeVideoRepo{err: errors.New("boom")}
-	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{})
+	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{}, nil, "")
 	r := setupVideoRouter(uc, true)
 
 	w := httptest.NewRecorder()
@@ -148,7 +148,7 @@ func TestListVideos_RepoError(t *testing.T) {
 
 func TestListVideos_Unauthorized(t *testing.T) {
 	repo := &fakeVideoRepo{}
-	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{})
+	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{}, nil, "")
 	r := setupVideoRouter(uc, false) // no auth middleware sets userID
 
 	w := httptest.NewRecorder()

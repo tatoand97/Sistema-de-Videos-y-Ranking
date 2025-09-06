@@ -17,9 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type VideoHandlers struct {
-	uploadsUC *useCase.UploadsUseCase
-}
+type VideoHandlers struct{ uploadsUC *useCase.UploadsUseCase }
 
 func NewVideoHandlers(uploadsUC *useCase.UploadsUseCase) *VideoHandlers {
 	return &VideoHandlers{uploadsUC: uploadsUC}
@@ -126,7 +124,9 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid permissions in context"})
 		return
 	}
-	allowed := slices.Contains(perms, "upload_video")
+	// Align with OpenAPI: expect "videos:upload".
+	// Keep backward compatibility with legacy "upload_video".
+	allowed := slices.Contains(perms, "videos:upload") || slices.Contains(perms, "upload_video")
 	if !allowed {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
