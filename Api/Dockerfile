@@ -27,7 +27,7 @@ WORKDIR /app
 RUN apk add --no-cache file ca-certificates && update-ca-certificates
 COPY --from=build /out/api /app/api
 COPY internal/infrastructure/migrations /app/internal/infrastructure/migrations
-COPY static /app/static
+
 RUN chmod +x /app/api && file /app/api
 EXPOSE 8080
 ENTRYPOINT ["/app/api"]
