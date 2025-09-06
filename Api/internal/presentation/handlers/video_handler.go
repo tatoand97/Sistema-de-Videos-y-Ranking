@@ -2,13 +2,16 @@ package handlers
 
 import (
 	"api/internal/application/useCase"
+	"api/internal/application/validations"
+	"api/internal/domain"
 	"api/internal/domain/entities"
 	"context"
+	"errors"
 	"net/http"
 	"slices"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type VideoHandlers struct {
@@ -26,9 +29,25 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		return
 	}
 
-	file, err := c.FormFile("video")
+	// Acepta el nombre estándar del documento: video_file. Mantiene compatibilidad con "video".
+	file, err := c.FormFile("video_file")
+	if err != nil {
+		file, err = c.FormFile("video")
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "video file is required"})
+		return
+	}
+
+	// Validar MIME declarado
+	if ct := file.Header.Get("Content-Type"); ct != "video/mp4" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "mimeType must be video/mp4"})
+		return
+	}
+
+	// Validar tamaño declarado (≤100MB)
+	if file.Size > validations.MaxBytes {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file too large (max 100MB)"})
 		return
 	}
 
@@ -59,29 +78,8 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		return
 	}
 
-	status := c.PostForm("status_id")
-	// Default to UPLOADED when not provided; otherwise validate/normalize
-	if status == "" {
-		status = string(entities.StatusUploaded)
-	} else {
-		status = strings.ToUpper(status)
-		valid := false
-		for _, st := range entities.AllVideoStatuses() {
-			if string(st) == status {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			// Return 400 with allowed statuses for clarity
-			allowed := make([]string, 0)
-			for _, st := range entities.AllVideoStatuses() {
-				allowed = append(allowed, string(st))
-			}
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status", "allowed": allowed})
-			return
-		}
-	}
+	// Forzar estado UPLOADED según documento (no se controla por API)
+	status := string(entities.StatusUploaded)
 
 	input := useCase.UploadVideoInput{
 		Title:      title,
@@ -91,9 +89,17 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), useCase.UserIDContextKey, userID)
 	output, err := h.uploadsUC.UploadMultipart(ctx, input)
 	if err != nil {
+		if errors.Is(err, domain.ErrInvalid) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, output)
+	_ = output // No se expone el Video en 201
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Video subido correctamente. Procesamiento en curso.",
+		"task_id": uuid.NewString(),
+	})
 }

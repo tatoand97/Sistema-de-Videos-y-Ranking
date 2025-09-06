@@ -168,23 +168,24 @@ paths:
               required: [video_file, title]
       responses:
         "201":
-          description: Video subido.
+          description: Video subido correctamente. Procesamiento en curso.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Video"
+                type: object
+                required: [message, task_id]
+                properties:
+                  message: { type: string, enum: ["Video subido correctamente. Procesamiento en curso."] }
+                  task_id: { type: string }
               examples:
-                created:
+                ok:
                   value:
-                    video_id: "a1b2c3d4"
-                    title: "Mi mejor tiro de 3"
-                    status: "uploaded"
-                    uploaded_at: "2025-03-10T14:30:00Z"
-                    original_url: null
-                    processed_url: null
+                    message: "Video subido correctamente. Procesamiento en curso."
+                    task_id: "123456"
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
-        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        # Opcional (extensión no normada por el documento):
+        # "413": { $ref: "#/components/responses/PayloadTooLarge" }
 
   /api/videos:
     get:

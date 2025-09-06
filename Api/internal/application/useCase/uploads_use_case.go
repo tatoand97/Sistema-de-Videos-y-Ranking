@@ -68,7 +68,7 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 
 	// Validate MP4
 	if _, _, err := validations.CheckMP4(fileBytes); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", domain.ErrInvalid, err)
 	}
 
 	// Recreate a reader for saving
