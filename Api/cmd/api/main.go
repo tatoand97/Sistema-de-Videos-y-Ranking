@@ -52,6 +52,7 @@ func main() {
 	}
 
 	userRepo := postgresrepo.NewUserRepository(db)
+	locRepo := postgresrepo.NewLocationRepository(db)
 	videoRepo := postgresrepo.NewVideoRepository(db)
 
 	minioCfg := storage.MinioConfig{
@@ -68,7 +69,7 @@ func main() {
 
 	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
-	userService := useCase.NewUserService(userRepo)
+	userService := useCase.NewUserService(userRepo, locRepo)
 
 	r := gin.Default()
 	r.Static("/static", "./static")

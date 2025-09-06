@@ -6,5 +6,6 @@ type RegisterUserRequest struct {
 	Email     string `json:"email" form:"email" binding:"required,email"`
 	Password1 string `json:"password1" form:"password1" binding:"required"`
 	Password2 string `json:"password2" form:"password2" binding:"required"`
-	CityID    int    `json:"city_id" form:"city_id" binding:"required"`
+	City      string `json:"city" form:"city" binding:"required"`
+	Country   string `json:"country" form:"country" binding:"required"`
 }

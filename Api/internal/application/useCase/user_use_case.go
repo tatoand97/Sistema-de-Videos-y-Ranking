@@ -12,15 +12,21 @@ import (
 )
 
 type UserService struct {
-	repo interfaces.UserRepository
+	repo    interfaces.UserRepository
+	locRepo interfaces.LocationRepository
 }
 
-func NewUserService(repo interfaces.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo interfaces.UserRepository, locRepo interfaces.LocationRepository) *UserService {
+	return &UserService{repo: repo, locRepo: locRepo}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, firstName, lastName, email, password string, cityID int) (*entities.User, error) {
+func (s *UserService) CreateUser(ctx context.Context, firstName, lastName, email, password string, country, city string) (*entities.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	cityID, err := s.locRepo.GetCityID(ctx, country, city)
 	if err != nil {
 		return nil, err
 	}

@@ -22,22 +22,22 @@ func NewUserHandlers(service *useCase.UserService) *UserHandlers {
 func (handler *UserHandlers) Register(context *gin.Context) {
 	var request requests.RegisterUserRequest
 	if err := context.ShouldBindJSON(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 		return
 	}
 
 	email := strings.ToLower(strings.TrimSpace(request.Email))
 
-	if _, err := handler.service.GetByEmail(context.Request.Context(), email); err == nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "email_already_in_use"})
+	if exists, err := handler.service.EmailExists(context.Request.Context(), email); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
-	} else if !errors.Is(err, domain.ErrNotFound) {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	} else if exists {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "email already in use"})
 		return
 	}
 
 	if request.Password1 != request.Password2 {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "passwords_do_not_match"})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "passwords do not match"})
 		return
 	}
 
@@ -47,18 +47,20 @@ func (handler *UserHandlers) Register(context *gin.Context) {
 		request.LastName,
 		email,
 		request.Password1,
-		request.CityID,
+		request.Country,
+		request.City,
 	)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, domain.ErrInvalid) {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "invalid city or country"})
+			return
+		}
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	}
 
+	_ = user // no se expone en la respuesta según OpenAPI
 	context.JSON(http.StatusCreated, gin.H{
-		"id":         user.UserID,
-		"first_name": user.FirstName,
-		"last_name":  user.LastName,
-		"email":      user.Email,
-		"city_id":    user.CityID,
+		"message": "Usuario creado exitosamente.",
 	})
 }
