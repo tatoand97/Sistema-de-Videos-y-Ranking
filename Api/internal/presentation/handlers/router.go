@@ -32,4 +32,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	videoGroup := authGroup.Group("/api/videos")
 	videoGroup.POST("/upload", videoHandlers.Upload)
 
+	// Ruta protegida para votar por un video público
+	authGroup.POST("/api/public/videos/:video_id/vote", publicHandlers.VotePublicVideo)
+
 }

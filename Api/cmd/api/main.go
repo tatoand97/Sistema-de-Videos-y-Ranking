@@ -73,6 +73,9 @@ func main() {
 	locationService := useCase.NewLocationService(locRepo)
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	publicService := useCase.NewPublicService(publicRepo)
+	// Inyectar repositorio de votos al servicio público
+	voteRepo := postgresrepo.NewVoteRepository(db)
+	publicService.WithVotes(voteRepo)
 
 	r := gin.Default()
 	r.Static("/static", "./static")

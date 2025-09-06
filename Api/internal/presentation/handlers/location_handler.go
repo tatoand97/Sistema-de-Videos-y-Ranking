@@ -17,7 +17,6 @@ func NewLocationHandlers(service *useCase.LocationService) *LocationHandlers {
 	return &LocationHandlers{service: service}
 }
 
-// GetCityID maneja GET /api/location/city-id?country=...&city=...
 func (h *LocationHandlers) GetCityID(c *gin.Context) {
 	country := strings.TrimSpace(c.Query("country"))
 	city := strings.TrimSpace(c.Query("city"))

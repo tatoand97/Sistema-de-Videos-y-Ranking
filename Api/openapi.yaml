@@ -325,25 +325,6 @@ paths:
                   $ref: "#/components/schemas/PublicVideo"
         "400": { $ref: "#/components/responses/BadRequest" }
 
-  /api/public/videos/{video_id}/file:
-    get:
-      summary: Servir video público procesado (stream/descarga)
-      tags: [Público]
-      parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200":
-          description: Binario del video procesado.
-          content:
-            "*/*":
-              schema:
-                type: string
-                format: binary
-        "404": { $ref: "#/components/responses/NotFound" }
-
   /api/public/videos/{video_id}/vote:
     post:
       summary: Emitir voto por un video público
