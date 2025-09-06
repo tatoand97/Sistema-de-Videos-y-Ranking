@@ -6,6 +6,10 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "31371962"
   },
+  "variable": [
+    { "key": "host", "value": "localhost", "type": "string" },
+    { "key": "port", "value": "8080", "type": "string" }
+  ],
   "item": [
     {
       "name": "Health",

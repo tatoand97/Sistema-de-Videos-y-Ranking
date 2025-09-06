@@ -30,7 +30,8 @@ func (r *locationRepository) GetCityID(ctx context.Context, countryName, cityNam
 		Table("city c").
 		Select("c.city_id").
 		Joins("JOIN country co ON co.country_id = c.country_id").
-		Where("LOWER(co.name) = ? AND LOWER(c.name) = ?", strings.ToLower(countryName), strings.ToLower(cityName)).
+		// Búsqueda sin tildes ni mayúsculas/minúsculas usando wrapper inmutable para aprovechar índices
+		Where("immutable_unaccent(LOWER(co.name)) = immutable_unaccent(LOWER(?)) AND immutable_unaccent(LOWER(c.name)) = immutable_unaccent(LOWER(?))", countryName, cityName).
 		Limit(1)
 
 	if err := q.Scan(&id).Error; err != nil {

@@ -78,7 +78,8 @@ func (r *publicRepository) Rankings(ctx context.Context, city *string, page, pag
 		Offset(offset)
 
 	if city != nil && *city != "" {
-		q = q.Where("LOWER(c.name) = LOWER(?)", *city)
+		// Filtro de ciudad sin tildes ni mayúsculas/minúsculas, usando wrapper inmutable para que el planificador use el índice
+		q = q.Where("immutable_unaccent(LOWER(c.name)) = immutable_unaccent(LOWER(?))", *city)
 	}
 
 	var rows []row
