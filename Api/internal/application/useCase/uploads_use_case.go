@@ -3,10 +3,12 @@ package useCase
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -17,6 +19,8 @@ import (
 	"api/internal/domain/interfaces"
 	"api/internal/domain/requests"
 	"api/internal/domain/responses"
+
+	"github.com/google/uuid"
 )
 
 type UploadVideoInput struct {
@@ -40,10 +44,12 @@ type UploadVideoOutput struct {
 type UploadsUseCase struct {
 	videoRepo interfaces.VideoRepository
 	storage   interfaces.VideoStorage
+	publisher interfaces.MessagePublisher
+	queue     string
 }
 
-func NewUploadsUseCase(videoRepo interfaces.VideoRepository, storage interfaces.VideoStorage) *UploadsUseCase {
-	return &UploadsUseCase{videoRepo: videoRepo, storage: storage}
+func NewUploadsUseCase(videoRepo interfaces.VideoRepository, storage interfaces.VideoStorage, publisher interfaces.MessagePublisher, queue string) *UploadsUseCase {
+	return &UploadsUseCase{videoRepo: videoRepo, storage: storage, publisher: publisher, queue: queue}
 }
 
 // UploadMultipart handles the classic multipart upload path.
@@ -74,7 +80,23 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	// Recreate a reader for saving
 	reader := bytes.NewReader(fileBytes)
 
-	objectName := input.FileHeader.Filename
+	// Build a unique object key to avoid overwriting files with same original name
+	now := time.Now().UTC()
+	base := filepath.Base(input.FileHeader.Filename)
+	if base == "." || base == ".." || strings.TrimSpace(base) == "" {
+		base = "file"
+	}
+	base = strings.TrimSpace(base)
+	base = strings.ReplaceAll(base, " ", "-")
+	// Keep only safe characters
+	var sanitizeFileRe = regexp.MustCompile(`[^a-zA-Z0-9._-]+`)
+	base = sanitizeFileRe.ReplaceAllString(base, "")
+	if base == "" {
+		base = "file"
+	}
+	objectName := fmt.Sprintf(
+		"%s-%s", uuid.NewString(), base,
+	)
 	contentType := input.FileHeader.Header.Get("Content-Type")
 	if contentType == "" {
 		contentType = "application/octet-stream"
@@ -85,7 +107,7 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 		return nil, err
 	}
 
-	now := time.Now()
+	now = time.Now()
 	video := &entities.Video{
 		UserID:       userID,
 		Title:        input.Title,
@@ -95,6 +117,16 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	}
 	if err := uc.videoRepo.Create(ctx, video); err != nil {
 		return nil, err
+	}
+
+	// Publicar la ID del video guardado para procesamiento asíncrono
+	if uc.publisher != nil && strings.TrimSpace(uc.queue) != "" {
+		payload := struct {
+			VideoID uint `json:"video_id"`
+		}{VideoID: video.VideoID}
+		if b, err := json.Marshal(payload); err == nil {
+			_ = uc.publisher.Publish(uc.queue, b)
+		}
 	}
 
 	return &UploadVideoOutput{

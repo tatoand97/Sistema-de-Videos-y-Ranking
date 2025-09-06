@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -14,6 +15,8 @@ import (
 	"gorm.io/gorm"
 
 	"api/internal/application/useCase"
+	"api/internal/domain/interfaces"
+	infraMessaging "api/internal/infrastructure/messaging"
 	postgresrepo "api/internal/infrastructure/repository"
 	"api/internal/infrastructure/storage"
 )
@@ -67,13 +70,41 @@ func main() {
 		log.Fatalf("minio storage init failed: %v", err)
 	}
 
-	uploadsUC := useCase.NewUploadsUseCase(videoRepo, videoStorage)
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
 	locationService := useCase.NewLocationService(locRepo)
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	voteRepo := postgresrepo.NewVoteRepository(db)
 	publicService := useCase.NewPublicService(publicRepo, voteRepo)
+
+	// Optional RabbitMQ publisher for background processing
+	var messagePublisher interfaces.MessagePublisher
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	audioQueue := os.Getenv("STATES_MACHINE_QUEUE")
+	if audioQueue == "" {
+		audioQueue = "states_machine_queue"
+	}
+
+	if rabbitURL != "" {
+		p, err := infraMessaging.NewRabbitMQPublisher(rabbitURL)
+		if err != nil {
+			log.Printf("warning: rabbitmq publisher init failed: %v", err)
+		} else {
+			// Ensure queue infra roughly mirrors workers (DLQ + length)
+			maxLen := 1000
+			if v := os.Getenv("RABBITMQ_QUEUE_MAXLEN"); v != "" {
+				if n, err := strconv.Atoi(v); err == nil {
+					maxLen = n
+				}
+			}
+			_ = p.EnsureQueue(audioQueue, maxLen, true)
+			messagePublisher = p
+			defer messagePublisher.Close()
+		}
+	}
+
+	// Build use cases (inject publisher into use case, not handlers)
+	uploadsUC := useCase.NewUploadsUseCase(videoRepo, videoStorage, messagePublisher, audioQueue)
 
 	r := gin.Default()
 	r.Static("/static", "./static")

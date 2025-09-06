@@ -74,8 +74,6 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Voto registrado exitosamente."})
 }
 
-// Unique violation mapping moved to repository layer; handler sees domain.ErrConflict only.
-
 // ListRankings maneja GET /api/public/rankings
 // Público, sin autenticación. Devuelve un array de RankingEntry.
 func (h *PublicHandlers) ListRankings(c *gin.Context) {
