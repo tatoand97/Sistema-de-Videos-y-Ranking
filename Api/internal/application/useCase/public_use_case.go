@@ -58,3 +58,8 @@ func (s *PublicService) VotePublicVideo(ctx context.Context, videoID, userID uin
 	}
 	return nil
 }
+
+// Rankings retorna el ranking paginado por votos acumulados por usuario.
+func (s *PublicService) Rankings(ctx context.Context, city *string, page, pageSize int) ([]responses.RankingItem, error) {
+	return s.repo.Rankings(ctx, city, page, pageSize)
+}

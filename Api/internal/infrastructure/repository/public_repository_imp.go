@@ -53,3 +53,46 @@ func (r *publicRepository) GetPublicByID(ctx context.Context, id uint) (*respons
 	}
 	return &result, nil
 }
+
+// Rankings agrega votos por usuario (solo sobre videos públicos procesados) y ordena por votos desc.
+// Desempate TBD: se aplica orden estable por user_id (no expuesto).
+func (r *publicRepository) Rankings(ctx context.Context, city *string, page, pageSize int) ([]responses.RankingItem, error) {
+	type row struct {
+		Username string  `gorm:"column:username"`
+		City     *string `gorm:"column:city"`
+		Votes    int     `gorm:"column:votes"`
+	}
+
+	offset := (page - 1) * pageSize
+
+	q := r.db.WithContext(ctx).
+		Table("users u").
+		Select("split_part(u.email, '@', 1) AS username, c.name AS city, COUNT(vt.vote_id) AS votes").
+		Joins("JOIN city c ON c.city_id = u.city_id").
+		Joins("JOIN video v ON v.user_id = u.user_id").
+		Joins("LEFT JOIN vote vt ON vt.video_id = v.video_id").
+		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
+		Group("u.user_id, u.email, c.name").
+		Order("votes DESC, u.user_id ASC"). // desempate interno estable (TBD)
+		Limit(pageSize).
+		Offset(offset)
+
+	if city != nil && *city != "" {
+		q = q.Where("LOWER(c.name) = LOWER(?)", *city)
+	}
+
+	var rows []row
+	if err := q.Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]responses.RankingItem, 0, len(rows))
+	for _, rrow := range rows {
+		items = append(items, responses.RankingItem{
+			Username: rrow.Username,
+			City:     rrow.City,
+			Votes:    rrow.Votes,
+		})
+	}
+	return items, nil
+}

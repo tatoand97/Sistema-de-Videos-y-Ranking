@@ -22,6 +22,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	// Público: ubicación
 	router.GET("/api/location/city-id", locationHandlers.GetCityID)
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
+	router.GET("/api/public/rankings", publicHandlers.ListRankings)
 	router.POST("/api/auth/signup", userHandlers.Register)
 	router.POST("/api/auth/login", authHandlers.Login)
 

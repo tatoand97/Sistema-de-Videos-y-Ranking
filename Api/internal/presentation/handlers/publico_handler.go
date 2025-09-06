@@ -4,9 +4,11 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"api/internal/application/useCase"
 	"api/internal/domain"
+	domainresponses "api/internal/domain/responses"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -86,4 +88,55 @@ func isUniqueViolation(err error) bool {
 		}
 	}
 	return false
+}
+
+// ListRankings maneja GET /api/public/rankings
+// Público, sin autenticación. Devuelve un array de RankingEntry.
+func (h *PublicHandlers) ListRankings(c *gin.Context) {
+	// Validación de parámetros de consulta
+	cityParam := strings.TrimSpace(c.Query("city"))
+	var city *string
+	if cityParam != "" {
+		city = &cityParam
+	}
+
+	// Defaults
+	page := 1
+	pageSize := 20
+
+	if ps := strings.TrimSpace(c.Query("page")); ps != "" {
+		v, err := strconv.Atoi(ps)
+		if err != nil || v < 1 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido en la consulta"})
+			return
+		}
+		page = v
+	}
+	if pss := strings.TrimSpace(c.Query("pageSize")); pss != "" {
+		v, err := strconv.Atoi(pss)
+		if err != nil || v < 1 || v > 100 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido en la consulta"})
+			return
+		}
+		pageSize = v
+	}
+
+	items, err := h.service.Rankings(c.Request.Context(), city, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
+		return
+	}
+
+	// Mapear a salida pública con posición por página (empezando en 1)
+	resp := make([]domainresponses.RankingEntry, 0, len(items))
+	for i, it := range items {
+		resp = append(resp, domainresponses.RankingEntry{
+			Position: i + 1,
+			Username: it.Username,
+			City:     it.City,
+			Votes:    it.Votes,
+		})
+	}
+	// Sin headers adicionales de paginación no normados.
+	c.JSON(http.StatusOK, resp)
 }

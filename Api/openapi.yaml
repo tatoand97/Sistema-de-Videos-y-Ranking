@@ -380,6 +380,7 @@ paths:
     get:
       summary: Ranking de jugadores por votos acumulados
       tags: [Ranking]
+      security: []
       parameters:
         - name: city
           in: query
