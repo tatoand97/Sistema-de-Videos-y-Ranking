@@ -5,8 +5,10 @@ import (
 	"api/internal/application/validations"
 	"api/internal/domain"
 	"api/internal/domain/entities"
+	"api/internal/domain/responses"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -20,6 +22,57 @@ type VideoHandlers struct {
 
 func NewVideoHandlers(uploadsUC *useCase.UploadsUseCase) *VideoHandlers {
 	return &VideoHandlers{uploadsUC: uploadsUC}
+}
+
+// ListVideos handles GET /api/videos (authenticated)
+func (h *VideoHandlers) ListVideos(c *gin.Context) {
+	uidVal, ok := c.Get("userID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
+		return
+	}
+	userID, ok := uidVal.(uint)
+	if !ok || userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
+		return
+	}
+
+	videos, err := h.uploadsUC.ListUserVideos(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
+		return
+	}
+
+	// Map to OAS Video schema
+	out := make([]responses.VideoResponse, 0, len(videos))
+	for _, v := range videos {
+		// Map status to storage status: uploaded | processed
+		status := "uploaded"
+		if v.Status == string(entities.StatusProcessed) {
+			status = "processed"
+		}
+
+		var originalURL *string
+		if v.OriginalFile != "" {
+			s := v.OriginalFile
+			originalURL = &s
+		}
+
+		vr := responses.VideoResponse{
+			VideoID:     fmt.Sprintf("%d", v.VideoID),
+			Title:       v.Title,
+			Status:      status,
+			UploadedAt:  v.UploadedAt,
+			ProcessedAt: v.ProcessedAt,
+			OriginalURL: originalURL,
+		}
+		if v.ProcessedFile != nil && *v.ProcessedFile != "" {
+			vr.ProcessedURL = v.ProcessedFile
+		}
+		out = append(out, vr)
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 func (h *VideoHandlers) Upload(c *gin.Context) {
@@ -53,12 +106,12 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 
 	uidVal, ok := c.Get("userID")
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "userID missing in context"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 	userID, ok := uidVal.(uint)
 	if !ok || userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid userID in context"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 

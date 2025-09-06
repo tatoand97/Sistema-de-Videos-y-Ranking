@@ -40,3 +40,14 @@ func (r *videoRepository) List(ctx context.Context) ([]*entities.Video, error) {
 	}
 	return videos, nil
 }
+
+func (r *videoRepository) ListByUser(ctx context.Context, userID uint) ([]*entities.Video, error) {
+	var videos []*entities.Video
+	if err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("uploaded_at DESC").
+		Find(&videos).Error; err != nil {
+		return nil, err
+	}
+	return videos, nil
+}

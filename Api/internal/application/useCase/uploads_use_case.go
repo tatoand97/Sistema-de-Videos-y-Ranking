@@ -120,3 +120,8 @@ func (uc *UploadsUseCase) CreatePostPolicy(ctx context.Context, req requests.Cre
 	}
 	return uc.storage.PresignedPostPolicy(ctx, req)
 }
+
+// ListUserVideos returns all videos belonging to a user.
+func (uc *UploadsUseCase) ListUserVideos(ctx context.Context, userID uint) ([]*entities.Video, error) {
+	return uc.videoRepo.ListByUser(ctx, userID)
+}
