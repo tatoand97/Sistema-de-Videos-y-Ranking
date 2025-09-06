@@ -125,3 +125,8 @@ func (uc *UploadsUseCase) CreatePostPolicy(ctx context.Context, req requests.Cre
 func (uc *UploadsUseCase) ListUserVideos(ctx context.Context, userID uint) ([]*entities.Video, error) {
 	return uc.videoRepo.ListByUser(ctx, userID)
 }
+
+// GetUserVideoByID returns a user's video by id, enforcing ownership.
+func (uc *UploadsUseCase) GetUserVideoByID(ctx context.Context, userID, videoID uint) (*entities.Video, error) {
+	return uc.videoRepo.GetByIDAndUser(ctx, videoID, userID)
+}

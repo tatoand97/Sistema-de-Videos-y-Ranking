@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"api/internal/application/useCase"
+	"api/internal/domain"
 	"api/internal/domain/entities"
 	"api/internal/domain/requests"
 	"api/internal/domain/responses"
@@ -33,6 +34,19 @@ func (f *fakeVideoRepo) ListByUser(_ context.Context, _ uint) ([]*entities.Video
 		return nil, f.err
 	}
 	return f.list, nil
+}
+
+// Satisfy new interface method used by use case for detail endpoint
+func (f *fakeVideoRepo) GetByIDAndUser(_ context.Context, id, userID uint) (*entities.Video, error) {
+	for _, v := range f.list {
+		if v.VideoID == id {
+			if v.UserID == userID {
+				return v, nil
+			}
+			return nil, domain.ErrForbidden
+		}
+	}
+	return nil, domain.ErrNotFound
 }
 
 type fakeStorage struct{}

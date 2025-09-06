@@ -12,4 +12,7 @@ type VideoRepository interface {
 	List(ctx context.Context) ([]*entities.Video, error)
 	// ListByUser returns videos owned by the given user, ordered by uploaded_at DESC
 	ListByUser(ctx context.Context, userID uint) ([]*entities.Video, error)
+	// GetByIDAndUser returns the video by id only if it belongs to userID.
+	// Returns domain.ErrNotFound if id does not exist, and domain.ErrForbidden if it exists but belongs to another user.
+	GetByIDAndUser(ctx context.Context, id, userID uint) (*entities.Video, error)
 }

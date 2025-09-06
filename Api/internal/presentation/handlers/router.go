@@ -38,6 +38,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	videoGroup := authGroup.Group("/api/videos")
 	videoGroup.GET("", videoHandlers.ListVideos)
 	videoGroup.POST("/upload", videoHandlers.Upload)
+	videoGroup.GET("/:video_id", videoHandlers.GetVideoDetail)
 
 	// New: S3/MinIO POST Policy for direct uploads
 	authGroup.POST("/api/uploads", uploadsHandlers.CreatePostPolicy)

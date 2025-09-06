@@ -51,3 +51,20 @@ func (r *videoRepository) ListByUser(ctx context.Context, userID uint) ([]*entit
 	}
 	return videos, nil
 }
+
+// GetByIDAndUser fetches a video by id and ensures it belongs to the given user.
+// Distinguishes between not found (404) and forbidden (403).
+func (r *videoRepository) GetByIDAndUser(ctx context.Context, id, userID uint) (*entities.Video, error) {
+	// First, try to get by id to know if it exists at all
+	var v entities.Video
+	if err := r.db.WithContext(ctx).First(&v, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	if v.UserID != userID {
+		return nil, domain.ErrForbidden
+	}
+	return &v, nil
+}
