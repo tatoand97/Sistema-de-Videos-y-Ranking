@@ -1,27 +1,33 @@
-# AudioRemoval Worker - MP4 Nativo
+# AudioRemoval Worker
 
 ## Descripción
-Worker optimizado para remover audio de videos MP4 usando procesamiento nativo en Go, sin dependencias externas.
+Worker que remueve el audio de videos MP4 usando FFmpeg para garantizar compatibilidad y calidad.
 
 ## Características
-- **Procesamiento**: Manipulación directa de contenedor MP4
-- **Recursos**: Mínimos (solo Go runtime)
-- **Rendimiento**: 200-500 archivos/segundo por core
-- **Memoria**: ~20MB por instancia
-- **Tamaño imagen**: ~15MB
-- **Latencia**: 5-10ms por archivo
+- **Procesamiento**: FFmpeg con copia de stream de video (sin re-encoding)
+- **Comando**: `ffmpeg -i input.mp4 -c:v copy -an -y output.mp4`
+- **Rendimiento**: Procesamiento rápido sin re-encoding de video
+- **Memoria**: ~50MB por instancia (incluye FFmpeg)
+- **Tamaño imagen**: ~80MB (Alpine + FFmpeg)
 
 ## Construcción
 ```bash
 docker build -t audioremoval .
 ```
 
+## Variables de Entorno
+- `RABBITMQ_URL`: URL de conexión a RabbitMQ
+- `QUEUE_NAME`: Cola de entrada (default: audio_removal_queue)
+- `RAW_BUCKET`: Bucket de videos de entrada
+- `PROCESSED_BUCKET`: Bucket de videos procesados
+- `STATE_MACHINE_QUEUE`: Cola para notificar al orquestador
+
 ## Limitaciones
 - Solo soporta archivos MP4
-- Requiere contenedor MP4 válido
+- Requiere FFmpeg instalado en el contenedor
 
 ## Ventajas
-- Sin dependencias FFmpeg
-- Escalabilidad horizontal perfecta
-- Ideal para pruebas de carga
-- Consumo mínimo de recursos
+- Procesamiento confiable con FFmpeg
+- No re-encoding de video (solo copia)
+- Escalabilidad horizontal
+- Manejo robusto de formatos MP4

@@ -9,7 +9,7 @@ RUN go mod download
 RUN go build -o audioremoval cmd/main.go
 
 FROM alpine:latest
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates ffmpeg
 RUN mkdir -p /tmp && chmod 777 /tmp
 
 WORKDIR /app
