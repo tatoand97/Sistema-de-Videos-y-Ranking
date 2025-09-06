@@ -1,4 +1,4 @@
-﻿package validations
+package validations
 
 import (
 	"bytes"
@@ -16,7 +16,8 @@ var okBrands = map[string]struct{}{
 }
 
 func CheckMP4(b []byte) (int, int, error) {
-	if len(b) >= MaxBytes {
+	// Permite exactamente 100MB; rechaza sólo si supera el límite.
+	if len(b) > MaxBytes {
 		return 0, 0, fmt.Errorf("excede 100MB (%.2fMB)", float64(len(b))/1024.0/1024.0)
 	}
 
