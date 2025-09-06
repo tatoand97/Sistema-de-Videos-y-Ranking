@@ -1,0 +1,91 @@
+name: SonarQube (monorepo Go)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+jobs:
+  sonar:
+    name: Analyze ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ====== Ajusta keys y nombres a tu organización ======
+          - name: Api
+            path: Api
+            sonar_project_key: company.video.Api
+            sonar_project_name: video-Api
+          - name: Workers-AudioRemoval
+            path: Workers/AudioRemoval
+            sonar_project_key: company.video.Workers.AudioRemoval
+            sonar_project_name: video-Workers-AudioRemoval
+          - name: Workers-EditVideo
+            path: Workers/EditVideo
+            sonar_project_key: company.video.Workers.EditVideo
+            sonar_project_name: video-Workers-EditVideo
+          - name: Workers-gossipOpenClose
+            path: Workers/gossipOpenClose
+            sonar_project_key: company.video.Workers.gossipOpenClose
+            sonar_project_name: video-Workers-gossipOpenClose
+          - name: Workers-TrimVideo
+            path: Workers/TrimVideo
+            sonar_project_key: company.video.Workers.TrimVideo
+            sonar_project_name: video-Workers-TrimVideo
+          - name: Workers-Watermarking
+            path: Workers/Watermarking
+            sonar_project_key: company.video.Workers.Watermarking
+            sonar_project_name: video-Workers-Watermarking
+          # Agrega más (AdminCache, StatesMachine) cuando tengan código Go y tests
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.path }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Download deps
+        run: go mod download
+
+      - name: Run tests with coverage
+        run: |
+          go test ./... -coverprofile=coverage.out -covermode=atomic
+
+      - name: SonarScanner CLI
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ matrix.sonar_project_key }}
+            -Dsonar.projectName=${{ matrix.sonar_project_name }}
+            -Dsonar.projectBaseDir=.
+            -Dsonar.language=go
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions=**/*_test.go
+            -Dsonar.exclusions=**/vendor/**,**/static/**,**/assets/**,**/migrations/**,**/*.yaml,**/*.yml
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.sourceEncoding=UTF-8
+
+      - name: Quality Gate (wait)
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
