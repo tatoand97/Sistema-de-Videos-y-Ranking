@@ -38,6 +38,8 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 			return h.orchestrateUC.HandleAudioRemovalCompleted(processedMsg.VideoID, processedMsg.Filename)
 		} else if contains(processedMsg.BucketPath, "watermarking") {
 			return h.orchestrateUC.HandleWatermarkingCompleted(processedMsg.VideoID, processedMsg.Filename)
+		} else if contains(processedMsg.BucketPath, "processed-videos") {
+			return h.orchestrateUC.HandleGossipOpenCloseCompleted(processedMsg.VideoID, processedMsg.Filename)
 		}
 	}
 

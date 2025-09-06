@@ -2,15 +2,16 @@ package usecases
 
 import (
     "fmt"
-    "mime"
     "time"
     "watermarking/internal/domain"
+    "github.com/sirupsen/logrus"
 )
 
 type WatermarkingUseCase struct {
 	videoRepo            domain.VideoRepository
 	storageRepo          domain.StorageRepository
 	processingService    domain.VideoProcessingService
+	notificationService  domain.NotificationService
 	rawBucket            string
 	processedBucket      string
 	maxSeconds           int
@@ -20,6 +21,7 @@ func NewWatermarkingUseCase(
 	videoRepo domain.VideoRepository,
 	storageRepo domain.StorageRepository,
 	processingService domain.VideoProcessingService,
+	notificationService domain.NotificationService,
 	rawBucket, processedBucket string,
 	maxSeconds int,
 ) *WatermarkingUseCase {
@@ -27,6 +29,7 @@ func NewWatermarkingUseCase(
 		videoRepo: videoRepo,
 		storageRepo: storageRepo,
 		processingService: processingService,
+		notificationService: notificationService,
 		rawBucket: rawBucket,
 		processedBucket: processedBucket,
 		maxSeconds: maxSeconds,
@@ -58,8 +61,20 @@ func (uc *WatermarkingUseCase) Execute(filename string) error {
 	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusCompleted); err != nil {
 		return fmt.Errorf("update final status: %w", err)
 	}
-	_ = mime.TypeByExtension(".mp4") // placeholder like AudioRemoval; could be used for content-type
 
-	_ = time.Now()
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+		logrus.Errorf("Failed to notify state machine: %v", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id": video.ID,
+		"filename": filename,
+		"bucket_from": uc.rawBucket,
+		"bucket_to": uc.processedBucket,
+		"max_seconds": uc.maxSeconds,
+		"timestamp": time.Now().UTC(),
+	}).Info("Watermarking processing completed successfully")
+
 	return nil
 }

@@ -164,7 +164,36 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 		"timestamp": time.Now().UTC(),
 		"stage":     "watermarking_completed",
 		"result":    "success",
-	}).Info("StatesMachine: Watermarking completed successfully, pipeline finished")
+	}).Info("StatesMachine: Watermarking completed successfully, sending to GossipOpenClose")
+
+	message := VideoMessage{Filename: filename}
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("marshal message: %w", err)
+	}
+
+	if err := uc.publisher.PublishMessage("gossip_open_close_queue", messageBytes); err != nil {
+		return fmt.Errorf("publish to gossip_open_close_queue: %w", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id":   videoID,
+		"filename":   filename,
+		"next_queue": "gossip_open_close_queue",
+		"timestamp":  time.Now().UTC(),
+	}).Info("StatesMachine: Message published to GossipOpenClose queue")
+
+	return nil
+}
+
+func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filename string) error {
+	logrus.WithFields(logrus.Fields{
+		"video_id":  videoID,
+		"filename":  filename,
+		"timestamp": time.Now().UTC(),
+		"stage":     "gossip_open_close_completed",
+		"result":    "success",
+	}).Info("StatesMachine: GossipOpenClose completed successfully, video processing pipeline finished")
 
 	return nil
 }
