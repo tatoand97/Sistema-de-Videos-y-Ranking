@@ -16,7 +16,7 @@ import (
 type UploadVideoInput struct {
 	Title      string
 	FileHeader *multipart.FileHeader
-	StatusID   uint
+	Status     string
 }
 
 type contextKey string
@@ -83,7 +83,7 @@ func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInpu
 		UserID:       userID,
 		Title:        input.Title,
 		OriginalFile: url,
-		StatusID:     input.StatusID,
+		Status:       input.Status,
 		UploadedAt:   now,
 	}
 	if err := uc.videoRepo.Create(ctx, video); err != nil {

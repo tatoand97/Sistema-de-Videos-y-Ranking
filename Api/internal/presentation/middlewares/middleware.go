@@ -65,6 +65,9 @@ func JWTMiddleware(authService *useCase.AuthService, secret string) gin.HandlerF
 		}
 		c.Set("userID", uint(uid64))
 		c.Set("permissions", claims.Permissions)
+		c.Set("first_name", claims.FirstName)
+		c.Set("last_name", claims.LastName)
+		c.Set("email", claims.Email)
 
 		c.Next()
 	}

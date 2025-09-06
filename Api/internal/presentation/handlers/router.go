@@ -22,9 +22,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	authGroup := router.Group("/")
 	authGroup.Use(middlewares.JWTMiddleware(authService, secret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
-	authGroup.GET("/api/me", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+	authGroup.GET("/api/me", authHandlers.Me)
 
 	videoGroup := authGroup.Group("/api/videos")
 	videoGroup.POST("/upload", videoHandlers.Upload)

@@ -15,6 +15,9 @@ import (
 type AuthClaims struct {
 	jwt.RegisteredClaims
 	Permissions []string `json:"perms"`
+	FirstName   string   `json:"first_name"`
+	LastName    string   `json:"last_name"`
+	Email       string   `json:"email"`
 }
 
 type AuthService struct {
@@ -37,7 +40,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", 0, errors.New("invalid credentials")
 	}
 
-	perms, err := s.repo.GetPermissions(ctx, user.UserID)
+	perms, err := s.repo.GetPermissions(ctx, uint(user.UserID))
 	if err != nil {
 		return "", 0, err
 	}
@@ -52,6 +55,9 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 			NotBefore: jwt.NewNumericDate(now),
 		},
 		Permissions: perms,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

@@ -22,6 +22,7 @@ paths:
       summary: Registro de nuevos jugadores
       description: Crea un usuario. Valida email único y confirmación de contraseña.
       tags: [Autenticación]
+      security: []
       requestBody:
         required: true
         content:
@@ -51,6 +52,7 @@ paths:
     post:
       summary: Inicio de sesión (JWT)
       tags: [Autenticación]
+      security: []
       requestBody:
         required: true
         content:
@@ -75,8 +77,61 @@ paths:
                     access_token: eyJ0eXAiOiJKV1QiLCJhbGci...
                     token_type: Bearer
                     expires_in: 3600
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/logout:
+    post:
+      summary: Cerrar sesión
+      tags: [Autenticación]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: No Content
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/me:
+    get:
+      summary: Verificar sesión del usuario
+      description: Retorna un estado simple para confirmar autenticación.
+      tags: [Autenticación]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  user_id: { type: integer }
+                  permissions:
+                    type: array
+                    items: { type: string }
+                  first_name: { type: string }
+                  last_name: { type: string }
+                  email: { type: string, format: email }
+              examples:
+                ok:
+                  value:
+                    status: "ok"
+                    user_id: 123
+                    permissions: ["videos:upload", "videos:read"]
+                    first_name: "John"
+                    last_name: "Doe"
+                    email: "john@example.com"
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/videos/upload:
     post:
@@ -465,7 +520,7 @@ components:
       properties:
         access_token: { type: string }
         token_type: { type: string, enum: [Bearer] }
-        expires_in: { type: integer }
+        expires_in: { type: integer, format: int64 }
     Video:
       type: object
       required: [video_id, title, status, uploaded_at]

@@ -73,7 +73,7 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 	input := useCase.UploadVideoInput{
 		Title:      title,
 		FileHeader: file,
-		StatusID:   uint(statusID),
+		Status:     uint(statusID),
 	}
 	ctx := context.WithValue(c.Request.Context(), useCase.UserIDContextKey, userID)
 	output, err := h.uploadUC.Execute(ctx, input)

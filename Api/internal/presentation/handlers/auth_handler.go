@@ -53,3 +53,33 @@ func (handler *AuthHandlers) Logout(context *gin.Context) {
 	}
 	context.Status(http.StatusNoContent)
 }
+
+func (handler *AuthHandlers) Me(context *gin.Context) {
+	uidVal, _ := context.Get("userID")
+	permsVal, _ := context.Get("permissions")
+	firstNameVal, _ := context.Get("first_name")
+	lastNameVal, _ := context.Get("last_name")
+	emailVal, _ := context.Get("email")
+
+	response := gin.H{
+		"status": "ok",
+	}
+
+	if uid, ok := uidVal.(uint); ok {
+		response["user_id"] = uid
+	}
+	if perms, ok := permsVal.([]string); ok {
+		response["permissions"] = perms
+	}
+	if fn, ok := firstNameVal.(string); ok && fn != "" {
+		response["first_name"] = fn
+	}
+	if ln, ok := lastNameVal.(string); ok && ln != "" {
+		response["last_name"] = ln
+	}
+	if em, ok := emailVal.(string); ok && em != "" {
+		response["email"] = em
+	}
+
+	context.JSON(http.StatusOK, response)
+}
