@@ -5,5 +5,5 @@ type VideoProcessingService interface {
 }
 
 type NotificationService interface {
-	NotifyProcessingComplete(videoID string, success bool) error
+	NotifyVideoProcessed(videoID, filename, bucketPath string) error
 }

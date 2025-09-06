@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 )
 
 // MP4VideoProcessingService cumple con domain.VideoProcessingService
@@ -19,44 +18,38 @@ func NewMP4VideoProcessingService() *MP4VideoProcessingService { return &MP4Vide
 // Mantenemos la firma para cumplir la interfaz, pero ignoramos el "trim" y
 // normalizamos a 1280x720 (16:9) sin distorsión.
 func (s *MP4VideoProcessingService) TrimToMaxSeconds(input []byte, maxSeconds int) ([]byte, error) {
-	// Archivos temporales
-	inPath := filepath.Join(os.TempDir(), fmt.Sprintf("edit_in_%d.mp4", time.Now().UnixNano()))
-	outPath := filepath.Join(os.TempDir(), fmt.Sprintf("edit_out_%d.mp4", time.Now().UnixNano()))
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		return nil, fmt.Errorf("ffmpeg not found: %w", err)
+	}
 
-	// Limpieza al final
-	defer func() {
-		_ = os.Remove(inPath)
-		_ = os.Remove(outPath)
-	}()
+	tmpDir, err := os.MkdirTemp("", "edit-*")
+	if err != nil {
+		return nil, fmt.Errorf("create temp dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
 
-	// Escribir el input a disco
-	if err := os.WriteFile(inPath, input, 0o600); err != nil {
-		return nil, fmt.Errorf("write temp input: %w", err)
+	inputPath := filepath.Join(tmpDir, "input.mp4")
+	outputPath := filepath.Join(tmpDir, "output.mp4")
+
+	if err := os.WriteFile(inputPath, input, 0600); err != nil {
+		return nil, fmt.Errorf("write input: %w", err)
 	}
 
 	// Pipeline de normalización a 16:9 720p
 	args := []string{
-		"-y", "-i", inPath,
+		"-y", "-i", inputPath,
 		"-vf", "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1",
 		"-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
 		"-c:a", "aac", "-b:a", "128k",
-		outPath,
+		outputPath,
 	}
 
 	cmd := exec.Command("ffmpeg", args...)
-	// opcional: expón logs al contenedor
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("ffmpeg: %w", err)
+		return nil, fmt.Errorf("ffmpeg failed: %w", err)
 	}
 
-	out, err := os.ReadFile(outPath)
-	if err != nil {
-		return nil, fmt.Errorf("read output: %w", err)
-	}
-	return out, nil
+	return os.ReadFile(outputPath)
 }
 
 // (Opcional) Si en algún punto llamas a otro método genérico en tu código,

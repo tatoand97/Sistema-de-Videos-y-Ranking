@@ -34,39 +34,22 @@ func NewRabbitMQConsumer(url string, maxRetries, queueMaxLength int) (*RabbitMQC
 }
 
 func (r *RabbitMQConsumer) StartConsuming(queueName string, handler ports.MessageHandler) error {
-	// Declare dead letter exchange and queue
-	dlxName := queueName + ".dlx"
-	dlqName := queueName + ".dlq"
-	
-	err := r.channel.ExchangeDeclare(dlxName, "direct", true, false, false, false, nil)
-	if err != nil {
-		return err
-	}
-	
-	_, err = r.channel.QueueDeclare(dlqName, true, false, false, false, nil)
-	if err != nil {
-		return err
-	}
-	
-	err = r.channel.QueueBind(dlqName, queueName, dlxName, false, nil)
-	if err != nil {
-		return err
-	}
+	logrus.Infof("Starting to consume queue: %s", queueName)
 
-	// Declare main queue with DLX configuration and length limit
+	// Declare main queue with simple configuration (consistent with TrimVideo and EditVideo)
 	args := amqp.Table{
-		"x-dead-letter-exchange": dlxName,
-		"x-dead-letter-routing-key": queueName,
 		"x-max-length": r.queueMaxLength,
-		"x-overflow": "reject-publish-dlx", // Send overflow to DLX
 	}
-	_, err = r.channel.QueueDeclare(queueName, true, false, false, false, args)
+	_, err := r.channel.QueueDeclare(queueName, true, false, false, false, args)
 	if err != nil {
+		logrus.Errorf("Failed to declare main queue %s: %v", queueName, err)
 		return err
 	}
 
+	logrus.Infof("Starting to consume messages from queue: %s", queueName)
 	msgs, err := r.channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
+		logrus.Errorf("Failed to start consuming from queue %s: %v", queueName, err)
 		return err
 	}
 
@@ -74,31 +57,7 @@ func (r *RabbitMQConsumer) StartConsuming(queueName string, handler ports.Messag
 		for msg := range msgs {
 			if err := handler.HandleMessage(msg.Body); err != nil {
 				logrus.Error("Error processing message:", err)
-				
-				retryCount := r.getRetryCount(msg)
-				if retryCount >= r.maxRetries {
-					logrus.Errorf("Message exceeded max retries (%d), sending to DLQ", r.maxRetries)
-					msg.Nack(false, false) // Send to DLQ
-				} else {
-					logrus.Infof("Retrying message (attempt %d/%d)", retryCount+1, r.maxRetries)
-					// Publish with incremented retry count
-					headers := amqp.Table{}
-					if msg.Headers != nil {
-						for k, v := range msg.Headers {
-							headers[k] = v
-						}
-					}
-					headers["x-retry-count"] = strconv.Itoa(retryCount + 1)
-					
-					err := r.channel.Publish("", msg.RoutingKey, false, false, amqp.Publishing{
-						Headers: headers,
-						Body:    msg.Body,
-					})
-					if err != nil {
-						logrus.Error("Failed to republish message:", err)
-					}
-					msg.Ack(false) // Ack original message
-				}
+				msg.Nack(false, false)
 			} else {
 				msg.Ack(false)
 			}

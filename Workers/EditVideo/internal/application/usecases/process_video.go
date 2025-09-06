@@ -2,8 +2,6 @@ package usecases
 
 import (
     "fmt"
-    "mime"
-    "time"
     "editvideo/internal/domain"
 )
 
@@ -11,6 +9,7 @@ type EditVideoUseCase struct {
 	videoRepo            domain.VideoRepository
 	storageRepo          domain.StorageRepository
 	processingService    domain.VideoProcessingService
+	notificationService  domain.NotificationService
 	rawBucket            string
 	processedBucket      string
 	maxSeconds           int
@@ -20,6 +19,7 @@ func NewEditVideoUseCase(
 	videoRepo domain.VideoRepository,
 	storageRepo domain.StorageRepository,
 	processingService domain.VideoProcessingService,
+	notificationService domain.NotificationService,
 	rawBucket, processedBucket string,
 	maxSeconds int,
 ) *EditVideoUseCase {
@@ -27,6 +27,7 @@ func NewEditVideoUseCase(
 		videoRepo: videoRepo,
 		storageRepo: storageRepo,
 		processingService: processingService,
+		notificationService: notificationService,
 		rawBucket: rawBucket,
 		processedBucket: processedBucket,
 		maxSeconds: maxSeconds,
@@ -50,8 +51,7 @@ func (uc *EditVideoUseCase) Execute(filename string) error {
 		return fmt.Errorf("processing: %w", err)
 	}
 
-	outName := fmt.Sprintf("processed_%s", filename)
-	if err := uc.storageRepo.Upload(uc.processedBucket, outName, processedData); err != nil {
+	if err := uc.storageRepo.Upload(uc.processedBucket, filename, processedData); err != nil {
 		_ = uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("upload: %w", err)
 	}
@@ -59,8 +59,11 @@ func (uc *EditVideoUseCase) Execute(filename string) error {
 	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusCompleted); err != nil {
 		return fmt.Errorf("update final status: %w", err)
 	}
-	_ = mime.TypeByExtension(".mp4") // placeholder like AudioRemoval; could be used for content-type
 
-	_ = time.Now()
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+		return fmt.Errorf("notify state machine: %w", err)
+	}
+
 	return nil
 }

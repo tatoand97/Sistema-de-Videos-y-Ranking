@@ -20,10 +20,15 @@ func NewContainer(config *Config) (*Container, error) {
 	storageRepo := adapters.NewStorageRepository(storage)
 	processing := services.NewMP4VideoProcessingService()
 
+	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
+	if err != nil { return nil, err }
+	notificationService := services.NewNotificationService(publisher, config.StateMachineQueue)
+
 	uc := usecases.NewWatermarkingUseCase(
 		videoRepo,
 		storageRepo,
 		processing,
+		notificationService,
 		config.RawBucket,
 		config.ProcessedBucket,
 		config.MaxSeconds,
