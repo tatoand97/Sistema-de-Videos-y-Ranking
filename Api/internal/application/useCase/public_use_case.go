@@ -14,19 +14,15 @@ type PublicService struct {
 	voteRepo interfaces.VoteRepository
 }
 
-func NewPublicService(repo interfaces.PublicRepository) *PublicService { // backward compat
-	return &PublicService{repo: repo}
+func NewPublicService(repo interfaces.PublicRepository, voteRepo interfaces.VoteRepository) *PublicService {
+	return &PublicService{repo: repo, voteRepo: voteRepo}
 }
 
 func (s *PublicService) ListPublicVideos(ctx context.Context) ([]responses.PublicVideoResponse, error) {
 	return s.repo.ListPublicVideos(ctx)
 }
 
-// WithVotes permite inyectar el repositorio de votos sin romper firmas existentes
-func (s *PublicService) WithVotes(voteRepo interfaces.VoteRepository) *PublicService {
-	s.voteRepo = voteRepo
-	return s
-}
+// WithVotes was removed; voteRepo is injected in constructor.
 
 func (s *PublicService) GetPublicByID(ctx context.Context, id uint) (*responses.PublicVideoResponse, error) {
 	return s.repo.GetPublicByID(ctx, id)

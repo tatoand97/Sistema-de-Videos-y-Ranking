@@ -4,13 +4,19 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"mime/multipart"
+	"regexp"
+	"strings"
 	"time"
 
 	"api/internal/application/validations"
+	"api/internal/domain"
 	"api/internal/domain/entities"
 	"api/internal/domain/interfaces"
-	"io"
+	"api/internal/domain/requests"
+	"api/internal/domain/responses"
 )
 
 type UploadVideoInput struct {
@@ -31,16 +37,17 @@ type UploadVideoOutput struct {
 	UploadedAt   time.Time
 }
 
-type UploadVideoUseCase struct {
+type UploadsUseCase struct {
 	videoRepo interfaces.VideoRepository
 	storage   interfaces.VideoStorage
 }
 
-func NewUploadVideoUseCase(videoRepo interfaces.VideoRepository, storage interfaces.VideoStorage) *UploadVideoUseCase {
-	return &UploadVideoUseCase{videoRepo: videoRepo, storage: storage}
+func NewUploadsUseCase(videoRepo interfaces.VideoRepository, storage interfaces.VideoStorage) *UploadsUseCase {
+	return &UploadsUseCase{videoRepo: videoRepo, storage: storage}
 }
 
-func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInput) (*UploadVideoOutput, error) {
+// UploadMultipart handles the classic multipart upload path.
+func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideoInput) (*UploadVideoOutput, error) {
 	val := ctx.Value(UserIDContextKey)
 	userID, ok := val.(uint)
 	if !ok || userID == 0 {
@@ -53,18 +60,18 @@ func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInpu
 	}
 	defer file.Close()
 
-	// Leer el archivo en memoria para validación
+	// Read into memory for validation
 	fileBytes := make([]byte, input.FileHeader.Size)
 	if _, err := io.ReadFull(file, fileBytes); err != nil {
 		return nil, err
 	}
 
-	// Validar MP4 (tamaño, resolución, brand)
+	// Validate MP4
 	if _, _, err := validations.CheckMP4(fileBytes); err != nil {
 		return nil, err
 	}
 
-	// Volver a crear un reader para el guardado (ya que file está consumido)
+	// Recreate a reader for saving
 	reader := bytes.NewReader(fileBytes)
 
 	objectName := input.FileHeader.Filename
@@ -96,4 +103,20 @@ func (uc *UploadVideoUseCase) Execute(ctx context.Context, input UploadVideoInpu
 		OriginalFile: video.OriginalFile,
 		UploadedAt:   video.UploadedAt,
 	}, nil
+}
+
+var sha256HexRe = regexp.MustCompile(`^[A-Fa-f0-9]{64}$`)
+
+// CreatePostPolicy validates input and delegates to storage to build a POST policy.
+func (uc *UploadsUseCase) CreatePostPolicy(ctx context.Context, req requests.CreateUploadRequest) (*responses.CreateUploadResponsePostPolicy, error) {
+	if strings.TrimSpace(req.Filename) == "" || strings.TrimSpace(req.MimeType) == "" {
+		return nil, fmt.Errorf("%w: filename and mimeType are required", domain.ErrInvalid)
+	}
+	if req.SizeBytes < 0 {
+		return nil, fmt.Errorf("%w: sizeBytes must be >= 0", domain.ErrInvalid)
+	}
+	if req.Checksum != "" && !sha256HexRe.MatchString(req.Checksum) {
+		return nil, fmt.Errorf("%w: checksum must be SHA-256 hex", domain.ErrInvalid)
+	}
+	return uc.storage.PresignedPostPolicy(ctx, req)
 }

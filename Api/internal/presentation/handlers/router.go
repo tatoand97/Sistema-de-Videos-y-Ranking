@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, locationService *useCase.LocationService, secret string, uploadVideoUC *useCase.UploadVideoUseCase, publicService *useCase.PublicService, statusService *useCase.StatusService, uploadsUC *useCase.PostPolicyUseCase) {
+func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, locationService *useCase.LocationService, secret string, uploadsUC *useCase.UploadsUseCase, publicService *useCase.PublicService, statusService *useCase.StatusService) {
 	authHandlers := NewAuthHandlers(authService)
 	userHandlers := NewUserHandlers(userService)
-	videoHandlers := NewVideoHandlers(uploadVideoUC)
+	videoHandlers := NewVideoHandlers(uploadsUC)
 	locationHandlers := NewLocationHandlers(locationService)
 	publicHandlers := NewPublicHandlers(publicService)
 	statusHandlers := NewStatusHandlers(statusService)

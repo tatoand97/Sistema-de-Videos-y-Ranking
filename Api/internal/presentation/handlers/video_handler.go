@@ -12,11 +12,11 @@ import (
 )
 
 type VideoHandlers struct {
-	uploadUC *useCase.UploadVideoUseCase
+	uploadsUC *useCase.UploadsUseCase
 }
 
-func NewVideoHandlers(uploadUC *useCase.UploadVideoUseCase) *VideoHandlers {
-	return &VideoHandlers{uploadUC: uploadUC}
+func NewVideoHandlers(uploadsUC *useCase.UploadsUseCase) *VideoHandlers {
+	return &VideoHandlers{uploadsUC: uploadsUC}
 }
 
 func (h *VideoHandlers) Upload(c *gin.Context) {
@@ -89,7 +89,7 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		Status:     status,
 	}
 	ctx := context.WithValue(c.Request.Context(), useCase.UserIDContextKey, userID)
-	output, err := h.uploadUC.Execute(ctx, input)
+	output, err := h.uploadsUC.UploadMultipart(ctx, input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

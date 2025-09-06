@@ -11,7 +11,6 @@ import (
 	domainresponses "api/internal/domain/responses"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // PublicHandlers maneja endpoints públicos relacionados a videos.
@@ -67,10 +66,6 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Ya has votado por este video."})
 			return
 		}
-		if isUniqueViolation(err) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Ya has votado por este video."})
-			return
-		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": "No se pudo registrar el voto."})
 		return
 	}
@@ -79,16 +74,7 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Voto registrado exitosamente."})
 }
 
-// isUniqueViolation detecta error 23505 de Postgres
-func isUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		if pgErr.Code == "23505" {
-			return true
-		}
-	}
-	return false
-}
+// Unique violation mapping moved to repository layer; handler sees domain.ErrConflict only.
 
 // ListRankings maneja GET /api/public/rankings
 // Público, sin autenticación. Devuelve un array de RankingEntry.

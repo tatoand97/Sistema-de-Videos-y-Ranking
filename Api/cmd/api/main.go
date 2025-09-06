@@ -67,21 +67,18 @@ func main() {
 		log.Fatalf("minio storage init failed: %v", err)
 	}
 
-	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
-	uploadsUC := useCase.NewPostPolicyUseCase(videoStorage)
+	uploadsUC := useCase.NewUploadsUseCase(videoRepo, videoStorage)
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
 	locationService := useCase.NewLocationService(locRepo)
 	publicRepo := postgresrepo.NewPublicRepository(db)
-	publicService := useCase.NewPublicService(publicRepo)
-	// Inyectar repositorio de votos al servicio público
 	voteRepo := postgresrepo.NewVoteRepository(db)
-	publicService.WithVotes(voteRepo)
+	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
 	r := gin.Default()
 	r.Static("/static", "./static")
 	statusService := useCase.NewStatusService()
-	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC, publicService, statusService, uploadsUC)
+	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadsUC, publicService, statusService)
 
 	port := os.Getenv("PORT")
 	if port == "" {

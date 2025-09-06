@@ -1,9 +1,12 @@
 package repository
 
 import (
+	"api/internal/domain"
 	"api/internal/domain/interfaces"
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -34,7 +37,11 @@ func (r *voteRepository) Create(ctx context.Context, videoID, userID uint) error
 	}
 	v := voteRow{UserID: userID, VideoID: videoID}
 	if err := r.db.WithContext(ctx).Table("vote").Create(&v).Error; err != nil {
-		// Propaga el error tal cual (puede ser unique violation 23505)
+		// Traducir unique violation de Postgres a error de dominio (conflicto)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return domain.ErrConflict
+		}
 		return err
 	}
 	return nil
