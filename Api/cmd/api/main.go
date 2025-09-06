@@ -68,6 +68,7 @@ func main() {
 	}
 
 	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
+	uploadsUC := useCase.NewPostPolicyUseCase(videoStorage)
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
 	locationService := useCase.NewLocationService(locRepo)
@@ -80,7 +81,7 @@ func main() {
 	r := gin.Default()
 	r.Static("/static", "./static")
 	statusService := useCase.NewStatusService()
-	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC, publicService, statusService)
+	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC, publicService, statusService, uploadsUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {
