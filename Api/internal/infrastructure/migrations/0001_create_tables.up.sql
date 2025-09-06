@@ -16,6 +16,13 @@ CREATE TABLE IF NOT EXISTS city (
     CONSTRAINT ux_city_country_name UNIQUE (country_id, name)
     );
 CREATE INDEX IF NOT EXISTS idx_city_country ON city (country_id);
+-- Countries: unique by LOWER(name)
+CREATE UNIQUE INDEX IF NOT EXISTS ux_country_lower_name
+    ON country (LOWER(name));
+
+-- Cities: unique by (country_id, LOWER(name))
+CREATE UNIQUE INDEX IF NOT EXISTS ux_city_country_lower_name
+    ON city (country_id, LOWER(name));
 
 -- 3. Users (incluye city_id)
 CREATE TABLE IF NOT EXISTS users (

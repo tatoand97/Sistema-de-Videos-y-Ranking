@@ -70,10 +70,11 @@ func main() {
 	uploadVideoUC := useCase.NewUploadVideoUseCase(videoRepo, videoStorage)
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
+	locationService := useCase.NewLocationService(locRepo)
 
 	r := gin.Default()
 	r.Static("/static", "./static")
-	handlers.NewRouter(r, authService, userService, jwtSecret, uploadVideoUC)
+	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC)
 
 	port := os.Getenv("PORT")
 	if port == "" {

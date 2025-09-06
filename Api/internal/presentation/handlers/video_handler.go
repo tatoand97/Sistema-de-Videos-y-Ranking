@@ -4,7 +4,7 @@ import (
 	"context"
 	"main_videork/internal/application/useCase"
 	"net/http"
-	"strconv"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 )
@@ -51,29 +51,18 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid permissions in context"})
 		return
 	}
-	allowed := false
-	for _, p := range perms {
-		if p == "upload_video" {
-			allowed = true
-			break
-		}
-	}
+	allowed := slices.Contains(perms, "upload_video")
 	if !allowed {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
-	statusIDStr := c.PostForm("status_id")
-	statusID, err := strconv.ParseUint(statusIDStr, 10, 64)
-	if err != nil || statusID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "status_id is required and must be a valid uint"})
-		return
-	}
+	status := c.PostForm("status_id")
 
 	input := useCase.UploadVideoInput{
 		Title:      title,
 		FileHeader: file,
-		Status:     uint(statusID),
+		Status:     status,
 	}
 	ctx := context.WithValue(c.Request.Context(), useCase.UserIDContextKey, userID)
 	output, err := h.uploadUC.Execute(ctx, input)

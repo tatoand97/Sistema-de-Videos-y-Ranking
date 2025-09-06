@@ -14,6 +14,7 @@ tags:
   - name: Videos
   - name: Público
   - name: Ranking
+  - name: Ubicación
 security:
   - bearerAuth: []
 paths:
@@ -559,3 +560,32 @@ x-rateLimit:
 x-pagination:
   style: "query"
   params: ["page", "pageSize", "city"]
+  /api/location/city-id:
+    get:
+      summary: Obtener city_id por país y ciudad
+      description: Devuelve el identificador de ciudad a partir de nombres de país y ciudad (comparación case-insensitive).
+      tags: [Ubicación]
+      security: []
+      parameters:
+        - name: country
+          in: query
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Identificador de la ciudad.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  city_id: { type: integer }
+              examples:
+                ok:
+                  value: { city_id: 123 }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
