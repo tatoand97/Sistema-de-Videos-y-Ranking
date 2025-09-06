@@ -1,7 +1,6 @@
 package main
 
 import (
-	"audioremoval/internal/adapters"
 	"audioremoval/internal/infrastructure"
 	"os"
 	"os/signal"
@@ -18,15 +17,9 @@ func main() {
 	if err != nil {
 		logrus.Fatal("Failed to initialize container:", err)
 	}
+	defer container.Publisher.Close()
 
-	messageHandler := adapters.NewMessageHandler(container.ProcessVideoUC)
-	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
-	if err != nil {
-		logrus.Fatal("Failed to connect to RabbitMQ:", err)
-	}
-	defer consumer.Close()
-
-	if err := consumer.StartConsuming(config.QueueName, messageHandler); err != nil {
+	if err := container.Consumer.StartConsuming(config.QueueName, container.MessageHandler); err != nil {
 		logrus.Fatal("Failed to start consuming:", err)
 	}
 
@@ -36,5 +29,6 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
+	container.Consumer.Close()
 	logrus.Info("Shutting down AudioRemoval worker...")
 }

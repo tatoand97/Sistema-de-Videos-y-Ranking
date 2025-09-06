@@ -17,18 +17,20 @@ type OrchestrateVideoUseCase struct {
 	publisher         domain.MessagePublisher
 	editVideoQueue    string
 	audioRemovalQueue string
+	watermarkingQueue string
 }
 
 func NewOrchestrateVideoUseCase(
 	videoRepo domain.VideoRepository,
 	publisher domain.MessagePublisher,
-	editVideoQueue, audioRemovalQueue string,
+	editVideoQueue, audioRemovalQueue, watermarkingQueue string,
 ) *OrchestrateVideoUseCase {
 	return &OrchestrateVideoUseCase{
 		videoRepo:         videoRepo,
 		publisher:         publisher,
 		editVideoQueue:    editVideoQueue,
 		audioRemovalQueue: audioRemovalQueue,
+		watermarkingQueue: watermarkingQueue,
 	}
 }
 
@@ -122,6 +124,47 @@ func (uc *OrchestrateVideoUseCase) HandleEditCompleted(videoID, filename string)
 		"next_queue": uc.audioRemovalQueue,
 		"timestamp":  time.Now().UTC(),
 	}).Info("StatesMachine: Message published to AudioRemoval queue")
+
+	return nil
+}
+
+func (uc *OrchestrateVideoUseCase) HandleAudioRemovalCompleted(videoID, filename string) error {
+	logrus.WithFields(logrus.Fields{
+		"video_id":  videoID,
+		"filename":  filename,
+		"timestamp": time.Now().UTC(),
+		"stage":     "audio_removal_completed",
+		"result":    "success",
+	}).Info("StatesMachine: AudioRemoval completed successfully, sending to Watermarking")
+
+	message := VideoMessage{Filename: filename}
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("marshal message: %w", err)
+	}
+
+	if err := uc.publisher.PublishMessage(uc.watermarkingQueue, messageBytes); err != nil {
+		return fmt.Errorf("publish to watermarking_queue: %w", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id":   videoID,
+		"filename":   filename,
+		"next_queue": uc.watermarkingQueue,
+		"timestamp":  time.Now().UTC(),
+	}).Info("StatesMachine: Message published to Watermarking queue")
+
+	return nil
+}
+
+func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename string) error {
+	logrus.WithFields(logrus.Fields{
+		"video_id":  videoID,
+		"filename":  filename,
+		"timestamp": time.Now().UTC(),
+		"stage":     "watermarking_completed",
+		"result":    "success",
+	}).Info("StatesMachine: Watermarking completed successfully, pipeline finished")
 
 	return nil
 }

@@ -4,16 +4,14 @@ import (
 	"audioremoval/internal/adapters"
 	"audioremoval/internal/application/services"
 	"audioremoval/internal/application/usecases"
-	"audioremoval/internal/domain"
 )
 
 type Container struct {
-	Config              *Config
-	VideoRepo           domain.VideoRepository
-	StorageRepo         domain.StorageRepository
-	ProcessingService   domain.VideoProcessingService
-	NotificationService domain.NotificationService
-	ProcessVideoUC      *usecases.ProcessVideoUseCase
+	Config         *Config
+	Consumer       *adapters.RabbitMQConsumer
+	Publisher      *adapters.RabbitMQPublisher
+	MessageHandler *adapters.MessageHandler
+	ProcessVideoUC *usecases.ProcessVideoUseCase
 }
 
 func NewContainer(config *Config) (*Container, error) {
@@ -26,10 +24,20 @@ func NewContainer(config *Config) (*Container, error) {
 		return nil, err
 	}
 
+	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
+	if err != nil {
+		return nil, err
+	}
+
+	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
+	if err != nil {
+		return nil, err
+	}
+
 	videoRepo := adapters.NewVideoRepository()
 	storageRepo := adapters.NewStorageRepository(storage)
 	processingService := services.NewMP4VideoProcessingService()
-	notificationService := services.NewLogNotificationService()
+	notificationService := services.NewNotificationService(publisher, config.StateMachineQueue)
 
 	processVideoUC := usecases.NewProcessVideoUseCase(
 		videoRepo,
@@ -40,12 +48,13 @@ func NewContainer(config *Config) (*Container, error) {
 		config.ProcessedBucket,
 	)
 
+	messageHandler := adapters.NewMessageHandler(processVideoUC)
+
 	return &Container{
-		Config:              config,
-		VideoRepo:           videoRepo,
-		StorageRepo:         storageRepo,
-		ProcessingService:   processingService,
-		NotificationService: notificationService,
-		ProcessVideoUC:      processVideoUC,
+		Config:         config,
+		Consumer:       consumer,
+		Publisher:      publisher,
+		MessageHandler: messageHandler,
+		ProcessVideoUC: processVideoUC,
 	}, nil
 }

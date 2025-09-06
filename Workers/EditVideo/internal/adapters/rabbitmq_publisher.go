@@ -23,7 +23,9 @@ func NewRabbitMQPublisher(url string) (*RabbitMQPublisher, error) {
 }
 
 func (p *RabbitMQPublisher) PublishMessage(queueName string, message interface{}) error {
-	_, err := p.channel.QueueDeclare(queueName, true, false, false, false, nil)
+	_, err := p.channel.QueueDeclare(queueName, true, false, false, false, amqp.Table{
+		"x-max-length": 1000,
+	})
 	if err != nil {
 		return err
 	}

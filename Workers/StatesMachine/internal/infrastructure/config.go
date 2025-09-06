@@ -3,10 +3,11 @@ package infrastructure
 import "os"
 
 type Config struct {
-	RabbitMQURL       string
-	QueueName         string
-	EditVideoQueue    string
-	AudioRemovalQueue string
+	RabbitMQURL         string
+	QueueName           string
+	EditVideoQueue      string
+	AudioRemovalQueue   string
+	WatermarkingQueue   string
 }
 
 func LoadConfig() *Config {
@@ -15,6 +16,7 @@ func LoadConfig() *Config {
 		QueueName:         getEnv("QUEUE_NAME", "orders"),
 		EditVideoQueue:    getEnv("EDIT_VIDEO_QUEUE", "edit_video_queue"),
 		AudioRemovalQueue: getEnv("AUDIO_REMOVAL_QUEUE", "audio_removal_queue"),
+		WatermarkingQueue: getEnv("WATERMARKING_QUEUE", "watermarking_queue"),
 	}
 }
 

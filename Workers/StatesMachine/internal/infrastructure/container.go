@@ -19,7 +19,7 @@ func NewContainer(config *Config) (*Container, error) {
 	if err != nil { return nil, err }
 
 	videoRepo := adapters.NewMockVideoRepository()
-	orchestrateUC := usecases.NewOrchestrateVideoUseCase(videoRepo, publisher, config.EditVideoQueue, config.AudioRemovalQueue)
+	orchestrateUC := usecases.NewOrchestrateVideoUseCase(videoRepo, publisher, config.EditVideoQueue, config.AudioRemovalQueue, config.WatermarkingQueue)
 	messageHandler := adapters.NewMessageHandler(orchestrateUC)
 
 	return &Container{

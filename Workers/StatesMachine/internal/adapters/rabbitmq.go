@@ -70,9 +70,12 @@ func (r *RabbitMQPublisher) PublishMessage(queueName string, message []byte) err
 			}
 		}
 
-		_, err := r.channel.QueueDeclare(queueName, true, false, false, false, amqp.Table{
+		// Simple queue configuration for all queues
+		args := amqp.Table{
 			"x-max-length": 1000,
-		})
+		}
+
+		_, err := r.channel.QueueDeclare(queueName, true, false, false, false, args)
 		if err != nil {
 			logrus.Errorf("Queue declare failed: %v", err)
 			r.channel = nil

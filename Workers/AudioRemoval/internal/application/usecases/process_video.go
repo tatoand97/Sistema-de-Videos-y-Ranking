@@ -3,6 +3,8 @@ package usecases
 import (
 	"audioremoval/internal/domain"
 	"fmt"
+	"time"
+	"github.com/sirupsen/logrus"
 )
 
 type ProcessVideoUseCase struct {
@@ -62,6 +64,18 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 		return fmt.Errorf("failed to update final status: %w", err)
 	}
 
-	uc.notificationService.NotifyProcessingComplete(video.ID, true)
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+		logrus.Errorf("Failed to notify state machine: %v", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id": video.ID,
+		"filename": filename,
+		"bucket_from": uc.rawBucket,
+		"bucket_to": uc.processedBucket,
+		"timestamp": time.Now().UTC(),
+	}).Info("AudioRemoval processing completed successfully")
+
 	return nil
 }

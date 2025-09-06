@@ -34,6 +34,10 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 			return h.orchestrateUC.HandleTrimCompleted(processedMsg.VideoID, processedMsg.Filename)
 		} else if contains(processedMsg.BucketPath, "edit") {
 			return h.orchestrateUC.HandleEditCompleted(processedMsg.VideoID, processedMsg.Filename)
+		} else if contains(processedMsg.BucketPath, "audio-removal") {
+			return h.orchestrateUC.HandleAudioRemovalCompleted(processedMsg.VideoID, processedMsg.Filename)
+		} else if contains(processedMsg.BucketPath, "watermarking") {
+			return h.orchestrateUC.HandleWatermarkingCompleted(processedMsg.VideoID, processedMsg.Filename)
 		}
 	}
 
