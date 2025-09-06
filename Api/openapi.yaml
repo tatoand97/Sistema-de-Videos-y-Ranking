@@ -30,16 +30,14 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/SignupRequest"
-            examples:
-              ok:
-                value:
-                  first_name: John
-                  last_name: Doe
-                  email: john@example.com
-                  password1: StrongPass123
-                  password2: StrongPass123
-                  city: Bogotá
-                  country: Colombia
+            example:
+              first_name: John
+              last_name: Doe
+              email: john@example.com
+              password1: StrongPass123
+              password2: StrongPass123
+              city: Bogotá
+              country: Colombia
       responses:
         "201":
           description: Usuario creado exitosamente.
@@ -49,6 +47,7 @@ paths:
                 $ref: "#/components/schemas/SignupResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+
   /api/auth/login:
     post:
       summary: Inicio de sesión (JWT)
@@ -60,11 +59,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/LoginRequest"
-            examples:
-              ok:
-                value:
-                  email: john@example.com
-                  password: StrongPass123
+            example:
+              email: john@example.com
+              password: StrongPass123
       responses:
         "200":
           description: Autenticación exitosa.
@@ -72,12 +69,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthToken"
-              examples:
-                ok:
-                  value:
-                    access_token: eyJ0eXAiOiJKV1QiLCJhbGci...
-                    token_type: Bearer
-                    expires_in: 3600
+              example:
+                access_token: eyJ0eXAiOiJKV1QiLCJhbGci...
+                token_type: "Bearer"
+                expires_in: 3600
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -123,15 +118,13 @@ paths:
                   first_name: { type: string }
                   last_name: { type: string }
                   email: { type: string, format: email }
-              examples:
-                ok:
-                  value:
-                    status: "ok"
-                    user_id: 123
-                    permissions: ["videos:upload", "videos:read"]
-                    first_name: "John"
-                    last_name: "Doe"
-                    email: "john@example.com"
+              example:
+                status: "ok"
+                user_id: 123
+                permissions: ["videos:upload", "videos:read"]
+                first_name: "John"
+                last_name: "Doe"
+                email: "john@example.com"
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/videos/upload:
@@ -177,11 +170,9 @@ paths:
                 properties:
                   message: { type: string, enum: ["Video subido correctamente. Procesamiento en curso."] }
                   task_id: { type: string }
-              examples:
-                ok:
-                  value:
-                    message: "Video subido correctamente. Procesamiento en curso."
-                    task_id: "123456"
+              example:
+                message: "Video subido correctamente. Procesamiento en curso."
+                task_id: "123456"
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         # Opcional (extensión no normada por el documento):
@@ -202,19 +193,17 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Video"
-              examples:
-                sample:
-                  value:
-                    - video_id: "123456"
-                      title: "Mi mejor tiro de 3"
-                      status: "processed"
-                      uploaded_at: "2025-03-10T14:30:00Z"
-                      processed_at: "2025-03-10T14:35:00Z"
-                      processed_url: "https://anb.com/videos/processed/123456.mp4"
-                    - video_id: "654321"
-                      title: "Habilidades de dribleo"
-                      status: "uploaded"
-                      uploaded_at: "2025-03-11T10:15:00Z"
+              example:
+                - video_id: "123456"
+                  title: "Mi mejor tiro de 3"
+                  status: "processed"
+                  uploaded_at: "2025-03-10T14:30:00Z"
+                  processed_at: "2025-03-10T14:35:00Z"
+                  processed_url: "https://anb.com/videos/processed/123456.mp4"
+                - video_id: "654321"
+                  title: "Habilidades de dribleo"
+                  status: "uploaded"
+                  uploaded_at: "2025-03-11T10:15:00Z"
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/videos/statuses:
@@ -235,13 +224,16 @@ paths:
                     type: array
                     items:
                       type: string
-              examples:
-                ok:
-                  value:
-                    statuses: [
-                      "UPLOADED", "TRIMMING", "ADJUSTING_RESOLUTION", "ADDING_WATERMARK",
-                      "REMOVING_AUDIO", "ADDING_INTRO_OUTRO", "PROCESSED", "FAILED"
-                    ]
+              example:
+                statuses:
+                  - "UPLOADED"
+                  - "TRIMMING"
+                  - "ADJUSTING_RESOLUTION"
+                  - "ADDING_WATERMARK"
+                  - "REMOVING_AUDIO"
+                  - "ADDING_INTRO_OUTRO"
+                  - "PROCESSED"
+                  - "FAILED"
 
   /api/videos/{video_id}:
     get:
@@ -261,17 +253,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Video"
-              examples:
-                ok:
-                  value:
-                    video_id: "a1b2c3d4"
-                    title: "Tiros de tres en movimiento"
-                    status: "processed"
-                    uploaded_at: "2025-03-15T14:22:00Z"
-                    processed_at: "2025-03-15T15:10:00Z"
-                    original_url: "https://anb.com/uploads/a1b2c3d4.mp4"
-                    processed_url: "https://anb.com/processed/a1b2c3d4.mp4"
-                    votes: 125
+              example:
+                video_id: "a1b2c3d4"
+                title: "Tiros de tres en movimiento"
+                status: "processed"
+                uploaded_at: "2025-03-15T14:22:00Z"
+                processed_at: "2025-03-15T15:10:00Z"
+                original_url: "https://anb.com/uploads/a1b2c3d4.mp4"
+                processed_url: "https://anb.com/processed/a1b2c3d4.mp4"
+                votes: 125
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -295,11 +285,9 @@ paths:
                 properties:
                   message: { type: string }
                   video_id: { type: string }
-              examples:
-                ok:
-                  value:
-                    message: "El video ha sido eliminado exitosamente."
-                    video_id: "a1b2c3d4"
+              example:
+                message: "El video ha sido eliminado exitosamente."
+                video_id: "a1b2c3d4"
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -329,7 +317,7 @@ paths:
         "200":
           description: Binario del video.
           content:
-            "*/*":
+            application/octet-stream:
               schema:
                 type: string
                 format: binary
@@ -341,6 +329,7 @@ paths:
     get:
       summary: Listar videos públicos disponibles para votación
       tags: [Público]
+      security: []
       responses:
         "200":
           description: Lista de videos públicos.
@@ -370,9 +359,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VoteResponse"
-              examples:
-                ok:
-                  value: { message: "Voto registrado exitosamente." }
+              example:
+                message: "Voto registrado exitosamente."
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -408,17 +396,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RankingEntry"
-              examples:
-                ok:
-                  value:
-                    - position: 1
-                      username: superplayer
-                      city: Bogotá
-                      votes: 1530
-                    - position: 2
-                      username: nextstar
-                      city: Bogotá
-                      votes: 1495
+              example:
+                - position: 1
+                  username: superplayer
+                  city: Bogotá
+                  votes: 1530
+                - position: 2
+                  username: nextstar
+                  city: Bogotá
+                  votes: 1495
         "400": { $ref: "#/components/responses/BadRequest" }
 
   /api/uploads:
@@ -436,13 +422,11 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/CreateUploadRequest"
-            examples:
-              ok:
-                value:
-                  filename: "clip.mp4"
-                  mimeType: "video/mp4"
-                  sizeBytes: 73400320
-                  checksum: "TBD_SHA256_HEX"
+            example:
+              filename: "clip.mp4"
+              mimeType: "video/mp4"
+              sizeBytes: 73400320
+              checksum: "TBD_SHA256_HEX"
       responses:
         "201":
           description: URL y campos firmados para POST Policy
@@ -450,26 +434,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateUploadResponsePostPolicy"
-              examples:
-                ok:
-                  value:
-                    uploadUrl: "https://minio.example.com/my-bucket"
-                    resourceUrl: "s3://my-bucket/uploads/2025/09/06/5a1d...-clip.mp4"
-                    expiresAt: "2025-09-06T23:59:59Z"
-                    form:
-                      key: "uploads/2025/09/06/5a1d...-clip.mp4"
-                      policy: "eyJleHBpcmF0aW9uIjoiMjAyNS0wOS..."
-                      x-amz-algorithm: "AWS4-HMAC-SHA256"
-                      x-amz-credential: "ACCESSKEY/20250906/auto/s3/aws4_request"
-                      x-amz-date: "20250906T201122Z"
-                      x-amz-signature: "b5f3a1..."
-                      Content-Type: "video/mp4"
-                      x-amz-meta-sha256: "a2c3...f9"
-                      success_action_status: "201"
+              example:
+                uploadUrl: "https://minio.example.com/my-bucket"
+                resourceUrl: "s3://my-bucket/uploads/2025/09/06/5a1d...-clip.mp4"
+                expiresAt: "2025-09-06T23:59:59Z"
+                form:
+                  key: "uploads/2025/09/06/5a1d...-clip.mp4"
+                  policy: "eyJleHBpcmF0aW9uIjoiMjAyNS0wOS..."
+                  x-amz-algorithm: "AWS4-HMAC-SHA256"
+                  x-amz-credential: "ACCESSKEY/20250906/auto/s3/aws4_request"
+                  x-amz-date: "20250906T201122Z"
+                  x-amz-signature: "b5f3a1..."
+                  Content-Type: "video/mp4"
+                  x-amz-meta-sha256: "a2c3...f9"
+                  success_action_status: "201"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /api/location/city-id:
+    get:
+      summary: Obtener city_id por país y ciudad
+      description: Devuelve el identificador de ciudad a partir de nombres de país y ciudad (comparación case-insensitive).
+      tags: [Ubicación]
+      security: []
+      parameters:
+        - name: country
+          in: query
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Identificador de la ciudad.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  city_id: { type: integer }
+              example: { city_id: 123 }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -482,32 +493,31 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
-          examples:
-            invalid:
-              value: { error: "Bad Request", message: "Parámetro inválido." }
+          example: { error: "Bad Request", message: "Parámetro inválido." }
     Unauthorized:
       description: Falta de autenticación o token inválido.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
-          examples:
-            unauth:
-              value: { error: "Unauthorized", message: "Token inválido o expirado." }
+          example: { error: "Unauthorized", message: "Token inválido o expirado." }
     Forbidden:
       description: Acceso denegado.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Forbidden", message: "Acceso denegado." }
     NotFound:
       description: Recurso no encontrado.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Not Found", message: "Recurso no encontrado." }
     PayloadTooLarge:
       description: Tamaño de carga excedido (p. ej., >100MB).
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Payload Too Large", message: "Tamaño de carga excedido." }
   schemas:
     Error:
       type: object
@@ -541,7 +551,7 @@ components:
       required: [access_token, token_type, expires_in]
       properties:
         access_token: { type: string }
-        token_type: { type: string, enum: [Bearer] }
+        token_type: { type: string, enum: ["Bearer"] }
         expires_in: { type: integer, format: int64 }
     Video:
       type: object
@@ -586,7 +596,6 @@ components:
           type: string
           description: "Opcional. SHA-256 en hex del archivo; se refleja en x-amz-meta-sha256."
       required: [filename, mimeType]
-
     CreateUploadResponsePostPolicy:
       type: object
       required: [uploadUrl, resourceUrl, expiresAt, form]
@@ -603,7 +612,6 @@ components:
           format: date-time
         form:
           $ref: "#/components/schemas/S3PostPolicyForm"
-
     S3PostPolicyForm:
       type: object
       description: "Campos que el cliente debe enviar como fields del multipart/form-data a uploadUrl."
@@ -628,37 +636,3 @@ components:
         - x-amz-date
         - x-amz-signature
         - Content-Type
-x-rateLimit:
-  requestsPerMinute: TBD_RATE_LIMIT
-x-pagination:
-  style: "query"
-  params: ["page", "pageSize", "city"]
-  /api/location/city-id:
-    get:
-      summary: Obtener city_id por país y ciudad
-      description: Devuelve el identificador de ciudad a partir de nombres de país y ciudad (comparación case-insensitive).
-      tags: [Ubicación]
-      security: []
-      parameters:
-        - name: country
-          in: query
-          required: true
-          schema: { type: string }
-        - name: city
-          in: query
-          required: true
-          schema: { type: string }
-      responses:
-        "200":
-          description: Identificador de la ciudad.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  city_id: { type: integer }
-              examples:
-                ok:
-                  value: { city_id: 123 }
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "404": { $ref: "#/components/responses/NotFound" }
