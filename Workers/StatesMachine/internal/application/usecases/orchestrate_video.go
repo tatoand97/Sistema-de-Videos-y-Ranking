@@ -187,13 +187,18 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 }
 
 func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filename string) error {
+	if err := uc.videoRepo.UpdateStatus(videoID, domain.StatusCompleted); err != nil {
+		return fmt.Errorf("update final status: %w", err)
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"video_id":  videoID,
 		"filename":  filename,
 		"timestamp": time.Now().UTC(),
 		"stage":     "gossip_open_close_completed",
 		"result":    "success",
-	}).Info("StatesMachine: GossipOpenClose completed successfully, video processing pipeline finished")
+		"pipeline":  "finished",
+	}).Info("StatesMachine: GossipOpenClose completed successfully, entire video processing pipeline finished")
 
 	return nil
 }

@@ -3,18 +3,20 @@ package usecases
 
 import (
 	"fmt"
-	"mime"
 	"os"
 	"strconv"
+	"time"
 
 	"gossipopenclose/internal/domain"
 	"gossipopenclose/internal/application/services"
+	"github.com/sirupsen/logrus"
 )
 
 type OpenCloseUseCase struct {
 	videoRepo            domain.VideoRepository
 	storageRepo          domain.StorageRepository
 	processingService    *services.OpenCloseVideoProcessingService
+	notificationService  domain.NotificationService
 	rawBucket            string
 	processedBucket      string
 	introSeconds         float64
@@ -29,6 +31,7 @@ func NewOpenCloseUseCase(
 	videoRepo domain.VideoRepository,
 	storageRepo domain.StorageRepository,
 	processingService *services.OpenCloseVideoProcessingService,
+	notificationService domain.NotificationService,
 	rawBucket, processedBucket, logoPath string,
 	introSeconds, outroSeconds float64,
 	targetW, targetH, fps int,
@@ -37,6 +40,7 @@ func NewOpenCloseUseCase(
 		videoRepo: videoRepo,
 		storageRepo: storageRepo,
 		processingService: processingService,
+		notificationService: notificationService,
 		rawBucket: rawBucket,
 		processedBucket: processedBucket,
 		introSeconds: introSeconds,
@@ -91,6 +95,18 @@ func (uc *OpenCloseUseCase) Execute(filename string) error {
 		return fmt.Errorf("update final status: %w", err)
 	}
 
-	_ = mime.TypeByExtension(".mp4") // placeholder para mantenener simetría con watermarking
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+		logrus.Errorf("Failed to notify state machine: %v", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id": video.ID,
+		"filename": filename,
+		"bucket_from": uc.rawBucket,
+		"bucket_to": uc.processedBucket,
+		"timestamp": time.Now().UTC(),
+	}).Info("GossipOpenClose processing completed successfully")
+
 	return nil
 }

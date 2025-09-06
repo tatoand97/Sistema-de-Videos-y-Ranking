@@ -22,10 +22,16 @@ func NewContainer(config *Config) (*Container, error) {
 
 	processing := services.NewOpenCloseVideoProcessingService()
 
+	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
+	if err != nil { return nil, err }
+
+	notificationService := services.NewNotificationService(publisher, "states_machine_queue")
+
 	uc := usecases.NewOpenCloseUseCase(
 		videoRepo,
 		storageRepo,
 		processing,
+		notificationService,
 		config.RawBucket,
 		config.ProcessedBucket,
 		config.LogoPath,
