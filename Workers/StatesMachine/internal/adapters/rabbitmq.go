@@ -14,6 +14,7 @@ type RabbitMQConsumer struct {
 type RabbitMQPublisher struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
+	url     string
 }
 
 func NewRabbitMQConsumer(url string) (*RabbitMQConsumer, error) {
@@ -31,9 +32,12 @@ func NewRabbitMQPublisher(url string) (*RabbitMQPublisher, error) {
 	if err != nil { return nil, err }
 
 	ch, err := conn.Channel()
-	if err != nil { return nil, err }
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
 
-	return &RabbitMQPublisher{conn: conn, channel: ch}, nil
+	return &RabbitMQPublisher{conn: conn, channel: ch, url: url}, nil
 }
 
 func (r *RabbitMQConsumer) StartConsuming(queueName string, handler MessageHandlerInterface) error {
@@ -101,11 +105,14 @@ func (r *RabbitMQPublisher) reconnect() error {
 		r.conn.Close()
 	}
 
-	conn, err := amqp.Dial("amqp://admin:admin@rabbitmq:5672/")
+	conn, err := amqp.Dial(r.url)
 	if err != nil { return err }
 
 	ch, err := conn.Channel()
-	if err != nil { return err }
+	if err != nil {
+		conn.Close()
+		return err
+	}
 
 	r.conn = conn
 	r.channel = ch

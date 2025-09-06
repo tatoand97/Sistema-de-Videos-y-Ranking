@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"strings"
-	"regexp"
+	"shared/security"
 )
 
 type VideoMessage struct {
@@ -30,7 +30,7 @@ func NewMessageHandler(uc *usecases.OrchestrateVideoUseCase) *MessageHandler {
 func (h *MessageHandler) HandleMessage(body []byte) error {
 	var processedMsg VideoProcessedMessage
 	if err := json.Unmarshal(body, &processedMsg); err == nil && processedMsg.VideoID != "" {
-		logrus.Infof("StatesMachine received processed video: %s from %s", sanitizeLogInput(processedMsg.Filename), sanitizeLogInput(processedMsg.BucketPath))
+		logrus.Infof("StatesMachine received processed video: %s from %s", security.SanitizeLogInput(processedMsg.Filename), security.SanitizeLogInput(processedMsg.BucketPath))
 		
 		if contains(processedMsg.BucketPath, "trim") {
 			return h.orchestrateUC.HandleTrimCompleted(processedMsg.VideoID, processedMsg.Filename)
@@ -51,32 +51,11 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return err
 	}
 
-	logrus.Infof("StatesMachine received filename: '%s'", sanitizeLogInput(msg.Filename))
+	logrus.Infof("StatesMachine received filename: '%s'", security.SanitizeLogInput(msg.Filename))
 	return h.orchestrateUC.Execute(msg.Filename)
 }
 
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || (len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || findInString(s, substr))))
-}
-
-func findInString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
-
-// sanitizeLogInput removes potentially dangerous characters from log input
-func sanitizeLogInput(input string) string {
-	// Remove newlines, carriage returns, and control characters
-	re := regexp.MustCompile(`[\r\n\t\x00-\x1f\x7f-\x9f]`)
-	sanitized := re.ReplaceAllString(input, "")
-	// Limit length to prevent log flooding
-	if len(sanitized) > 100 {
-		sanitized = sanitized[:100] + "..."
-	}
-	return strings.TrimSpace(sanitized)
+	return strings.Contains(s, substr)
 }
 

@@ -23,12 +23,20 @@ func ValidateRabbitMQURL(rabbitURL string) error {
 		return fmt.Errorf("RABBITMQ_URL must use amqp or amqps scheme")
 	}
 	
-	// Check for placeholder credentials
+	// Check for common weak/placeholder credentials
 	if u.User != nil {
 		username := u.User.Username()
 		password, _ := u.User.Password()
-		if username == "user" && password == "pass" {
-			return fmt.Errorf("RABBITMQ_URL contains placeholder credentials, please set real credentials")
+		weakCreds := map[string]string{
+			"user": "pass",
+			"admin": "admin",
+			"guest": "guest",
+			"test": "test",
+		}
+		for user, pass := range weakCreds {
+			if username == user && password == pass {
+				return fmt.Errorf("RABBITMQ_URL contains weak credentials (%s:%s), please set secure credentials", user, pass)
+			}
 		}
 	}
 	

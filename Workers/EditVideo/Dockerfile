@@ -1,10 +1,11 @@
 FROM golang:1.21-alpine AS builder
 RUN apk add --no-cache git
 WORKDIR /app
-COPY go.mod .
+COPY EditVideo/go.mod .
+COPY shared ./shared
 RUN go mod download
-COPY internal/ ./internal/
-COPY cmd/ ./cmd/
+COPY EditVideo/internal/ ./internal/
+COPY EditVideo/cmd/ ./cmd/
 RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o editvideo ./cmd/main.go
 
