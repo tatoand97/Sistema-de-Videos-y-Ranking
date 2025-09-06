@@ -314,11 +314,6 @@ paths:
     get:
       summary: Listar videos públicos disponibles para votación
       tags: [Público]
-      parameters:
-        - name: city
-          in: query
-          required: false
-          schema: { type: string }
       responses:
         "200":
           description: Lista de videos públicos.

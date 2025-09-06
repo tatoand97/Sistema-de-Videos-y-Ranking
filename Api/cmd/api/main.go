@@ -71,10 +71,12 @@ func main() {
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
 	locationService := useCase.NewLocationService(locRepo)
+	publicRepo := postgresrepo.NewPublicRepository(db)
+	publicService := useCase.NewPublicService(publicRepo)
 
 	r := gin.Default()
 	r.Static("/static", "./static")
-	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC)
+	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC, publicService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
