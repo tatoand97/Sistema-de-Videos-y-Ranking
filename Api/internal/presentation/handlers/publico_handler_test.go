@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain"
-	"main_videork/internal/domain/responses"
+	"api/internal/application/useCase"
+	"api/internal/domain"
+	"api/internal/domain/responses"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"

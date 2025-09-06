@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain"
+	"api/internal/application/useCase"
+	"api/internal/domain"
 	"net/http"
 	"strings"
 

@@ -1,8 +1,8 @@
 package interfaces
 
 import (
+	"api/internal/domain/responses"
 	"context"
-	"main_videork/internal/domain/responses"
 )
 
 // PublicRepository define operaciones de lectura públicas (agregadas) para videos.

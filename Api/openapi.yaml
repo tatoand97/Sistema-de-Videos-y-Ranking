@@ -216,6 +216,32 @@ paths:
                       uploaded_at: "2025-03-11T10:15:00Z"
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /api/videos/statuses:
+    get:
+      summary: Listar estados de procesamiento de video
+      description: Devuelve el listado de estados posibles para un video.
+      tags: [Videos]
+      security: []
+      responses:
+        "200":
+          description: Lista de estados disponibles.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statuses:
+                    type: array
+                    items:
+                      type: string
+              examples:
+                ok:
+                  value:
+                    statuses: [
+                      "UPLOADED", "TRIMMING", "ADJUSTING_RESOLUTION", "ADDING_WATERMARK",
+                      "REMOVING_AUDIO", "ADDING_INTRO_OUTRO", "PROCESSED", "FAILED"
+                    ]
+
   /api/videos/{video_id}:
     get:
       summary: Obtener detalle de un video propio

@@ -1,12 +1,12 @@
 package useCase
 
 import (
+	"api/internal/domain"
 	"context"
 	"errors"
-	"main_videork/internal/domain"
 
-	"main_videork/internal/domain/entities"
-	"main_videork/internal/domain/interfaces"
+	"api/internal/domain/entities"
+	"api/internal/domain/interfaces"
 
 	"golang.org/x/crypto/bcrypt"
 )

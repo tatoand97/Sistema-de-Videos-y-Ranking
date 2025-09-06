@@ -1,8 +1,8 @@
 package useCase
 
 import (
+	"api/internal/domain/interfaces"
 	"context"
-	"main_videork/internal/domain/interfaces"
 )
 
 // LocationService expone operaciones de lectura para ubicación (país/ciudad).

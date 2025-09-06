@@ -1,8 +1,8 @@
 package interfaces
 
 import (
+	"api/internal/domain/entities"
 	"context"
-	"main_videork/internal/domain/entities"
 )
 
 // UserRepository defines persistence behavior for users.

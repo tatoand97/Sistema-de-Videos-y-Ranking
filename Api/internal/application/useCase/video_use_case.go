@@ -7,10 +7,10 @@ import (
 	"mime/multipart"
 	"time"
 
+	"api/internal/application/validations"
+	"api/internal/domain/entities"
+	"api/internal/domain/interfaces"
 	"io"
-	"main_videork/internal/application/validations"
-	"main_videork/internal/domain/entities"
-	"main_videork/internal/domain/interfaces"
 )
 
 type UploadVideoInput struct {

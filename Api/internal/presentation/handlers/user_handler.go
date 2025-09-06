@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"api/internal/application/useCase"
+	"api/internal/domain"
+	"api/internal/domain/requests"
 	"errors"
-	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain"
-	"main_videork/internal/domain/requests"
 	"net/http"
 	"strings"
 

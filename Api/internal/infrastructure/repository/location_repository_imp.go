@@ -7,8 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"main_videork/internal/domain"
-	"main_videork/internal/domain/interfaces"
+	"api/internal/domain"
+	"api/internal/domain/interfaces"
 )
 
 type locationRepository struct {

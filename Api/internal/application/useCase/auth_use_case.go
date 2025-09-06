@@ -1,9 +1,9 @@
 package useCase
 
 import (
+	"api/internal/domain/interfaces"
 	"context"
 	"errors"
-	"main_videork/internal/domain/interfaces"
 	"strconv"
 	"sync"
 	"time"

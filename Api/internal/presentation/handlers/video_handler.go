@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"api/internal/application/useCase"
+	"api/internal/domain/entities"
 	"context"
-	"main_videork/internal/application/useCase"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,6 +60,28 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 	}
 
 	status := c.PostForm("status_id")
+	// Default to UPLOADED when not provided; otherwise validate/normalize
+	if status == "" {
+		status = string(entities.StatusUploaded)
+	} else {
+		status = strings.ToUpper(status)
+		valid := false
+		for _, st := range entities.AllVideoStatuses() {
+			if string(st) == status {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			// Return 400 with allowed statuses for clarity
+			allowed := make([]string, 0)
+			for _, st := range entities.AllVideoStatuses() {
+				allowed = append(allowed, string(st))
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status", "allowed": allowed})
+			return
+		}
+	}
 
 	input := useCase.UploadVideoInput{
 		Title:      title,

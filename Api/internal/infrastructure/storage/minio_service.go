@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"main_videork/internal/domain/interfaces"
+	"api/internal/domain/interfaces"
 
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"

@@ -1,19 +1,20 @@
 package handlers
 
 import (
-	"main_videork/internal/application/useCase"
-	"main_videork/internal/presentation/middlewares"
+	"api/internal/application/useCase"
+	"api/internal/presentation/middlewares"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, locationService *useCase.LocationService, secret string, uploadVideoUC *useCase.UploadVideoUseCase, publicService *useCase.PublicService) {
+func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, locationService *useCase.LocationService, secret string, uploadVideoUC *useCase.UploadVideoUseCase, publicService *useCase.PublicService, statusService *useCase.StatusService) {
 	authHandlers := NewAuthHandlers(authService)
 	userHandlers := NewUserHandlers(userService)
 	videoHandlers := NewVideoHandlers(uploadVideoUC)
 	locationHandlers := NewLocationHandlers(locationService)
 	publicHandlers := NewPublicHandlers(publicService)
+	statusHandlers := NewStatusHandlers(statusService)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -23,6 +24,9 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
 	router.POST("/api/auth/signup", userHandlers.Register)
 	router.POST("/api/auth/login", authHandlers.Login)
+
+	// Public: list video statuses
+	router.GET("/api/videos/statuses", statusHandlers.ListVideoStatuses)
 
 	authGroup := router.Group("/")
 	authGroup.Use(middlewares.JWTMiddleware(authService, secret))

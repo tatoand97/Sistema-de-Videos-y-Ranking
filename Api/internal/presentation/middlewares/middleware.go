@@ -1,8 +1,8 @@
 package middlewares
 
 import (
+	"api/internal/application/useCase"
 	"fmt"
-	"main_videork/internal/application/useCase"
 	"net/http"
 	"strconv"
 	"strings"

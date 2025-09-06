@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"api/internal/domain/interfaces"
 	"context"
-	"main_videork/internal/domain/interfaces"
 
 	"gorm.io/gorm"
 )

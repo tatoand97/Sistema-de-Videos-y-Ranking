@@ -1,8 +1,8 @@
 package interfaces
 
 import (
+	"api/internal/domain/entities"
 	"context"
-	"main_videork/internal/domain/entities"
 )
 
 // VideoRepository define el comportamiento de persistencia para videos.

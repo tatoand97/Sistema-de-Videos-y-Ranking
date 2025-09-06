@@ -1,11 +1,11 @@
 package useCase
 
 import (
+	"api/internal/domain"
+	"api/internal/domain/interfaces"
+	"api/internal/domain/responses"
 	"context"
 	"errors"
-	"main_videork/internal/domain"
-	"main_videork/internal/domain/interfaces"
-	"main_videork/internal/domain/responses"
 )
 
 // PublicService expone operaciones públicas relacionadas con videos.

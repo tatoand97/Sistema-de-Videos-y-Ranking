@@ -1,11 +1,11 @@
 package repository
 
 import (
+	"api/internal/domain"
+	"api/internal/domain/entities"
+	"api/internal/domain/interfaces"
 	"context"
 	"errors"
-	"main_videork/internal/domain"
-	"main_videork/internal/domain/entities"
-	"main_videork/internal/domain/interfaces"
 
 	"gorm.io/gorm"
 )

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"main_videork/internal/application/useCase"
-	"main_videork/internal/domain"
+	"api/internal/application/useCase"
+	"api/internal/domain"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"

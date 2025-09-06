@@ -1,9 +1,9 @@
 package main
 
 import (
+	"api/internal/presentation/handlers"
 	"errors"
 	"log"
-	"main_videork/internal/presentation/handlers"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -13,9 +13,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"main_videork/internal/application/useCase"
-	postgresrepo "main_videork/internal/infrastructure/repository"
-	"main_videork/internal/infrastructure/storage"
+	"api/internal/application/useCase"
+	postgresrepo "api/internal/infrastructure/repository"
+	"api/internal/infrastructure/storage"
 )
 
 func main() {
@@ -79,7 +79,8 @@ func main() {
 
 	r := gin.Default()
 	r.Static("/static", "./static")
-	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC, publicService)
+	statusService := useCase.NewStatusService()
+	handlers.NewRouter(r, authService, userService, locationService, jwtSecret, uploadVideoUC, publicService, statusService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
