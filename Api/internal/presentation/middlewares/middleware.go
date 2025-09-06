@@ -1,8 +1,8 @@
-package presentation
+package middlewares
 
 import (
+	"api/internal/application/useCase"
 	"fmt"
-	"main_videork/internal/application/useCase"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,27 +12,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, secret string, uploadVideoUC *useCase.UploadVideoUseCase) {
-	authHandlers := NewAuthHandlers(authService)
-	videoHandlers := NewVideoHandlers(uploadVideoUC)
-
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-	router.POST("/api/auth/signup", authHandlers.Register)
-	router.POST("/api/auth/login", authHandlers.Login)
-
-	authGroup := router.Group("/")
-	authGroup.Use(jwtMiddleware(authService, secret))
-	authGroup.POST("/api/auth/logout", authHandlers.Logout)
-	authGroup.GET("/api/me", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-	authGroup.POST("/api/videos/upload", videoHandlers.Upload)
-
-}
-
-func jwtMiddleware(authService *useCase.AuthService, secret string) gin.HandlerFunc {
+// JWTMiddleware valida el token Bearer, verifica expiración y not-before,
+// y coloca el userID en el contexto para el resto de handlers protegidos.
+func JWTMiddleware(authService *useCase.AuthService, secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")
 		parts := strings.Fields(auth)
@@ -47,7 +29,7 @@ func jwtMiddleware(authService *useCase.AuthService, secret string) gin.HandlerF
 			return
 		}
 
-		claims := &jwt.RegisteredClaims{}
+		claims := &useCase.AuthClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
 			if t.Method != jwt.SigningMethodHS256 {
 				return nil, fmt.Errorf("algoritmo inválido")
@@ -82,6 +64,10 @@ func jwtMiddleware(authService *useCase.AuthService, secret string) gin.HandlerF
 			return
 		}
 		c.Set("userID", uint(uid64))
+		c.Set("permissions", claims.Permissions)
+		c.Set("first_name", claims.FirstName)
+		c.Set("last_name", claims.LastName)
+		c.Set("email", claims.Email)
 
 		c.Next()
 	}
