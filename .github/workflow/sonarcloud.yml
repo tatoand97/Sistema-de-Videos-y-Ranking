@@ -1,14 +1,10 @@
-name: SonarQube (monorepo Go)
+name: SonarCloud (monorepo Go)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/sonar-to-main ]
   pull_request:
-    branches: [ main ]
-
-env:
-  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    branches: [ main, feature/sonar-to-main ]
 
 jobs:
   sonar:
@@ -18,32 +14,52 @@ jobs:
       fail-fast: false
       matrix:
         include:
+
+        include:
           # ====== Ajusta keys y nombres a tu organización ======
           - name: Api
             path: Api
-            sonar_project_key: company.video.Api
-            sonar_project_name: video-Api
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_API
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_API
+            env: Api
           - name: Workers-AudioRemoval
             path: Workers/AudioRemoval
-            sonar_project_key: company.video.Workers.AudioRemoval
-            sonar_project_name: video-Workers-AudioRemoval
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_audio_removal
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_audio_removal
+            env: Workers-AudioRemoval
           - name: Workers-EditVideo
             path: Workers/EditVideo
-            sonar_project_key: company.video.Workers.EditVideo
-            sonar_project_name: video-Workers-EditVideo
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_edit_video
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_edit_video
+            env: Workers-EditVideo
           - name: Workers-gossipOpenClose
             path: Workers/gossipOpenClose
-            sonar_project_key: company.video.Workers.gossipOpenClose
-            sonar_project_name: video-Workers-gossipOpenClose
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_gossip_open_close
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_gossip_open_close
+            env: Workers-gossipOpenClose
           - name: Workers-TrimVideo
             path: Workers/TrimVideo
-            sonar_project_key: company.video.Workers.TrimVideo
-            sonar_project_name: video-Workers-TrimVideo
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_trim_video
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_trim_video
+            env: Workers-TrimVideo
           - name: Workers-Watermarking
             path: Workers/Watermarking
-            sonar_project_key: company.video.Workers.Watermarking
-            sonar_project_name: video-Workers-Watermarking
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_watermarking
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_watermarking
+            env: Workers-Watermarking
           # Agrega más (AdminCache, StatesMachine) cuando tengan código Go y tests
+          - name: Workers-AdminCache
+            path: Workers/AdminCache
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_admin_cache
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_admin_cache
+            env: Workers-AdminCache
+          - name: Workers-StatesMachine
+            path: Workers/StatesMachine
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_states_machine
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_states_machine
+            env: Workers-StatesMachine
+    # <- clave: esto hace que cada iteración del matrix use el Environment con su propio SONAR_TOKEN
+    environment: ${{ matrix.env }}
 
     defaults:
       run:
@@ -52,6 +68,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -62,19 +80,18 @@ jobs:
         run: go mod download
 
       - name: Run tests with coverage
-        run: |
-          go test ./... -coverprofile=coverage.out -covermode=atomic
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
 
-      - name: SonarScanner CLI
-        uses: SonarSource/sonarqube-scan-action@v2
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # <- viene del Environment activo
         with:
+          projectBaseDir: .
           args: >
             -Dsonar.projectKey=${{ matrix.sonar_project_key }}
             -Dsonar.projectName=${{ matrix.sonar_project_name }}
-            -Dsonar.projectBaseDir=.
-            -Dsonar.language=go
             -Dsonar.sources=.
             -Dsonar.tests=.
             -Dsonar.test.inclusions=**/*_test.go
@@ -82,8 +99,5 @@ jobs:
             -Dsonar.go.coverage.reportPaths=coverage.out
             -Dsonar.sourceEncoding=UTF-8
 
-      - name: Quality Gate (wait)
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 10
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
