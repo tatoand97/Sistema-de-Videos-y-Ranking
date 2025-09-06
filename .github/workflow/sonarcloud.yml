@@ -14,8 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-
-        include:
           # ====== Ajusta keys y nombres a tu organización ======
           - name: Api
             path: Api
@@ -52,11 +50,11 @@ jobs:
             path: Workers/AdminCache
             sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_admin_cache
             sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_admin_cache
-            env: Workers-AdminCache
+            env: 
           - name: Workers-StatesMachine
-            path: Workers/StatesMachine
-            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_states_machine
-            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_states_machine
+            path: Workers-AdminCacheWorkers/StatesMachine
+            sonar_project_key: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_state_machine
+            sonar_project_name: tatoand97_Sistema-de-Videos-y-Ranking_WRKR_state_machine
             env: Workers-StatesMachine
     # <- clave: esto hace que cada iteración del matrix use el Environment con su propio SONAR_TOKEN
     environment: ${{ matrix.env }}
