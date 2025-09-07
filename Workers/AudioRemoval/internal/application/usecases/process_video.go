@@ -33,7 +33,7 @@ func NewProcessVideoUseCase(
 	}
 }
 
-func (uc *ProcessVideoUseCase) Execute(filename string) error {
+func (uc *ProcessVideoUseCase) Execute(videoID, filename string) error {
 	video, err := uc.videoRepo.FindByFilename(filename)
 	if err != nil {
 		return fmt.Errorf("video not found: %w", err)
@@ -65,7 +65,7 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 	}
 
 	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
-	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+	if err := uc.notificationService.NotifyVideoProcessed(videoID, filename, bucketPath); err != nil {
 		logrus.Errorf("Failed to notify state machine: %v", err)
 	}
 

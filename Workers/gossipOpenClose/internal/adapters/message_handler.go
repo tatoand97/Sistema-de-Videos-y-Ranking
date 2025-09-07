@@ -7,6 +7,7 @@ import (
 )
 
 type VideoMessage struct {
+	VideoID  string `json:"video_id"`
 	Filename string `json:"filename"`
 }
 
@@ -25,6 +26,6 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return err
 	}
 
-	logrus.Infof("Recibido filename: '%s'", msg.Filename)
-	return h.editVideoUC.Execute(msg.Filename)
+	logrus.Infof("Recibido video_id: '%s', filename: '%s'", msg.VideoID, msg.Filename)
+	return h.editVideoUC.Execute(msg.VideoID, msg.Filename)
 }

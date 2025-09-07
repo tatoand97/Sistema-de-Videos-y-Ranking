@@ -26,5 +26,16 @@ func (r *PostgresVideoRepository) FindByID(id uint) (*domain.Video, error) {
 }
 
 func (r *PostgresVideoRepository) UpdateStatus(id uint, status domain.VideoStatus) error {
-	return r.db.Model(&domain.Video{}).Where("video_id = ?", id).Update("status", string(status)).Error
+	updates := map[string]interface{}{
+		"status": string(status),
+	}
+	
+	// Handle processed_at according to constraint: only set when status is PROCESSED
+	if status == domain.StatusProcessed {
+		updates["processed_at"] = "NOW()"
+	} else {
+		updates["processed_at"] = nil
+	}
+	
+	return r.db.Model(&domain.Video{}).Where("video_id = ?", id).Updates(updates).Error
 }

@@ -36,7 +36,7 @@ func NewWatermarkingUseCase(
 	}
 }
 
-func (uc *WatermarkingUseCase) Execute(filename string) error {
+func (uc *WatermarkingUseCase) Execute(videoID, filename string) error {
 	video, err := uc.videoRepo.FindByFilename(filename)
 	if err != nil { return fmt.Errorf("find video: %w", err) }
 	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusProcessing); err != nil { return err }
@@ -63,7 +63,7 @@ func (uc *WatermarkingUseCase) Execute(filename string) error {
 	}
 
 	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
-	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+	if err := uc.notificationService.NotifyVideoProcessed(videoID, filename, bucketPath); err != nil {
 		logrus.Errorf("Failed to notify state machine: %v", err)
 	}
 

@@ -8,6 +8,7 @@ import (
 )
 
 type VideoMessage struct {
+	VideoID  string `json:"video_id"`
 	Filename string `json:"filename"`
 }
 
@@ -28,9 +29,9 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return err
 	}
 
-	logrus.Infof("Processing video: %s", security.SanitizeLogInput(msg.Filename))
+	logrus.Infof("Processing video_id: %s, filename: %s", security.SanitizeLogInput(msg.VideoID), security.SanitizeLogInput(msg.Filename))
 	
-	if err := h.processVideoUC.Execute(msg.Filename); err != nil {
+	if err := h.processVideoUC.Execute(msg.VideoID, msg.Filename); err != nil {
 		logrus.Errorf("Error processing video %s: %v", security.SanitizeLogInput(msg.Filename), err)
 		return err
 	}
