@@ -3,10 +3,31 @@ package adapters
 import (
 	"statesmachine/internal/application/usecases"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"shared/security"
 )
+
+// NonRetryableError represents errors that should not be retried
+type NonRetryableError struct {
+	OriginalError error
+	Message       string
+}
+
+func (e *NonRetryableError) Error() string {
+	return fmt.Sprintf("non-retryable error: %s - %v", e.Message, e.OriginalError)
+}
+
+func (e *NonRetryableError) Unwrap() error {
+	return e.OriginalError
+}
+
+func IsNonRetryableError(err error) bool {
+	var nonRetryable *NonRetryableError
+	return errors.As(err, &nonRetryable)
+}
 
 type VideoMessage struct {
 	VideoID  string `json:"videoId"`
@@ -33,27 +54,46 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 	if err := json.Unmarshal(body, &processedMsg); err == nil && processedMsg.VideoID != "" {
 		logrus.Infof("StatesMachine received processed video: %s from %s", security.SanitizeLogInput(processedMsg.Filename), security.SanitizeLogInput(processedMsg.BucketPath))
 		
+		var handlerErr error
 		if contains(processedMsg.BucketPath, "trim") {
-			return h.orchestrateUC.HandleTrimCompleted(processedMsg.VideoID, processedMsg.Filename)
+			handlerErr = h.orchestrateUC.HandleTrimCompleted(processedMsg.VideoID, processedMsg.Filename)
 		} else if contains(processedMsg.BucketPath, "edit") {
-			return h.orchestrateUC.HandleEditCompleted(processedMsg.VideoID, processedMsg.Filename)
+			handlerErr = h.orchestrateUC.HandleEditCompleted(processedMsg.VideoID, processedMsg.Filename)
 		} else if contains(processedMsg.BucketPath, "audio-removal") {
-			return h.orchestrateUC.HandleAudioRemovalCompleted(processedMsg.VideoID, processedMsg.Filename)
+			handlerErr = h.orchestrateUC.HandleAudioRemovalCompleted(processedMsg.VideoID, processedMsg.Filename)
 		} else if contains(processedMsg.BucketPath, "watermarking") {
-			return h.orchestrateUC.HandleWatermarkingCompleted(processedMsg.VideoID, processedMsg.Filename)
+			handlerErr = h.orchestrateUC.HandleWatermarkingCompleted(processedMsg.VideoID, processedMsg.Filename)
 		} else if contains(processedMsg.BucketPath, "processed-videos") {
-			return h.orchestrateUC.HandleGossipOpenCloseCompleted(processedMsg.VideoID, processedMsg.Filename)
+			handlerErr = h.orchestrateUC.HandleGossipOpenCloseCompleted(processedMsg.VideoID, processedMsg.Filename)
 		}
+		
+		if handlerErr != nil && strings.Contains(handlerErr.Error(), "invalid video ID format") {
+			return &NonRetryableError{
+				OriginalError: handlerErr,
+				Message:       "Invalid video ID in processed message",
+			}
+		}
+		return handlerErr
 	}
 
 	var msg VideoMessage
 	if err := json.Unmarshal(body, &msg); err != nil {
 		logrus.Errorf("Failed to unmarshal message: %v", err)
-		return err
+		return &NonRetryableError{
+			OriginalError: err,
+			Message:       "Invalid message format",
+		}
 	}
 
 	logrus.Infof("StatesMachine received videoId: '%s'", security.SanitizeLogInput(msg.VideoID))
-	return h.orchestrateUC.Execute(msg.VideoID)
+	execErr := h.orchestrateUC.Execute(msg.VideoID)
+	if execErr != nil && strings.Contains(execErr.Error(), "invalid video ID format") {
+		return &NonRetryableError{
+			OriginalError: execErr,
+			Message:       "Invalid video ID in orchestration message",
+		}
+	}
+	return execErr
 }
 
 func contains(s, substr string) bool {

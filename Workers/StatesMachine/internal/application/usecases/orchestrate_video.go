@@ -45,7 +45,12 @@ func (uc *OrchestrateVideoUseCase) Execute(videoID string) error {
 	// Convert string ID to uint
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
-		return fmt.Errorf("invalid video ID format: %w", err)
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "id_validation",
+		}).Error("StatesMachine: Invalid video ID format, skipping message")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 
 	video, err := uc.videoRepo.FindByID(id)
@@ -104,7 +109,12 @@ func (uc *OrchestrateVideoUseCase) HandleTrimCompleted(videoID, filename string)
 	// Update status to ADJUSTING_RESOLUTION
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
-		return fmt.Errorf("invalid video ID format: %w", err)
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "trim_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in trim completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 	if err := uc.videoRepo.UpdateStatus(id, domain.StatusAdjustingRes); err != nil {
 		return fmt.Errorf("update status: %w", err)
@@ -145,7 +155,12 @@ func (uc *OrchestrateVideoUseCase) HandleEditCompleted(videoID, filename string)
 	// Update status to REMOVING_AUDIO
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
-		return fmt.Errorf("invalid video ID format: %w", err)
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "edit_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in edit completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 	if err := uc.videoRepo.UpdateStatus(id, domain.StatusRemovingAudio); err != nil {
 		return fmt.Errorf("update status: %w", err)
@@ -186,7 +201,12 @@ func (uc *OrchestrateVideoUseCase) HandleAudioRemovalCompleted(videoID, filename
 	// Update status to ADDING_WATERMARK
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
-		return fmt.Errorf("invalid video ID format: %w", err)
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "audio_removal_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in audio removal completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 	if err := uc.videoRepo.UpdateStatus(id, domain.StatusAddingWatermark); err != nil {
 		return fmt.Errorf("update status: %w", err)
@@ -227,7 +247,12 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 	// Update status to ADDING_INTRO_OUTRO
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
-		return fmt.Errorf("invalid video ID format: %w", err)
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "watermarking_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in watermarking completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 	if err := uc.videoRepo.UpdateStatus(id, domain.StatusAddingIntroOutro); err != nil {
 		return fmt.Errorf("update status: %w", err)
@@ -247,7 +272,12 @@ func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filen
 	// Update status to PROCESSED
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
-		return fmt.Errorf("invalid video ID format: %w", err)
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "gossip_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in gossip completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 	if err := uc.videoRepo.UpdateStatus(id, domain.StatusProcessed); err != nil {
 		return fmt.Errorf("update final status: %w", err)
