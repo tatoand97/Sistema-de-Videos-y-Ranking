@@ -254,6 +254,8 @@ services:
       - AUDIO_REMOVAL_QUEUE=audio_removal_queue
       - WATERMARKING_QUEUE=watermarking_queue
       - DATABASE_URL=postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+      - MAX_RETRIES=3
+      - RETRY_DELAY_MINUTES=5
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pgrep", "-f", "statesmachine"]

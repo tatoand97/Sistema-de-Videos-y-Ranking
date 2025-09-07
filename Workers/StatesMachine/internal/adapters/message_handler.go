@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"strings"
 	"shared/security"
+	"time"
 )
 
 // NonRetryableError represents errors that should not be retried
@@ -39,15 +40,21 @@ func IsNonRetryableError(err error) bool {
 }
 
 type VideoMessage struct {
-	VideoID  string `json:"videoId"`
-	Filename string `json:"filename"`
+	VideoID     string `json:"videoId"`
+	Filename    string `json:"filename"`
+	RetryCount  int    `json:"retry_count,omitempty"`
+	MaxRetries  int    `json:"max_retries,omitempty"`
+	LastRetry   int64  `json:"last_retry,omitempty"`
 }
 
 type VideoProcessedMessage struct {
-	VideoID    string `json:"video_id"`
-	Filename   string `json:"filename"`
-	BucketPath string `json:"bucket_path"`
-	Status     string `json:"status"`
+	VideoID     string `json:"video_id"`
+	Filename    string `json:"filename"`
+	BucketPath  string `json:"bucket_path"`
+	Status      string `json:"status"`
+	RetryCount  int    `json:"retry_count,omitempty"`
+	MaxRetries  int    `json:"max_retries,omitempty"`
+	LastRetry   int64  `json:"last_retry,omitempty"`
 }
 
 type MessageHandler struct {
@@ -91,6 +98,33 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return &NonRetryableError{
 			OriginalError: err,
 			Message:       "Invalid message format",
+		}
+	}
+
+	// Check retry limits and delay
+	if msg.MaxRetries > 0 && msg.RetryCount >= msg.MaxRetries {
+		logrus.WithFields(logrus.Fields{
+			"video_id": msg.VideoID,
+			"retry_count": msg.RetryCount,
+			"max_retries": msg.MaxRetries,
+		}).Warn("StatesMachine: Max retries exceeded, discarding message")
+		return &NonRetryableError{
+			OriginalError: fmt.Errorf("max retries exceeded"),
+			Message:       "Max retries exceeded",
+		}
+	}
+
+	// Check retry delay
+	if msg.LastRetry > 0 {
+		timeSinceLastRetryMinutes := (time.Now().Unix() - msg.LastRetry) / 60
+		requiredDelayMinutes := int64(h.orchestrateUC.GetRetryDelayMinutes())
+		if timeSinceLastRetryMinutes < requiredDelayMinutes {
+			logrus.WithFields(logrus.Fields{
+				"video_id": msg.VideoID,
+				"time_since_last_retry_minutes": timeSinceLastRetryMinutes,
+				"required_delay_minutes": requiredDelayMinutes,
+			}).Info("StatesMachine: Retry delay not met, requeuing message")
+			return fmt.Errorf("retry delay not met, requeue message")
 		}
 	}
 

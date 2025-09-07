@@ -9,8 +9,11 @@ import (
 )
 
 type WorkerMessage struct {
-	VideoID  string `json:"video_id"`
-	Filename string `json:"filename"`
+	VideoID     string `json:"video_id"`
+	Filename    string `json:"filename"`
+	RetryCount  int    `json:"retry_count,omitempty"`
+	MaxRetries  int    `json:"max_retries,omitempty"`
+	LastRetry   int64  `json:"last_retry,omitempty"`
 }
 
 type OrchestrateVideoUseCase struct {
@@ -19,12 +22,15 @@ type OrchestrateVideoUseCase struct {
 	editVideoQueue    string
 	audioRemovalQueue string
 	watermarkingQueue string
+	maxRetries        int
+	retryDelayMinutes int
 }
 
 func NewOrchestrateVideoUseCase(
 	videoRepo domain.VideoRepository,
 	publisher domain.MessagePublisher,
 	editVideoQueue, audioRemovalQueue, watermarkingQueue string,
+	maxRetries, retryDelayMinutes int,
 ) *OrchestrateVideoUseCase {
 	return &OrchestrateVideoUseCase{
 		videoRepo:         videoRepo,
@@ -32,6 +38,8 @@ func NewOrchestrateVideoUseCase(
 		editVideoQueue:    editVideoQueue,
 		audioRemovalQueue: audioRemovalQueue,
 		watermarkingQueue: watermarkingQueue,
+		maxRetries:        maxRetries,
+		retryDelayMinutes: retryDelayMinutes,
 	}
 }
 
@@ -59,8 +67,11 @@ func (uc *OrchestrateVideoUseCase) Execute(videoID string) error {
 	}
 
 	message := WorkerMessage{
-		VideoID:  videoID,
-		Filename: video.OriginalFile,
+		VideoID:     videoID,
+		Filename:    video.OriginalFile,
+		RetryCount:  0,
+		MaxRetries:  uc.maxRetries,
+		LastRetry:   0,
 	}
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
@@ -294,4 +305,8 @@ func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filen
 	}).Info("StatesMachine: GossipOpenClose completed successfully, entire video processing pipeline finished")
 
 	return nil
+}
+
+func (uc *OrchestrateVideoUseCase) GetRetryDelayMinutes() int {
+	return uc.retryDelayMinutes
 }
