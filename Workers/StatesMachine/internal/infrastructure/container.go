@@ -3,12 +3,15 @@ package infrastructure
 import (
 	"statesmachine/internal/adapters"
 	"statesmachine/internal/application/usecases"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type Container struct {
 	Consumer       *adapters.RabbitMQConsumer
 	Publisher      *adapters.RabbitMQPublisher
 	MessageHandler *adapters.MessageHandler
+	DB             *gorm.DB
 }
 
 func NewContainer(config *Config) (*Container, error) {
@@ -18,7 +21,11 @@ func NewContainer(config *Config) (*Container, error) {
 	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
 	if err != nil { return nil, err }
 
-	videoRepo := adapters.NewMockVideoRepository()
+	// Database connection
+	db, err := gorm.Open(postgres.Open(config.DatabaseURL), &gorm.Config{})
+	if err != nil { return nil, err }
+
+	videoRepo := adapters.NewPostgresVideoRepository(db)
 	orchestrateUC := usecases.NewOrchestrateVideoUseCase(videoRepo, publisher, config.EditVideoQueue, config.AudioRemovalQueue, config.WatermarkingQueue)
 	messageHandler := adapters.NewMessageHandler(orchestrateUC)
 
@@ -26,5 +33,6 @@ func NewContainer(config *Config) (*Container, error) {
 		Consumer:       consumer,
 		Publisher:      publisher,
 		MessageHandler: messageHandler,
+		DB:             db,
 	}, nil
 }

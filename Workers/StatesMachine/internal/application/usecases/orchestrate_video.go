@@ -8,7 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type VideoMessage struct {
+type WorkerMessage struct {
+	VideoID  string `json:"video_id"`
 	Filename string `json:"filename"`
 }
 
@@ -34,36 +35,49 @@ func NewOrchestrateVideoUseCase(
 	}
 }
 
-func (uc *OrchestrateVideoUseCase) Execute(filename string) error {
+func (uc *OrchestrateVideoUseCase) Execute(videoID string) error {
 	logrus.WithFields(logrus.Fields{
-		"filename":  filename,
+		"video_id":  videoID,
 		"timestamp": time.Now().UTC(),
 		"stage":     "orchestration_start",
 	}).Info("StatesMachine: Starting video processing orchestration")
 
-	video, err := uc.videoRepo.FindByFilename(filename)
+	// Convert string ID to uint
+	var id uint
+	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "id_validation",
+		}).Error("StatesMachine: Invalid video ID format, skipping message")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
+	}
+
+	video, err := uc.videoRepo.FindByID(id)
 	if err != nil {
 		return fmt.Errorf("find video: %w", err)
 	}
 
-	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusProcessing); err != nil {
-		return fmt.Errorf("update status: %w", err)
+	message := WorkerMessage{
+		VideoID:  videoID,
+		Filename: video.OriginalFile,
 	}
-
-	message := VideoMessage{Filename: filename}
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("marshal message: %w", err)
 	}
 
 	if err := uc.publisher.PublishMessage("trim_video_queue", messageBytes); err != nil {
-		_ = uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("publish to trim_video_queue: %w", err)
 	}
 
+	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusTrimming); err != nil {
+		return fmt.Errorf("update status: %w", err)
+	}
+
 	logrus.WithFields(logrus.Fields{
-		"filename":    filename,
-		"video_id":    video.ID,
+		"video_id":    videoID,
+		"filename":    video.OriginalFile,
 		"next_queue":  "trim_video_queue",
 		"timestamp":   time.Now().UTC(),
 	}).Info("StatesMachine: Message published to TrimVideo queue")
@@ -79,7 +93,10 @@ func (uc *OrchestrateVideoUseCase) HandleTrimCompleted(videoID, filename string)
 		"stage":     "trim_completed",
 	}).Info("StatesMachine: TrimVideo completed, sending to EditVideo")
 
-	message := VideoMessage{Filename: filename}
+	message := WorkerMessage{
+		VideoID:  videoID,
+		Filename: filename,
+	}
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("marshal message: %w", err)
@@ -87,6 +104,20 @@ func (uc *OrchestrateVideoUseCase) HandleTrimCompleted(videoID, filename string)
 
 	if err := uc.publisher.PublishMessage(uc.editVideoQueue, messageBytes); err != nil {
 		return fmt.Errorf("publish to edit_video_queue: %w", err)
+	}
+
+	// Update status to ADJUSTING_RESOLUTION
+	var id uint
+	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "trim_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in trim completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
+	}
+	if err := uc.videoRepo.UpdateStatus(id, domain.StatusAdjustingRes); err != nil {
+		return fmt.Errorf("update status: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -108,7 +139,10 @@ func (uc *OrchestrateVideoUseCase) HandleEditCompleted(videoID, filename string)
 		"result":    "success",
 	}).Info("StatesMachine: EditVideo completed successfully, sending to AudioRemoval")
 
-	message := VideoMessage{Filename: filename}
+	message := WorkerMessage{
+		VideoID:  videoID,
+		Filename: filename,
+	}
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("marshal message: %w", err)
@@ -116,6 +150,20 @@ func (uc *OrchestrateVideoUseCase) HandleEditCompleted(videoID, filename string)
 
 	if err := uc.publisher.PublishMessage(uc.audioRemovalQueue, messageBytes); err != nil {
 		return fmt.Errorf("publish to audio_removal_queue: %w", err)
+	}
+
+	// Update status to REMOVING_AUDIO
+	var id uint
+	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "edit_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in edit completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
+	}
+	if err := uc.videoRepo.UpdateStatus(id, domain.StatusRemovingAudio); err != nil {
+		return fmt.Errorf("update status: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -137,7 +185,10 @@ func (uc *OrchestrateVideoUseCase) HandleAudioRemovalCompleted(videoID, filename
 		"result":    "success",
 	}).Info("StatesMachine: AudioRemoval completed successfully, sending to Watermarking")
 
-	message := VideoMessage{Filename: filename}
+	message := WorkerMessage{
+		VideoID:  videoID,
+		Filename: filename,
+	}
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("marshal message: %w", err)
@@ -145,6 +196,20 @@ func (uc *OrchestrateVideoUseCase) HandleAudioRemovalCompleted(videoID, filename
 
 	if err := uc.publisher.PublishMessage(uc.watermarkingQueue, messageBytes); err != nil {
 		return fmt.Errorf("publish to watermarking_queue: %w", err)
+	}
+
+	// Update status to ADDING_WATERMARK
+	var id uint
+	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "audio_removal_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in audio removal completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
+	}
+	if err := uc.videoRepo.UpdateStatus(id, domain.StatusAddingWatermark); err != nil {
+		return fmt.Errorf("update status: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -166,7 +231,10 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 		"result":    "success",
 	}).Info("StatesMachine: Watermarking completed successfully, sending to GossipOpenClose")
 
-	message := VideoMessage{Filename: filename}
+	message := WorkerMessage{
+		VideoID:  videoID,
+		Filename: filename,
+	}
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("marshal message: %w", err)
@@ -174,6 +242,20 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 
 	if err := uc.publisher.PublishMessage("gossip_open_close_queue", messageBytes); err != nil {
 		return fmt.Errorf("publish to gossip_open_close_queue: %w", err)
+	}
+
+	// Update status to ADDING_INTRO_OUTRO
+	var id uint
+	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "watermarking_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in watermarking completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
+	}
+	if err := uc.videoRepo.UpdateStatus(id, domain.StatusAddingIntroOutro); err != nil {
+		return fmt.Errorf("update status: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -187,17 +269,28 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 }
 
 func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filename string) error {
-	if err := uc.videoRepo.UpdateStatus(videoID, domain.StatusCompleted); err != nil {
-		return fmt.Errorf("update final status: %w", err)
+	// Update status to PROCESSED and set processed_file
+	var id uint
+	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"video_id": videoID,
+			"error":    err.Error(),
+			"stage":    "gossip_completed_id_validation",
+		}).Error("StatesMachine: Invalid video ID format in gossip completion")
+		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
+	}
+	if err := uc.videoRepo.UpdateStatusAndProcessedFile(id, domain.StatusProcessed, filename); err != nil {
+		return fmt.Errorf("update final status and processed file: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"video_id":  videoID,
-		"filename":  filename,
-		"timestamp": time.Now().UTC(),
-		"stage":     "gossip_open_close_completed",
-		"result":    "success",
-		"pipeline":  "finished",
+		"video_id":      videoID,
+		"filename":      filename,
+		"processed_file": filename,
+		"timestamp":     time.Now().UTC(),
+		"stage":         "gossip_open_close_completed",
+		"result":        "success",
+		"pipeline":      "finished",
 	}).Info("StatesMachine: GossipOpenClose completed successfully, entire video processing pipeline finished")
 
 	return nil

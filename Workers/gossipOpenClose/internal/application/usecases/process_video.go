@@ -66,7 +66,7 @@ func envInt(key string, def int) int {
 	return def
 }
 
-func (uc *OpenCloseUseCase) Execute(filename string) error {
+func (uc *OpenCloseUseCase) Execute(videoID, filename string) error {
 	video, err := uc.videoRepo.FindByFilename(filename)
 	if err != nil { return fmt.Errorf("find video: %w", err) }
 
@@ -96,7 +96,7 @@ func (uc *OpenCloseUseCase) Execute(filename string) error {
 	}
 
 	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
-	if err := uc.notificationService.NotifyVideoProcessed(video.ID, filename, bucketPath); err != nil {
+	if err := uc.notificationService.NotifyVideoProcessed(videoID, filename, bucketPath); err != nil {
 		logrus.Errorf("Failed to notify state machine: %v", err)
 	}
 

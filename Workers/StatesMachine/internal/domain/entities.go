@@ -1,16 +1,24 @@
 package domain
 
 type Video struct {
-	ID       string
-	Filename string
-	Status   VideoStatus
+	ID           uint   `gorm:"column:video_id;primaryKey"`
+	OriginalFile string `gorm:"column:original_file"`
+	Status       string `gorm:"column:status"`
+}
+
+func (Video) TableName() string {
+	return "video"
 }
 
 type VideoStatus string
 
 const (
-	StatusPending    VideoStatus = "pending"
-	StatusProcessing VideoStatus = "processing"
-	StatusCompleted  VideoStatus = "completed"
-	StatusFailed     VideoStatus = "failed"
+	StatusUploaded         VideoStatus = "UPLOADED"
+	StatusTrimming         VideoStatus = "TRIMMING"
+	StatusAdjustingRes     VideoStatus = "ADJUSTING_RESOLUTION"
+	StatusAddingWatermark  VideoStatus = "ADDING_WATERMARK"
+	StatusRemovingAudio    VideoStatus = "REMOVING_AUDIO"
+	StatusAddingIntroOutro VideoStatus = "ADDING_INTRO_OUTRO"
+	StatusProcessed        VideoStatus = "PROCESSED"
+	StatusFailed           VideoStatus = "FAILED"
 )

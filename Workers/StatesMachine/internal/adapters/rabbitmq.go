@@ -55,7 +55,13 @@ func (r *RabbitMQConsumer) StartConsuming(queueName string, handler MessageHandl
 		for d := range msgs {
 			if err := handler.HandleMessage(d.Body); err != nil {
 				logrus.Errorf("Error processing message: %v", err)
-				d.Nack(false, true)
+				// Check if it's a non-retryable error
+				if IsNonRetryableError(err) {
+					logrus.Warnf("Non-retryable error, discarding message: %v", err)
+					d.Ack(false) // Acknowledge to remove from queue
+				} else {
+					d.Nack(false, true) // Requeue for retry
+				}
 			} else {
 				d.Ack(false)
 			}

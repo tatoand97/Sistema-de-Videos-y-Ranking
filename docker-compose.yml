@@ -251,6 +251,9 @@ services:
     environment:
       - QUEUE_NAME=states_machine_queue
       - EDIT_VIDEO_QUEUE=edit_video_queue
+      - AUDIO_REMOVAL_QUEUE=audio_removal_queue
+      - WATERMARKING_QUEUE=watermarking_queue
+      - DATABASE_URL=postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pgrep", "-f", "statesmachine"]
