@@ -1,8 +1,8 @@
 package domain
 
 type VideoRepository interface {
-	FindByFilename(filename string) (*Video, error)
-	UpdateStatus(id string, status VideoStatus) error
+	FindByID(id uint) (*Video, error)
+	UpdateStatus(id uint, status VideoStatus) error
 }
 
 type MessagePublisher interface {

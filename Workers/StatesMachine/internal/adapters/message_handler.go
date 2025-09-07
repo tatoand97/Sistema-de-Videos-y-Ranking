@@ -9,6 +9,7 @@ import (
 )
 
 type VideoMessage struct {
+	VideoID  string `json:"videoId"`
 	Filename string `json:"filename"`
 }
 
@@ -51,8 +52,8 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return err
 	}
 
-	logrus.Infof("StatesMachine received filename: '%s'", security.SanitizeLogInput(msg.Filename))
-	return h.orchestrateUC.Execute(msg.Filename)
+	logrus.Infof("StatesMachine received videoId: '%s'", security.SanitizeLogInput(msg.VideoID))
+	return h.orchestrateUC.Execute(msg.VideoID)
 }
 
 func contains(s, substr string) bool {

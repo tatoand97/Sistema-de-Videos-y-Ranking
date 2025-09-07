@@ -13,6 +13,7 @@ type Config struct {
 	EditVideoQueue      string
 	AudioRemovalQueue   string
 	WatermarkingQueue   string
+	DatabaseURL         string
 }
 
 func LoadConfig() *Config {
@@ -28,6 +29,7 @@ func LoadConfig() *Config {
 		EditVideoQueue:    getEnv("EDIT_VIDEO_QUEUE", "edit_video_queue"),
 		AudioRemovalQueue: getEnv("AUDIO_REMOVAL_QUEUE", "audio_removal_queue"),
 		WatermarkingQueue: getEnv("WATERMARKING_QUEUE", "watermarking_queue"),
+		DatabaseURL:       getEnv("DATABASE_URL", "postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable"),
 	}
 }
 

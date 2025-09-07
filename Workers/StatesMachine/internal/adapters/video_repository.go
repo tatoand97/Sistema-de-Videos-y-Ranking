@@ -2,23 +2,29 @@ package adapters
 
 import (
 	"statesmachine/internal/domain"
-	"fmt"
+	"errors"
+	"gorm.io/gorm"
 )
 
-type MockVideoRepository struct{}
-
-func NewMockVideoRepository() *MockVideoRepository {
-	return &MockVideoRepository{}
+type PostgresVideoRepository struct {
+	db *gorm.DB
 }
 
-func (r *MockVideoRepository) FindByFilename(filename string) (*domain.Video, error) {
-	return &domain.Video{
-		ID:       fmt.Sprintf("video_%s", filename),
-		Filename: filename,
-		Status:   domain.StatusPending,
-	}, nil
+func NewPostgresVideoRepository(db *gorm.DB) *PostgresVideoRepository {
+	return &PostgresVideoRepository{db: db}
 }
 
-func (r *MockVideoRepository) UpdateStatus(id string, status domain.VideoStatus) error {
-	return nil
+func (r *PostgresVideoRepository) FindByID(id uint) (*domain.Video, error) {
+	var video domain.Video
+	if err := r.db.First(&video, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("video not found")
+		}
+		return nil, err
+	}
+	return &video, nil
+}
+
+func (r *PostgresVideoRepository) UpdateStatus(id uint, status domain.VideoStatus) error {
+	return r.db.Model(&domain.Video{}).Where("video_id = ?", id).Update("status", string(status)).Error
 }
