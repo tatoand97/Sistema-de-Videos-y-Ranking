@@ -269,7 +269,7 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 }
 
 func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filename string) error {
-	// Update status to PROCESSED
+	// Update status to PROCESSED and set processed_file
 	var id uint
 	if _, err := fmt.Sscanf(videoID, "%d", &id); err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -279,17 +279,18 @@ func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filen
 		}).Error("StatesMachine: Invalid video ID format in gossip completion")
 		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
-	if err := uc.videoRepo.UpdateStatus(id, domain.StatusProcessed); err != nil {
-		return fmt.Errorf("update final status: %w", err)
+	if err := uc.videoRepo.UpdateStatusAndProcessedFile(id, domain.StatusProcessed, filename); err != nil {
+		return fmt.Errorf("update final status and processed file: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"video_id":  videoID,
-		"filename":  filename,
-		"timestamp": time.Now().UTC(),
-		"stage":     "gossip_open_close_completed",
-		"result":    "success",
-		"pipeline":  "finished",
+		"video_id":      videoID,
+		"filename":      filename,
+		"processed_file": filename,
+		"timestamp":     time.Now().UTC(),
+		"stage":         "gossip_open_close_completed",
+		"result":        "success",
+		"pipeline":      "finished",
 	}).Info("StatesMachine: GossipOpenClose completed successfully, entire video processing pipeline finished")
 
 	return nil

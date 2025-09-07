@@ -39,3 +39,19 @@ func (r *PostgresVideoRepository) UpdateStatus(id uint, status domain.VideoStatu
 	
 	return r.db.Model(&domain.Video{}).Where("video_id = ?", id).Updates(updates).Error
 }
+
+func (r *PostgresVideoRepository) UpdateStatusAndProcessedFile(id uint, status domain.VideoStatus, processedFile string) error {
+	updates := map[string]interface{}{
+		"status": string(status),
+		"processed_file": processedFile,
+	}
+	
+	// Handle processed_at according to constraint: only set when status is PROCESSED
+	if status == domain.StatusProcessed {
+		updates["processed_at"] = "NOW()"
+	} else {
+		updates["processed_at"] = nil
+	}
+	
+	return r.db.Model(&domain.Video{}).Where("video_id = ?", id).Updates(updates).Error
+}
