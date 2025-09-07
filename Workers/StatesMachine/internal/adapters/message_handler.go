@@ -26,7 +26,16 @@ func (e *NonRetryableError) Unwrap() error {
 
 func IsNonRetryableError(err error) bool {
 	var nonRetryable *NonRetryableError
-	return errors.As(err, &nonRetryable)
+	if errors.As(err, &nonRetryable) {
+		return true
+	}
+	
+	// Check for database constraint errors
+	errorMsg := err.Error()
+	return strings.Contains(errorMsg, "violates check constraint") ||
+		   strings.Contains(errorMsg, "invalid video ID format") ||
+		   strings.Contains(errorMsg, "Invalid message format") ||
+		   strings.Contains(errorMsg, "non-retryable error")
 }
 
 type VideoMessage struct {
