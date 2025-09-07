@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func ProcessWithTempFiles(inputData []byte, args []string) ([]byte, error) {
@@ -21,8 +22,11 @@ func ProcessWithTempFiles(inputData []byte, args []string) ([]byte, error) {
 		return nil, fmt.Errorf("write input: %w", err)
 	}
 
-	// Replace placeholders in args
+	// Validate and replace placeholders in args
 	for i, arg := range args {
+		if strings.Contains(arg, "../") || strings.Contains(arg, "..\\") {
+			return nil, fmt.Errorf("invalid argument contains path traversal: %s", arg)
+		}
 		if arg == "{input}" {
 			args[i] = inputPath
 		} else if arg == "{output}" {

@@ -1,11 +1,12 @@
 FROM golang:1.21-alpine AS builder
 RUN apk add --no-cache git
 WORKDIR /app
-COPY go.mod .
+COPY gossipOpenClose/go.mod .
+COPY shared ./shared
 RUN go mod download
-COPY internal/ ./internal/
-COPY cmd/ ./cmd/
-COPY assets/ ./assets/
+COPY gossipOpenClose/internal/ ./internal/
+COPY gossipOpenClose/cmd/ ./cmd/
+COPY gossipOpenClose/assets/ ./assets/
 RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o gossipopenclose ./cmd/main.go
 

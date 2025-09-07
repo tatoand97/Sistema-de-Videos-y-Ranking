@@ -156,7 +156,9 @@ services:
 
   # TrimVideo Worker (1º - raw-videos → processed-videos-trim)
   trim-video:
-    build: ./Workers/TrimVideo
+    build:
+      context: ./Workers
+      dockerfile: TrimVideo/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -175,7 +177,9 @@ services:
 
   # EditVideo Worker (2º - processed-videos-trim → processed-videos-edit)
   edit-video:
-    build: ./Workers/EditVideo
+    build:
+      context: ./Workers
+      dockerfile: EditVideo/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -194,7 +198,9 @@ services:
 
   # AudioRemoval Worker (3º - processed-videos-edit → processed-videos-audio-removal)
   audio-removal:
-    build: ./Workers/AudioRemoval
+    build:
+      context: ./Workers
+      dockerfile: AudioRemoval/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -212,7 +218,9 @@ services:
 
   # Watermarking Worker (4º - processed-videos-audio-removal → processed-videos-watermarking)
   watermarking:
-    build: ./Workers/Watermarking
+    build:
+      context: ./Workers
+      dockerfile: Watermarking/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -231,7 +239,9 @@ services:
 
   # StatesMachine Worker (Orchestrator)
   states-machine:
-    build: ./Workers/StatesMachine
+    build:
+      context: ./Workers
+      dockerfile: StatesMachine/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -251,7 +261,9 @@ services:
 
   # GossipOpenClose Worker (5º - processed-videos-watermarking → processed-videos)
   gossip-open-close:
-    build: ./Workers/gossipOpenClose
+    build:
+      context: ./Workers
+      dockerfile: gossipOpenClose/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy

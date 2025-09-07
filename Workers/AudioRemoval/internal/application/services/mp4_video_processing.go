@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"shared/security"
 )
 
 type MP4VideoProcessingService struct{}
@@ -26,14 +27,14 @@ func (s *MP4VideoProcessingService) RemoveAudio(inputData []byte) ([]byte, error
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// Write input file
-	inputPath := filepath.Join(tmpDir, "input.mp4")
+	// Write input file with safe filename
+	inputPath := filepath.Join(tmpDir, security.SanitizeFilename("input.mp4"))
 	if err := os.WriteFile(inputPath, inputData, 0600); err != nil {
 		return nil, fmt.Errorf("write input file: %w", err)
 	}
 
-	// Output file
-	outputPath := filepath.Join(tmpDir, "output.mp4")
+	// Output file with safe filename
+	outputPath := filepath.Join(tmpDir, security.SanitizeFilename("output.mp4"))
 
 	// Use FFmpeg to remove audio (copy video stream only)
 	cmd := exec.Command("ffmpeg",
