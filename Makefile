@@ -53,6 +53,14 @@ install-test-deps:
 	go mod tidy
 	go install github.com/golang/mock/mockgen@latest
 
+# Generate comprehensive HTML coverage report
+coverage-html:
+	@echo "Generating comprehensive coverage report..."
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+	@echo "Open coverage.html in your browser to view the report"
+
 # Clean test artifacts
 clean-test:
 	find . -name "coverage.out" -delete

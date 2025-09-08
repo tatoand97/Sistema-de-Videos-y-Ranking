@@ -122,10 +122,12 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	// Publicar la ID del video guardado para procesamiento asíncrono
 	if uc.publisher != nil && strings.TrimSpace(uc.queue) != "" {
 		payload := struct {
-			VideoID uint `json:"video_id"`
-		}{VideoID: video.VideoID}
+			VideoID string `json:"videoId"`
+		}{VideoID: fmt.Sprintf("%d", video.VideoID)}
 		if b, err := json.Marshal(payload); err == nil {
-			_ = uc.publisher.Publish(uc.queue, b)
+			if publishErr := uc.publisher.Publish(uc.queue, b); publishErr != nil {
+				fmt.Printf("Error publishing message to queue %s: %v\n", uc.queue, publishErr)
+			}
 		}
 	}
 
