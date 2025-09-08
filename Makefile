@@ -9,15 +9,17 @@ test-workers:
 	@echo "Running API tests..."
 	cd Api && go test -v ./tests/unit/...
 	@echo "Running AudioRemoval tests..."
-	cd AudioRemoval && go test -v ./tests/unit/...
+	cd Workers/AudioRemoval && go test -v ./tests/unit/...
 	@echo "Running EditVideo tests..."
-	cd EditVideo && go test -v ./tests/unit/...
+	cd Workers/EditVideo && go test -v ./tests/unit/...
 	@echo "Running TrimVideo tests..."
-	cd TrimVideo && go test -v ./tests/unit/...
+	cd Workers/TrimVideo && go test -v ./tests/unit/...
 	@echo "Running Watermarking tests..."
-	cd Watermarking && go test -v ./tests/unit/... || true
+	cd Workers/Watermarking && go test -v ./tests/unit/... || true
 	@echo "Running gossipOpenClose tests..."
-	cd gossipOpenClose && go test -v ./tests/unit/... || true
+	cd Workers/gossipOpenClose && go test -v ./tests/unit/... || true
+	@echo "Running StatesMachine tests..."
+	cd Workers/StatesMachine && go test -v ./tests/unit/... || true
 
 # Unit tests
 test-unit:
@@ -35,11 +37,17 @@ coverage-workers:
 	@echo "Generating coverage for API..."
 	cd Api && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
 	@echo "Generating coverage for AudioRemoval..."
-	cd AudioRemoval && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
+	cd Workers/AudioRemoval && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
 	@echo "Generating coverage for EditVideo..."
-	cd EditVideo && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
+	cd Workers/EditVideo && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
 	@echo "Generating coverage for TrimVideo..."
-	cd TrimVideo && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
+	cd Workers/TrimVideo && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
+	@echo "Generating coverage for Watermarking..."
+	cd Workers/Watermarking && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html || true
+	@echo "Generating coverage for gossipOpenClose..."
+	cd Workers/gossipOpenClose && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html || true
+	@echo "Generating coverage for StatesMachine..."
+	cd Workers/StatesMachine && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html || true
 
 # Overall coverage
 coverage:

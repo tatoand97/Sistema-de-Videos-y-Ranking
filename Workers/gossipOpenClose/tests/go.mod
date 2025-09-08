@@ -1,4 +1,4 @@
-module editvideo
+module gossipopenclose-tests
 
 go 1.21
 
