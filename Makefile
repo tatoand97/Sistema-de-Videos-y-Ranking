@@ -4,8 +4,10 @@
 mocks:
 	go generate ./...
 
-# Unit tests for all workers
+# Unit tests for all workers and API
 test-workers:
+	@echo "Running API tests..."
+	cd Api && go test -v ./tests/unit/...
 	@echo "Running AudioRemoval tests..."
 	cd AudioRemoval && go test -v ./tests/unit/...
 	@echo "Running EditVideo tests..."
@@ -28,8 +30,10 @@ test-integration:
 # All tests
 test: test-unit test-workers
 
-# Coverage for workers
+# Coverage for workers and API
 coverage-workers:
+	@echo "Generating coverage for API..."
+	cd Api && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
 	@echo "Generating coverage for AudioRemoval..."
 	cd AudioRemoval && go test -coverprofile=coverage.out ./tests/unit/... && go tool cover -html=coverage.out -o coverage.html
 	@echo "Generating coverage for EditVideo..."

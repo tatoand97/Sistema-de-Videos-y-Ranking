@@ -120,14 +120,19 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	}
 
 	// Publicar la ID del video guardado para procesamiento asíncrono
+	// No fallar el upload si el messaging falla
 	if uc.publisher != nil && strings.TrimSpace(uc.queue) != "" {
 		payload := struct {
 			VideoID string `json:"videoId"`
 		}{VideoID: fmt.Sprintf("%d", video.VideoID)}
 		if b, err := json.Marshal(payload); err == nil {
-			if publishErr := uc.publisher.Publish(uc.queue, b); publishErr != nil {
-				fmt.Printf("Error publishing message to queue %s: %v\n", uc.queue, publishErr)
-			}
+			go func() {
+				if publishErr := uc.publisher.Publish(uc.queue, b); publishErr != nil {
+					fmt.Printf("Warning: Failed to publish message to queue %s: %v\n", uc.queue, publishErr)
+				}
+			}()
+		} else {
+			fmt.Printf("Warning: Failed to marshal message payload: %v\n", err)
 		}
 	}
 
