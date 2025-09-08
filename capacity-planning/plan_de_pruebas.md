@@ -163,9 +163,3 @@ flowchart TD
 
 **Tiempo de Respuesta p95 vs. Carga**  
 ![p95 vs Carga](jmeter_tiempo_respuesta_vs_carga.png)
-
----
-
-## 13. Anexos
-- Plan `.jmx` (JMeter) de ambos escenarios; CSVs; `run.sh` (non-GUI + dashboard).  
-- Guía de *tuning* de SO y JMeter para alto volumen.
