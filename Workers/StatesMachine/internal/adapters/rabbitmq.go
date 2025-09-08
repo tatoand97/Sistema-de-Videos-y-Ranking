@@ -1,9 +1,11 @@
 package adapters
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/streadway/amqp"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 type RabbitMQConsumer struct {
@@ -60,7 +62,14 @@ func (r *RabbitMQConsumer) StartConsuming(queueName string, handler MessageHandl
 					logrus.Warnf("Non-retryable error, discarding message: %v", err)
 					d.Ack(false) // Acknowledge to remove from queue
 				} else {
-					d.Nack(false, true) // Requeue for retry
+					// Increment retry count and update timestamp
+					if updatedBody := r.incrementRetryCount(d.Body); updatedBody != nil {
+						// Republish with updated retry info
+						if pubErr := r.republishWithDelay(queueName, updatedBody); pubErr != nil {
+							logrus.Errorf("Failed to republish message: %v", pubErr)
+						}
+					}
+					d.Ack(false) // Acknowledge original message
 				}
 			} else {
 				d.Ack(false)
@@ -137,4 +146,37 @@ func (r *RabbitMQConsumer) Close() error {
 
 type MessageHandlerInterface interface {
 	HandleMessage(body []byte) error
+}
+
+func (r *RabbitMQConsumer) incrementRetryCount(body []byte) []byte {
+	var msg map[string]interface{}
+	if err := json.Unmarshal(body, &msg); err != nil {
+		return nil
+	}
+	
+	// Get current retry count
+	retryCount := 0
+	if count, ok := msg["retry_count"]; ok {
+		if countInt, ok := count.(float64); ok {
+			retryCount = int(countInt)
+		}
+	}
+	
+	// Increment retry count and set timestamp
+	msg["retry_count"] = retryCount + 1
+	msg["last_retry"] = time.Now().Unix()
+	
+	updatedBody, err := json.Marshal(msg)
+	if err != nil {
+		return nil
+	}
+	return updatedBody
+}
+
+func (r *RabbitMQConsumer) republishWithDelay(queueName string, message []byte) error {
+	// Simple republish - delay is handled by message handler
+	return r.channel.Publish("", queueName, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        message,
+	})
 }

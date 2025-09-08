@@ -3,6 +3,7 @@ package messaging
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -11,25 +12,44 @@ import (
 type RabbitMQPublisher struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
+	url     string
 }
 
 func NewRabbitMQPublisher(url string) (*RabbitMQPublisher, error) {
-	conn, err := amqp.Dial(url)
-	if err != nil {
+	p := &RabbitMQPublisher{url: url}
+	if err := p.connect(); err != nil {
 		return nil, err
+	}
+	return p, nil
+}
+
+func (p *RabbitMQPublisher) connect() error {
+	conn, err := amqp.Dial(p.url)
+	if err != nil {
+		return err
 	}
 	ch, err := conn.Channel()
 	if err != nil {
 		_ = conn.Close()
-		return nil, err
+		return err
 	}
-	// Publisher confirms can be enabled later if needed
-	return &RabbitMQPublisher{conn: conn, channel: ch}, nil
+	p.conn = conn
+	p.channel = ch
+	return nil
+}
+
+func (p *RabbitMQPublisher) isConnected() bool {
+	return p.conn != nil && !p.conn.IsClosed() && p.channel != nil
 }
 
 // EnsureQueue declares a durable queue with optional DLX and max length.
 // It is safe to call multiple times; server will keep existing settings when compatible.
 func (p *RabbitMQPublisher) EnsureQueue(queueName string, maxLen int, withDLQ bool) error {
+	if !p.isConnected() {
+		if err := p.connect(); err != nil {
+			return err
+		}
+	}
 	if withDLQ {
 		dlxName := queueName + ".dlx"
 		dlqName := queueName + ".dlq"
@@ -60,11 +80,30 @@ func (p *RabbitMQPublisher) EnsureQueue(queueName string, maxLen int, withDLQ bo
 
 // Publish sends a message with persistent delivery mode and application/json content-type.
 func (p *RabbitMQPublisher) Publish(queueName string, body []byte) error {
-	return p.channel.Publish("", queueName, false, false, amqp.Publishing{
-		DeliveryMode: amqp.Persistent,
-		ContentType:  "application/json",
-		Body:         body,
-	})
+	retries := 3
+	for i := 0; i < retries; i++ {
+		if !p.isConnected() {
+			if err := p.connect(); err != nil {
+				if i == retries-1 {
+					return err
+				}
+				time.Sleep(time.Duration(i+1) * time.Second)
+				continue
+			}
+		}
+		err := p.channel.Publish("", queueName, false, false, amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			Body:         body,
+		})
+		if err == nil {
+			return nil
+		}
+		if i < retries-1 {
+			time.Sleep(time.Duration(i+1) * time.Second)
+		}
+	}
+	return nil // Don't fail the operation if messaging fails
 }
 
 // PublishJSON marshals v to JSON and publishes it.

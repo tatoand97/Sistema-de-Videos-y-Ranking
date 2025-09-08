@@ -5,6 +5,7 @@ import (
 	"log"
 	"fmt"
 	"net/url"
+	"strconv"
 )
 
 type Config struct {
@@ -14,6 +15,8 @@ type Config struct {
 	AudioRemovalQueue   string
 	WatermarkingQueue   string
 	DatabaseURL         string
+	MaxRetries          int
+	RetryDelayMinutes   int
 }
 
 func LoadConfig() *Config {
@@ -30,12 +33,23 @@ func LoadConfig() *Config {
 		AudioRemovalQueue: getEnv("AUDIO_REMOVAL_QUEUE", "audio_removal_queue"),
 		WatermarkingQueue: getEnv("WATERMARKING_QUEUE", "watermarking_queue"),
 		DatabaseURL:       getEnv("DATABASE_URL", "postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable"),
+		MaxRetries:        getEnvInt("MAX_RETRIES", 3),
+		RetryDelayMinutes: getEnvInt("RETRY_DELAY_MINUTES", 5),
 	}
 }
 
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
 	}
 	return defaultValue
 }
