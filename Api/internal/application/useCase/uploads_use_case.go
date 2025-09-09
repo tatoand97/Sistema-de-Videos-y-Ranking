@@ -52,62 +52,64 @@ func NewUploadsUseCase(videoRepo interfaces.VideoRepository, storage interfaces.
 	return &UploadsUseCase{videoRepo: videoRepo, storage: storage, publisher: publisher, queue: queue}
 }
 
-// UploadMultipart handles the classic multipart upload path.
-func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideoInput) (*UploadVideoOutput, error) {
+// sanitizeFileRe keeps only safe characters for object/file names.
+var sanitizeFileRe = regexp.MustCompile(`[^a-zA-Z0-9._-]+`)
+
+func userIDFromCtx(ctx context.Context) (uint, error) {
 	val := ctx.Value(UserIDContextKey)
 	userID, ok := val.(uint)
 	if !ok || userID == 0 {
-		return nil, errors.New("userID missing in context")
+		return 0, errors.New("userID missing in context")
 	}
+	return userID, nil
+}
 
-	file, err := input.FileHeader.Open()
+func readAllFromHeader(h *multipart.FileHeader) ([]byte, error) {
+	f, err := h.Open()
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-
-	// Read into memory for validation
-	fileBytes := make([]byte, input.FileHeader.Size)
-	if _, err := io.ReadFull(file, fileBytes); err != nil {
+	defer f.Close()
+	buf := make([]byte, h.Size)
+	if _, err := io.ReadFull(f, buf); err != nil {
 		return nil, err
 	}
+	return buf, nil
+}
 
-	// Validate MP4
-	if _, _, err := validations.CheckMP4(fileBytes); err != nil {
-		return nil, fmt.Errorf("%w: %v", domain.ErrInvalid, err)
-	}
-
-	// Recreate a reader for saving
-	reader := bytes.NewReader(fileBytes)
-
-	// Build a unique object key to avoid overwriting files with same original name
-	now := time.Now().UTC()
-	base := filepath.Base(input.FileHeader.Filename)
+func sanitizeBaseName(name string) string {
+	base := filepath.Base(name)
 	if base == "." || base == ".." || strings.TrimSpace(base) == "" {
 		base = "file"
 	}
 	base = strings.TrimSpace(base)
 	base = strings.ReplaceAll(base, " ", "-")
-	// Keep only safe characters
-	var sanitizeFileRe = regexp.MustCompile(`[^a-zA-Z0-9._-]+`)
 	base = sanitizeFileRe.ReplaceAllString(base, "")
 	if base == "" {
 		base = "file"
 	}
-	objectName := fmt.Sprintf(
-		"%s-%s", uuid.NewString(), base,
-	)
-	contentType := input.FileHeader.Header.Get("Content-Type")
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
+	return base
+}
 
-	url, err := uc.storage.Save(ctx, objectName, reader, input.FileHeader.Size, contentType)
-	if err != nil {
-		return nil, err
-	}
+func buildObjectName(base string) string {
+	return fmt.Sprintf("%s-%s", uuid.NewString(), base)
+}
 
-	now = time.Now()
+func contentTypeFromHeader(h *multipart.FileHeader) string {
+	ct := h.Header.Get("Content-Type")
+	if ct == "" {
+		return "application/octet-stream"
+	}
+	return ct
+}
+
+func (uc *UploadsUseCase) saveFile(ctx context.Context, objectName string, data []byte, contentType string, size int64) (string, error) {
+	reader := bytes.NewReader(data)
+	return uc.storage.Save(ctx, objectName, reader, size, contentType)
+}
+
+func (uc *UploadsUseCase) persistVideo(ctx context.Context, userID uint, input UploadVideoInput, url string) (*entities.Video, error) {
+	now := time.Now()
 	video := &entities.Video{
 		UserID:       userID,
 		Title:        input.Title,
@@ -118,33 +120,71 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	if err := uc.videoRepo.Create(ctx, video); err != nil {
 		return nil, err
 	}
+	return video, nil
+}
 
-	// Publicar la ID del video guardado para procesamiento asíncrono
-	// No fallar el upload si el messaging falla
+func (uc *UploadsUseCase) publishVideo(videoID uint) {
+	// Publish the saved video ID for async processing.
+	// Do not fail the upload if messaging fails.
 	fmt.Printf("DEBUG: Checking publisher - publisher nil: %t, queue: '%s'\n", uc.publisher == nil, uc.queue)
-	
-	if uc.publisher == nil {
-		fmt.Printf("ERROR: Publisher is nil, cannot publish message for video ID: %d\n", video.VideoID)
-	} else if strings.TrimSpace(uc.queue) == "" {
-		fmt.Printf("ERROR: Queue name is empty, cannot publish message for video ID: %d\n", video.VideoID)
-	} else {
-		payload := struct {
-			VideoID string `json:"videoId"`
-		}{VideoID: fmt.Sprintf("%d", video.VideoID)}
-		
-		if b, err := json.Marshal(payload); err == nil {
-			fmt.Printf("DEBUG: Publishing message for video ID: %d to queue: %s, payload: %s\n", video.VideoID, uc.queue, string(b))
-			
-			// Hacer síncrono temporalmente para debug
-			if publishErr := uc.publisher.Publish(uc.queue, b); publishErr != nil {
-				fmt.Printf("ERROR: Failed to publish message to queue %s: %v\n", uc.queue, publishErr)
-			} else {
-				fmt.Printf("SUCCESS: Message published to queue %s for video ID: %d\n", uc.queue, video.VideoID)
-			}
+	if uc.publisher == nil || strings.TrimSpace(uc.queue) == "" {
+		if uc.publisher == nil {
+			fmt.Printf("ERROR: Publisher is nil, cannot publish message for video ID: %d\n", videoID)
 		} else {
-			fmt.Printf("ERROR: Failed to marshal message payload: %v\n", err)
+			fmt.Printf("ERROR: Queue name is empty, cannot publish message for video ID: %d\n", videoID)
 		}
+		return
 	}
+	payload := struct {
+		VideoID string `json:"videoId"`
+	}{VideoID: fmt.Sprintf("%d", videoID)}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Printf("ERROR: Failed to marshal message payload: %v\n", err)
+		return
+	}
+	fmt.Printf("DEBUG: Publishing message for video ID: %d to queue: %s, payload: %s\n", videoID, uc.queue, string(b))
+	if publishErr := uc.publisher.Publish(uc.queue, b); publishErr != nil {
+		fmt.Printf("ERROR: Failed to publish message to queue %s: %v\n", uc.queue, publishErr)
+		return
+	}
+	fmt.Printf("SUCCESS: Message published to queue %s for video ID: %d\n", uc.queue, videoID)
+}
+
+// UploadMultipart handles the classic multipart upload path.
+func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideoInput) (*UploadVideoOutput, error) {
+	userID, err := userIDFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fileBytes, err := readAllFromHeader(input.FileHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate MP4
+	if _, _, err := validations.CheckMP4(fileBytes); err != nil {
+		return nil, fmt.Errorf("%w: %v", domain.ErrInvalid, err)
+	}
+
+	// Build a unique object key to avoid overwriting files with same original name
+	base := sanitizeBaseName(input.FileHeader.Filename)
+	objectName := buildObjectName(base)
+	contentType := contentTypeFromHeader(input.FileHeader)
+
+	url, err := uc.saveFile(ctx, objectName, fileBytes, contentType, input.FileHeader.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	video, err := uc.persistVideo(ctx, userID, input, url)
+	if err != nil {
+		return nil, err
+	}
+
+	uc.publishVideo(video.VideoID)
 
 	return &UploadVideoOutput{
 		VideoID:      video.VideoID,

@@ -25,14 +25,8 @@ func NewVideoHandlers(uploadsUC *useCase.UploadsUseCase) *VideoHandlers {
 
 // ListVideos handles GET /api/videos (authenticated)
 func (h *VideoHandlers) ListVideos(c *gin.Context) {
-	uidVal, ok := c.Get("userID")
+	userID, ok := userIDFromContextOrAbort(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
-		return
-	}
-	userID, ok := uidVal.(uint)
-	if !ok || userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
 		return
 	}
 
@@ -45,30 +39,7 @@ func (h *VideoHandlers) ListVideos(c *gin.Context) {
 	// Map to OAS Video schema
 	out := make([]responses.VideoResponse, 0, len(videos))
 	for _, v := range videos {
-		// Map status to storage status: uploaded | processed
-		status := "uploaded"
-		if v.Status == string(entities.StatusProcessed) {
-			status = "processed"
-		}
-
-		var originalURL *string
-		if v.OriginalFile != "" {
-			s := v.OriginalFile
-			originalURL = &s
-		}
-
-		vr := responses.VideoResponse{
-			VideoID:     fmt.Sprintf("%d", v.VideoID),
-			Title:       v.Title,
-			Status:      status,
-			UploadedAt:  v.UploadedAt,
-			ProcessedAt: v.ProcessedAt,
-			OriginalURL: originalURL,
-		}
-		if v.ProcessedFile != nil && *v.ProcessedFile != "" {
-			vr.ProcessedURL = v.ProcessedFile
-		}
-		out = append(out, vr)
+		out = append(out, toVideoResponse(v))
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -97,20 +68,14 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		return
 	}
 
-	// Validar tamaño declarado (≤100MB)
+	// Validar tamaño declarado (=100MB)
 	if file.Size > validations.MaxBytes {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file too large (max 100MB)"})
 		return
 	}
 
-	uidVal, ok := c.Get("userID")
+	userID, ok := userIDFromContextOrAbort(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-	userID, ok := uidVal.(uint)
-	if !ok || userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
@@ -161,64 +126,109 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 // GetVideoDetail handles GET /api/videos/:video_id (authenticated, own video only)
 func (h *VideoHandlers) GetVideoDetail(c *gin.Context) {
 	// Auth identity from context
-	uidVal, ok := c.Get("userID")
+	userID, ok := userIDFromContextOrAbort(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
-		return
-	}
-	userID, ok := uidVal.(uint)
-	if !ok || userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
 		return
 	}
 
 	// Path param
-	vidStr := c.Param("video_id")
-	if vidStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
+	vidUint, ok := parseVideoIDOrAbort(c)
+	if !ok {
 		return
-	}
-	// video_id is numeric in our DB
-	var vidUint uint
-	{
-		var parsed uint64
-		var err error
-		parsed, err = strconv.ParseUint(vidStr, 10, 64)
-		if err != nil || parsed == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
-			return
-		}
-		vidUint = uint(parsed)
 	}
 
 	// Query use case enforcing ownership
 	v, err := h.uploadsUC.GetUserVideoByID(c.Request.Context(), userID, vidUint)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found", "message": "Video no encontrado."})
-			return
-		case errors.Is(err, domain.ErrForbidden):
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden", "message": "Acceso denegado."})
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
+		if handled := writeStandardDomainError(c, err); handled {
 			return
 		}
 	}
 
-	// Map status: uploaded | processed
+	resp := toVideoResponse(v)
+	c.JSON(http.StatusOK, resp)
+}
+
+// DeleteVideo handles DELETE /api/videos/:video_id (authenticated, own video only)
+func (h *VideoHandlers) DeleteVideo(c *gin.Context) {
+	// 1) Auth
+	userID, ok := userIDFromContextOrAbort(c)
+	if !ok {
+		return
+	}
+
+	// 2) Path param
+	vidStr := c.Param("video_id")
+	vidUint, ok := parseVideoIDOrAbort(c)
+	if !ok {
+		return
+	}
+
+	// 3-6) Execute delete with eligibility rules in use case
+	err := h.uploadsUC.DeleteUserVideoIfEligible(c.Request.Context(), userID, vidUint)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrInvalid):
+			// Elegibilidad incumplida (p.ej., publicado para votación o procesado)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "No se puede eliminar: el video está publicado para votación o ya fue procesado."})
+			return
+		default:
+			if handled := writeStandardDomainError(c, err); handled {
+				return
+			}
+		}
+	}
+
+	// 7) Success 200 with exact body
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "El video ha sido eliminado exitosamente.",
+		"video_id": vidStr,
+	})
+}
+
+// --- Helpers to reduce duplication ---
+
+// userIDFromContextOrAbort extracts userID from context or writes a 401 and returns false.
+func userIDFromContextOrAbort(c *gin.Context) (uint, bool) {
+	uidVal, ok := c.Get("userID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": invalidTokenExpiredMsg})
+		return 0, false
+	}
+	userID, ok := uidVal.(uint)
+	if !ok || userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": invalidTokenExpiredMsg})
+		return 0, false
+	}
+	return userID, true
+}
+
+// parseVideoIDOrAbort validates path param "video_id" and returns it as uint.
+func parseVideoIDOrAbort(c *gin.Context) (uint, bool) {
+	vidStr := c.Param("video_id")
+	if vidStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
+		return 0, false
+	}
+	parsed, err := strconv.ParseUint(vidStr, 10, 64)
+	if err != nil || parsed == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
+		return 0, false
+	}
+	return uint(parsed), true
+}
+
+// toVideoResponse maps an entities.Video to responses.VideoResponse.
+func toVideoResponse(v *entities.Video) responses.VideoResponse {
 	status := "uploaded"
 	if v.Status == string(entities.StatusProcessed) {
 		status = "processed"
 	}
-
 	var originalURL *string
 	if v.OriginalFile != "" {
 		s := v.OriginalFile
 		originalURL = &s
 	}
-
 	resp := responses.VideoResponse{
 		VideoID:     fmt.Sprintf("%d", v.VideoID),
 		Title:       v.Title,
@@ -230,62 +240,21 @@ func (h *VideoHandlers) GetVideoDetail(c *gin.Context) {
 	if v.ProcessedFile != nil && *v.ProcessedFile != "" {
 		resp.ProcessedURL = v.ProcessedFile
 	}
-	c.JSON(http.StatusOK, resp)
+	return resp
 }
 
-// DeleteVideo handles DELETE /api/videos/:video_id (authenticated, own video only)
-func (h *VideoHandlers) DeleteVideo(c *gin.Context) {
-	// 1) Auth
-	uidVal, ok := c.Get("userID")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
-		return
+// writeStandardDomainError writes common domain error translations.
+// Returns true if it wrote a response.
+func writeStandardDomainError(c *gin.Context, err error) bool {
+	switch {
+	case errors.Is(err, domain.ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not Found", "message": "Video no encontrado."})
+		return true
+	case errors.Is(err, domain.ErrForbidden):
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden", "message": "Acceso denegado."})
+		return true
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
+		return true
 	}
-	userID, ok := uidVal.(uint)
-	if !ok || userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
-		return
-	}
-
-	// 2) Path param
-	vidStr := c.Param("video_id")
-	if vidStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
-		return
-	}
-	var vidUint uint
-	{
-		parsed, err := strconv.ParseUint(vidStr, 10, 64)
-		if err != nil || parsed == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido."})
-			return
-		}
-		vidUint = uint(parsed)
-	}
-
-	// 3-6) Execute delete with eligibility rules in use case
-	err := h.uploadsUC.DeleteUserVideoIfEligible(c.Request.Context(), userID, vidUint)
-	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found", "message": "Video no encontrado."})
-			return
-		case errors.Is(err, domain.ErrForbidden):
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden", "message": "Acceso denegado."})
-			return
-		case errors.Is(err, domain.ErrInvalid):
-			// Elegibilidad incumplida (p.ej., publicado para votación o procesado)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "No se puede eliminar: el video está publicado para votación o ya fue procesado."})
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
-			return
-		}
-	}
-
-	// 7) Success 200 with exact body
-	c.JSON(http.StatusOK, gin.H{
-		"message":  "El video ha sido eliminado exitosamente.",
-		"video_id": vidStr,
-	})
 }
