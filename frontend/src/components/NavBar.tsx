@@ -4,6 +4,7 @@ import { useAuth } from '@store/auth';
 export default function NavBar() {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
+  const hasToken = Boolean(token || (typeof window !== 'undefined' && localStorage.getItem('token')));
 
   const onLogout = async () => {
     await logout();
@@ -17,7 +18,7 @@ export default function NavBar() {
         <Link to="/rankings">Rankings</Link>
         <Link to="/videos">Mis Videos</Link>
         <div className="spacer" />
-        {token ? (
+        {hasToken ? (
           <>
             <span className="muted">Hola{user ? `, ${user.first_name}` : ''}</span>
             <Link className="btn secondary" to="/profile">Perfil</Link>
