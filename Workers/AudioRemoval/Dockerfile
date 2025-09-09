@@ -1,4 +1,20 @@
-﻿FROM ubuntu:latest
-LABEL authors="ricar"
+FROM golang:1.21-alpine AS builder
+RUN apk add --no-cache git
+WORKDIR /app
+COPY AudioRemoval/go.mod AudioRemoval/go.sum ./
+COPY shared ./shared
+COPY AudioRemoval/internal/ ./internal/
+COPY AudioRemoval/cmd/ ./cmd/
+RUN go mod tidy
+RUN go mod download
+RUN go build -o audioremoval cmd/main.go
 
-ENTRYPOINT ["top", "-b"]
+FROM alpine:latest
+RUN apk add --no-cache ca-certificates ffmpeg
+RUN mkdir -p /tmp && chmod 777 /tmp
+
+WORKDIR /app
+COPY --from=builder /app/audioremoval .
+
+USER nobody
+CMD ["./audioremoval"]

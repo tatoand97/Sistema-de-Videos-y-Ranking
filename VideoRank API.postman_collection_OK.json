@@ -1,0 +1,313 @@
+{
+  "info": {
+    "_postman_id": "b6e32813-0e6a-49df-9a33-26bdf266cf3f",
+    "name": "VideoRank API",
+    "description": "Coleccion alineada con Api/openapi.yaml: autenticacion, videos, publico, ranking y utilidades.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "31371962"
+  },
+  "variable": [
+    { "key": "host", "value": "localhost", "type": "string" },
+    { "key": "port", "value": "8080", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/health",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth / Signup",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Tester\",\n  \"email\": \"alice@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Madrid\",\n  \"country\": \"Spain\"\n}"
+        },
+        "url": {
+          "raw": "{{host}}:{{port}}/api/auth/signup",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","auth","signup"]
+        }
+      },
+      "response": [
+        {
+          "name": "Email ya registrado",
+          "status": "Bad Request",
+          "code": 400,
+          "header": [ { "key": "Content-Type", "value": "application/json" } ],
+          "body": "{\n  \"error\": \"email_already_in_use\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Auth / Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Guarda el token JWT en la variable de entorno 'jwt'",
+              "try {",
+              "  const data = pm.response.json();",
+              "  const token = data.access_token || data.token || data.jwt;",
+              "  if (token) { pm.environment.set('jwt', token); }",
+              "} catch(e) { console.log('Sin JSON o sin token'); }"
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{host}}:{{port}}/api/auth/login",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","auth","login"]
+        }
+      },
+      "response": [
+        {
+          "name": "Login exitoso",
+          "status": "OK",
+          "code": 200,
+          "header": [ { "key": "Content-Type", "value": "application/json" } ],
+          "body": "{\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"access_token\": \"<jwt>\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Auth / Me (protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/me",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","me"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth / Logout",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/auth/logout",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","auth","logout"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Videos / Upload (protected)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "title", "value": "Example title", "type": "text" },
+            { "key": "video_file", "type": "file", "src": "" },
+            { "key": "checksum", "value": "", "type": "text", "disabled": true },
+            { "key": "sizeBytes", "value": "", "type": "text", "disabled": true },
+            { "key": "mimeType", "value": "video/mp4", "type": "text", "disabled": true }
+          ]
+        },
+        "url": {
+          "raw": "{{host}}:{{port}}/api/videos/upload",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","videos","upload"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Videos / List (protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/videos",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","videos"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Videos / Statuses (public)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/videos/statuses",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","videos","statuses"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Videos / Get by ID (protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","videos","{{video_id}}"],
+          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Videos / Delete by ID (protected)",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","videos","{{video_id}}"],
+          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Videos / Download file (protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}/file?variant=processed",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","videos","{{video_id}}","file"],
+          "query": [ { "key": "variant", "value": "processed" } ],
+          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Public / List videos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/public/videos",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","public","videos"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Public / Vote video (protected)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/public/videos/{{video_id}}/vote",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","public","videos","{{video_id}}","vote"],
+          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ranking / Get rankings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/public/rankings?city=&page=1&pageSize=20",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","public","rankings"],
+          "query": [
+            { "key": "city", "value": "" },
+            { "key": "page", "value": "1" },
+            { "key": "pageSize", "value": "20" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Uploads / Create signed URL (protected)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"filename\": \"clip.mp4\",\n  \"mimeType\": \"video/mp4\",\n  \"sizeBytes\": 73400320,\n  \"checksum\": \"<optional_sha256_hex>\"\n}"
+        },
+        "url": {
+          "raw": "{{host}}:{{port}}/api/uploads",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","uploads"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Location / City ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/location/city-id?country=&city=",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","location","city-id"],
+          "query": [
+            { "key": "country", "value": "" },
+            { "key": "city", "value": "" }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
