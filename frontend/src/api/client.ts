@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -39,8 +39,8 @@ export async function apiFetch<T>(path: string, opts: RequestOptions = {}): Prom
   if (contentType && contentType.includes('application/json')) {
     return (await res.json()) as T;
   }
-  // @ts-expect-error allow empty
-  return undefined as T;
+  // Non-JSON responses: return undefined as T (some endpoints may not return body)
+  return (undefined as unknown) as T;
 }
 
 export const endpoints = {
@@ -70,4 +70,3 @@ export const endpoints = {
   },
   cityId: (city: string, country: string) => apiFetch(`/api/location/city-id?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`)
 };
-
