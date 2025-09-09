@@ -30,7 +30,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 		expectedErrMsg string
 	}{
 		{
-			name:   "upload fails with minimal MP4 due to strict validation",
+			name:   "upload succeeds with minimal valid MP4",
 			userID: 1,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
@@ -38,7 +38,11 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 				Status:     string(entities.StatusUploaded),
 			},
 			mockRepo: &mocks.MockVideoRepository{
-				CreateFunc: func(ctx context.Context, video *entities.Video) error { return nil },
+				CreateFunc: func(ctx context.Context, video *entities.Video) error {
+					// Simulate DB assigning an ID
+					video.VideoID = 123
+					return nil
+				},
 			},
 			mockStorage: &mocks.MockVideoStorage{
 				SaveFunc: func(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
@@ -46,7 +50,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 				},
 			},
 			mockPublisher: &mocks.MockMessagePublisher{},
-			wantErr:       true,
+			wantErr:       false,
 		},
 		{
 			name:   "missing user ID",

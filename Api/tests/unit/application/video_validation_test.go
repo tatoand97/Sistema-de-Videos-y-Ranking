@@ -24,7 +24,8 @@ func TestCheckMP4_InvalidFile(t *testing.T) {
 	_, _, err := validations.CheckMP4(invalidData)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no es MP4 válido")
+	// Avoid accent/encoding issues across environments by checking a stable prefix
+	assert.Contains(t, err.Error(), "no es MP4")
 }
 
 func TestCheckMP4_EmptyData(t *testing.T) {
