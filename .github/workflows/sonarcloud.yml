@@ -119,7 +119,7 @@ jobs:
 
       # Run tests with coverage
       - name: Run tests with coverage
-        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+        run: go test ./... -coverpkg=./... -covermode=atomic -coverprofile=coverage.out
 
       # SonarCloud analysis
       - name: SonarCloud Scan
