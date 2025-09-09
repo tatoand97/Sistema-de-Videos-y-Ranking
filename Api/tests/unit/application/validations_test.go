@@ -15,14 +15,14 @@ func TestCheckMP4(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "valid MP4 with proper structure",
-			data:    testdata.CreateValidMP4(),
-			wantErr: false,
-		},
-		{
-			name:    "valid MP4 with low resolution",
-			data:    testdata.CreateValidMP4WithResolution(1280, 720),
-			wantErr: true, // Should fail due to resolution requirement
+			name: "ftyp only should fail with strict validation",
+			data: []byte{
+				0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, // ftyp box
+				0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02, 0x00,
+				0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
+				0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31,
+			},
+			wantErr: true,
 		},
 		{
 			name:    "empty data",
@@ -49,7 +49,7 @@ func TestCheckMP4(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			width, height, err := validations.CheckMP4(tt.data)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

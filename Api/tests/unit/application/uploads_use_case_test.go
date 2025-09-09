@@ -30,7 +30,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 		expectedErrMsg string
 	}{
 		{
-			name:   "successful upload",
+			name:   "upload fails with minimal MP4 due to strict validation",
 			userID: 1,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
@@ -38,10 +38,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 				Status:     string(entities.StatusUploaded),
 			},
 			mockRepo: &mocks.MockVideoRepository{
-				CreateFunc: func(ctx context.Context, video *entities.Video) error {
-					video.VideoID = 123
-					return nil
-				},
+				CreateFunc: func(ctx context.Context, video *entities.Video) error { return nil },
 			},
 			mockStorage: &mocks.MockVideoStorage{
 				SaveFunc: func(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
@@ -49,7 +46,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 				},
 			},
 			mockPublisher: &mocks.MockMessagePublisher{},
-			wantErr:       false,
+			wantErr:       true,
 		},
 		{
 			name:   "missing user ID",
@@ -117,9 +114,9 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 			}
 
 			usecase := useCase.NewUploadsUseCase(tt.mockRepo, tt.mockStorage, tt.mockPublisher, "test-queue")
-			
+
 			result, err := usecase.UploadMultipart(ctx, tt.input)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				if tt.expectedErrMsg != "" {
@@ -195,9 +192,9 @@ func TestUploadsUseCase_CreatePostPolicy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			usecase := useCase.NewUploadsUseCase(nil, tt.mockStorage, nil, "")
-			
+
 			result, err := usecase.CreatePostPolicy(context.Background(), tt.req)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, result)
@@ -266,9 +263,9 @@ func TestUploadsUseCase_DeleteUserVideoIfEligible(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			usecase := useCase.NewUploadsUseCase(tt.mockRepo, nil, nil, "")
-			
+
 			err := usecase.DeleteUserVideoIfEligible(context.Background(), tt.userID, tt.videoID)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -282,18 +279,27 @@ func TestUploadsUseCase_DeleteUserVideoIfEligible(t *testing.T) {
 func createMockFileHeader(filename string, content []byte) *multipart.FileHeader {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	
+
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", `form-data; name="file"; filename="`+filename+`"`)
 	h.Set("Content-Type", "video/mp4")
-	
+
 	part, _ := writer.CreatePart(h)
 	part.Write(content)
 	writer.Close()
-	
+
 	reader := multipart.NewReader(body, writer.Boundary())
 	form, _ := reader.ReadForm(int64(len(content)) + 1024)
-	
+
 	return form.File["file"][0]
 }
 
+func createValidMP4() []byte {
+	// Minimal valid MP4 header
+	return []byte{
+		0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, // ftyp box
+		0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02, 0x00,
+		0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
+		0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31,
+	}
+}

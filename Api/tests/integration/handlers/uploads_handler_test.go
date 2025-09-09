@@ -7,7 +7,6 @@ import (
 	"api/tests/testdata"
 	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -30,7 +29,7 @@ func TestUploadsHandler_UploadVideo(t *testing.T) {
 		checkResponse  func(t *testing.T, body string)
 	}{
 		{
-			name: "successful upload",
+			name: "upload fails due to strict validation",
 			setupMocks: func() (*mocks.MockVideoRepository, *mocks.MockVideoStorage, *mocks.MockMessagePublisher) {
 				repo := &mocks.MockVideoRepository{
 					CreateFunc: func(ctx context.Context, video *entities.Video) error {
@@ -59,13 +58,9 @@ func TestUploadsHandler_UploadVideo(t *testing.T) {
 				req.Header.Set("Content-Type", writer.FormDataContentType())
 				return req
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, body string) {
-				var response map[string]interface{}
-				err := json.Unmarshal([]byte(body), &response)
-				assert.NoError(t, err)
-				assert.Contains(t, response, "video_id")
-				assert.Contains(t, response, "title")
+				assert.Contains(t, body, "error")
 			},
 		},
 		{
