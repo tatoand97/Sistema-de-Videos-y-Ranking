@@ -28,46 +28,45 @@ jobs:
           # Worker Services
           - name: Workers-AudioRemoval
             path: Workers/AudioRemoval
-            sonar_project_key: WRKR_audio_removal
-            sonar_project_name: WRKR_audio_removal
+            sonar_project_key: Workers-AudioRemoval
+            sonar_project_name: Workers-AudioRemoval
             env: Workers-AudioRemoval
 
           - name: Workers-EditVideo
             path: Workers/EditVideo
-
-            sonar_project_key: WRKR_edit_video
-            sonar_project_name: WRKR_edit_video
+            sonar_project_key: Workers-EditVideo
+            sonar_project_name: Workers-EditVideo
             env: Workers-EditVideo
 
           - name: Workers-gossipOpenClose
             path: Workers/gossipOpenClose
-            sonar_project_key: WRKR_gossip_open_close
-            sonar_project_name: WRKR_gossip_open_close
+            sonar_project_key: Workers-gossipOpenClose
+            sonar_project_name: Workers-gossipOpenClose
             env: Workers-gossipOpenClose
 
           - name: Workers-TrimVideo
             path: Workers/TrimVideo
-            sonar_project_key: WRKR_trim_video
-            sonar_project_name: WRKR_trim_video
+            sonar_project_key: Workers-TrimVideo
+            sonar_project_name: Workers-TrimVideo
             env: Workers-TrimVideo
 
           - name: Workers-Watermarking
             path: Workers/Watermarking
-            sonar_project_key: WRKR_watermarking
-            sonar_project_name: WRKR_watermarking
+            sonar_project_key: Workers-Watermarking
+            sonar_project_name: Workers-Watermarking
             env: Workers-Watermarking
 
           # Infrastructure Services
           - name: Workers-AdminCache
             path: Workers/AdminCache
-            sonar_project_key: WRKR_admin_cache
-            sonar_project_name: WRKR_admin_cache
+            sonar_project_key: Workers-AdminCache
+            sonar_project_name: Workers-AdminCache
             env: Workers-AdminCache
 
           - name: Workers-StatesMachine
             path: Workers/StatesMachine
-            sonar_project_key: WRKR_state_machine
-            sonar_project_name: WRKR_state_machine
+            sonar_project_key: Workers-StatesMachine
+            sonar_project_name: Workers-StatesMachine
             env: Workers-StatesMachine
 
     # Environment configuration
