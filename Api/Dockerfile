@@ -4,7 +4,7 @@
 FROM --platform=linux/amd64 golang:1.25-alpine AS build
 WORKDIR /src
 
-RUN apk add --no-cache build-base file ca-certificates
+RUN apk add --no-cache build-base ca-certificates file
 COPY go.mod go.sum ./
 RUN go mod download
 

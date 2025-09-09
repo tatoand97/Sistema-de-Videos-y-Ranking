@@ -53,9 +53,9 @@ func TestUploadsUseCase_ListUserVideos(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			usecase := useCase.NewUploadsUseCase(tt.mockRepo, nil, nil, "")
-			
+
 			result, err := usecase.ListUserVideos(context.Background(), tt.userID)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, result)
@@ -125,9 +125,9 @@ func TestUploadsUseCase_GetUserVideoByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			usecase := useCase.NewUploadsUseCase(tt.mockRepo, nil, nil, "")
-			
+
 			result, err := usecase.GetUserVideoByID(context.Background(), tt.userID, tt.videoID)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, result)

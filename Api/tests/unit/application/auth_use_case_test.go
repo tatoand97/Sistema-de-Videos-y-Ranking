@@ -14,7 +14,7 @@ import (
 
 func TestAuthService_Login(t *testing.T) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-	
+
 	tests := []struct {
 		name         string
 		email        string
@@ -99,9 +99,9 @@ func TestAuthService_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			authService := useCase.NewAuthService(tt.mockRepo, "test-secret")
-			
+
 			token, duration, err := authService.Login(context.Background(), tt.email, tt.password)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Empty(t, token)
@@ -140,9 +140,9 @@ func TestAuthService_Logout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			authService := useCase.NewAuthService(nil, "test-secret")
-			
+
 			err := authService.Logout(tt.token)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -156,14 +156,14 @@ func TestAuthService_Logout(t *testing.T) {
 
 func TestAuthService_IsTokenInvalid(t *testing.T) {
 	authService := useCase.NewAuthService(nil, "test-secret")
-	
+
 	// Initially, token should not be invalid
 	assert.False(t, authService.IsTokenInvalid("test-token"))
-	
+
 	// After logout, token should be invalid
 	authService.Logout("test-token")
 	assert.True(t, authService.IsTokenInvalid("test-token"))
-	
+
 	// Empty token should return false
 	assert.False(t, authService.IsTokenInvalid(""))
 }
