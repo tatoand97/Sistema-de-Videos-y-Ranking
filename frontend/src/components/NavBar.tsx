@@ -16,11 +16,12 @@ export default function NavBar() {
       <div className="nav-inner">
         <Link className="brand" to="/">TATOLAND • VideoRank</Link>
         <Link to="/rankings">Rankings</Link>
-        <Link to="/videos">Mis Videos</Link>
+        {hasToken && <Link to="/videos">Mis Videos</Link>}
         <div className="spacer" />
         {hasToken ? (
           <>
             <span className="muted">Hola{user ? `, ${user.first_name}` : ''}</span>
+            <Link className="btn secondary" to="/upload">Subir Video</Link>
             <Link className="btn secondary" to="/profile">Perfil</Link>
             <button className="btn" onClick={onLogout}>Salir</button>
           </>

@@ -44,6 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token) {
       try { await endpoints.logout(token); } catch {}
     }
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    } catch {}
     setToken(null);
     setUser(null);
   };

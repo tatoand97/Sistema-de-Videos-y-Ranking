@@ -46,11 +46,17 @@ export default function MyVideos() {
       {loading && <div className="muted">Cargando…</div>}
       {error && <div className="card" style={{ borderColor: '#553' }}>{error}</div>}
       <div className="grid videos" style={{ marginTop: 12 }}>
-        {videos.map(v => (
-          <VideoCard key={v.video_id} video={v} actions={<button className="btn danger" onClick={() => remove(v.video_id)}>Eliminar</button>} />
-        ))}
+        {videos.map(v => {
+          const processed = v.status?.toLowerCase() === 'processed' || Boolean((v as any).processed_url);
+          const actions = (
+            <div className="row">
+              <button className="btn danger" onClick={() => remove(v.video_id)}>Eliminar</button>
+              <a className={`btn secondary${processed ? '' : ' disabled'}`} href={processed ? (v as any).processed_url || '#' : '#'} target="_blank" rel="noreferrer" onClick={e => { if (!processed) e.preventDefault(); }}>Resultado</a>
+            </div>
+          );
+          return <VideoCard key={v.video_id} video={v} actions={actions} />;
+        })}
       </div>
     </div>
   );
 }
-

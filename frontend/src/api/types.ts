@@ -17,7 +17,9 @@ export type Video = {
   title: string;
   status: string;
   created_at?: string;
-  // Additional fields can be added as backend evolves
+  // Campos opcionales según respuesta del backend
+  original_url?: string | null;
+  processed_url?: string | null;
 };
 
 export type RankingItem = {
@@ -26,4 +28,3 @@ export type RankingItem = {
   votes: number;
   city?: string;
 };
-
