@@ -232,6 +232,7 @@ services:
   admin-cache:
     build:
       context: ./Workers/AdminCache
+    container_name: admin-cache
     depends_on:
       postgres:
         condition: service_healthy
@@ -239,9 +240,9 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    environment:
-      # Redis
+    env_file:
       - ./Workers/AdminCache/.env
+    restart: unless-stopped
 
 volumes:
   redis-data:
