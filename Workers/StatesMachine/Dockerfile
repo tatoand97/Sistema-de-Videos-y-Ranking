@@ -1,9 +1,10 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 WORKDIR /app
 COPY StatesMachine/go.mod StatesMachine/go.sum ./
 COPY shared ./shared
-RUN go mod download
 COPY StatesMachine/ .
+RUN sed -i 's|replace shared => ../shared|replace shared => ./shared|' go.mod
+RUN go mod download
 RUN go mod tidy
 RUN go build -o statesmachine ./cmd/main.go
 
