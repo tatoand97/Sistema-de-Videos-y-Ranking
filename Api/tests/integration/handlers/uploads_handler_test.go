@@ -7,11 +7,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"api/internal/domain/entities"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,12 +32,12 @@ func TestUploadsHandler_UploadVideo(t *testing.T) {
 			name: "successful upload",
 			setupMocks: func() (*mocks.MockVideoRepository, *mocks.MockVideoStorage, *mocks.MockMessagePublisher) {
 				repo := &mocks.MockVideoRepository{
-					CreateFunc: func(ctx context.Context, video interface{}) error {
+					CreateFunc: func(ctx context.Context, video *entities.Video) error {
 						return nil
 					},
 				}
 				storage := &mocks.MockVideoStorage{
-					SaveFunc: func(ctx context.Context, objectName string, reader interface{}, size int64, contentType string) (string, error) {
+					SaveFunc: func(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
 						return "https://example.com/video.mp4", nil
 					},
 				}
@@ -47,7 +49,7 @@ func TestUploadsHandler_UploadVideo(t *testing.T) {
 				writer := multipart.NewWriter(body)
 				writer.WriteField("title", "Test Video")
 				writer.WriteField("status", "UPLOADED")
-				
+
 				part, _ := writer.CreateFormFile("file", "test.mp4")
 				part.Write(createValidMP4())
 				writer.Close()
