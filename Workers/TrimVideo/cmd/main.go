@@ -4,13 +4,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"trimvideo/internal/infrastructure"
 )
 
 func main() {
-	_ = godotenv.Load()
 
 	config := infrastructure.LoadConfig()
 	container, err := infrastructure.NewContainer(config)
