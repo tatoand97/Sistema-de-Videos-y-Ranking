@@ -8,14 +8,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService *useCase.UserService, locationService *useCase.LocationService, secret string, uploadsUC *useCase.UploadsUseCase, publicService *useCase.PublicService, statusService *useCase.StatusService) {
-	authHandlers := NewAuthHandlers(authService)
-	userHandlers := NewUserHandlers(userService)
-	videoHandlers := NewVideoHandlers(uploadsUC)
-	locationHandlers := NewLocationHandlers(locationService)
-	publicHandlers := NewPublicHandlers(publicService)
-	statusHandlers := NewStatusHandlers(statusService)
-	uploadsHandlers := NewUploadsHandlers(uploadsUC)
+// RouterConfig groups router dependencies to reduce parameters.
+type RouterConfig struct {
+	AuthService     *useCase.AuthService
+	UserService     *useCase.UserService
+	LocationService *useCase.LocationService
+	UploadsUC       *useCase.UploadsUseCase
+	PublicService   *useCase.PublicService
+	StatusService   *useCase.StatusService
+	JWTSecret       string
+}
+
+func NewRouter(router *gin.Engine, cfg RouterConfig) {
+	authHandlers := NewAuthHandlers(cfg.AuthService)
+	userHandlers := NewUserHandlers(cfg.UserService)
+	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
+	locationHandlers := NewLocationHandlers(cfg.LocationService)
+	publicHandlers := NewPublicHandlers(cfg.PublicService)
+	statusHandlers := NewStatusHandlers(cfg.StatusService)
+	uploadsHandlers := NewUploadsHandlers(cfg.UploadsUC)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -31,7 +42,7 @@ func NewRouter(router *gin.Engine, authService *useCase.AuthService, userService
 	router.GET("/api/videos/statuses", statusHandlers.ListVideoStatuses)
 
 	authGroup := router.Group("/")
-	authGroup.Use(middlewares.JWTMiddleware(authService, secret))
+	authGroup.Use(middlewares.JWTMiddleware(cfg.AuthService, cfg.JWTSecret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
 	authGroup.GET("/api/me", authHandlers.Me)
 
