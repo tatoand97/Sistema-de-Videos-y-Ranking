@@ -4,6 +4,7 @@ import (
 	"api/internal/application/useCase"
 	"api/internal/presentation/handlers"
 	"api/tests/mocks"
+	"api/tests/testdata"
 	"bytes"
 	"context"
 	"io"
@@ -50,7 +51,7 @@ func TestUploadsHandler_UploadVideo(t *testing.T) {
 				writer.WriteField("status", "UPLOADED")
 
 				part, _ := writer.CreateFormFile("file", "test.mp4")
-				part.Write(createValidMP4())
+				part.Write(testdata.CreateValidMP4())
 				writer.Close()
 
 				req := httptest.NewRequest("POST", "/api/uploads", body)
@@ -109,11 +110,4 @@ func TestUploadsHandler_UploadVideo(t *testing.T) {
 	}
 }
 
-func createValidMP4() []byte {
-	return []byte{
-		0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70,
-		0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02, 0x00,
-		0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
-		0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31,
-	}
-}
+
