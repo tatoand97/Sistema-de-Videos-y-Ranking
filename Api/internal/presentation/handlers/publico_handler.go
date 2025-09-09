@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PublicHandlers maneja endpoints públicos relacionados a videos.
+// PublicHandlers maneja endpoints p�blicos relacionados a videos.
 type PublicHandlers struct {
 	service *useCase.PublicService
 }
@@ -37,24 +37,24 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 	// 1) Auth: extraer userID del contexto
 	userID := c.GetUint("userID")
 	if userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inválido o expirado."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token inv�lido o expirado."})
 		return
 	}
 
 	// 2) Path param
 	v := c.Param("video_id")
 	if v == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetros inválidos."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "Par�metros inv�lidos."})
 		return
 	}
 	vid64, err := strconv.ParseUint(v, 10, 64)
 	if err != nil || vid64 == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetros inválidos."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "Par�metros inv�lidos."})
 		return
 	}
 	videoID := uint(vid64)
 
-	// 3-5) Lógica de voto a través del servicio (incluye verificación de existencia y unicidad)
+	// 3-5) L�gica de voto a trav�s del servicio (incluye verificaci�n de existencia y unicidad)
 	err = h.service.VotePublicVideo(c.Request.Context(), videoID, userID)
 	if err != nil {
 		// Mapear errores comunes
@@ -63,7 +63,7 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, domain.ErrConflict) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Ya has votado por este video."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "Ya has votado por este video."})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": "No se pudo registrar el voto."})
@@ -75,9 +75,9 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 }
 
 // ListRankings maneja GET /api/public/rankings
-// Público, sin autenticación. Devuelve un array de RankingEntry.
+// P�blico, sin autenticaci�n. Devuelve un array de RankingEntry.
 func (h *PublicHandlers) ListRankings(c *gin.Context) {
-	// Validación de parámetros de consulta
+	// Validaci�n de par�metros de consulta
 	cityParam := strings.TrimSpace(c.Query("city"))
 	var city *string
 	if cityParam != "" {
@@ -91,7 +91,7 @@ func (h *PublicHandlers) ListRankings(c *gin.Context) {
 	if ps := strings.TrimSpace(c.Query("page")); ps != "" {
 		v, err := strconv.Atoi(ps)
 		if err != nil || v < 1 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido en la consulta"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "Par�metro inv�lido en la consulta"})
 			return
 		}
 		page = v
@@ -99,7 +99,7 @@ func (h *PublicHandlers) ListRankings(c *gin.Context) {
 	if pss := strings.TrimSpace(c.Query("pageSize")); pss != "" {
 		v, err := strconv.Atoi(pss)
 		if err != nil || v < 1 || v > 100 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Parámetro inválido en la consulta"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "Par�metro inv�lido en la consulta"})
 			return
 		}
 		pageSize = v
@@ -111,7 +111,7 @@ func (h *PublicHandlers) ListRankings(c *gin.Context) {
 		return
 	}
 
-	// Mapear a salida pública con posición por página (empezando en 1)
+	// Mapear a salida p�blica con posici�n por p�gina (empezando en 1)
 	resp := make([]domainresponses.RankingEntry, 0, len(items))
 	for i, it := range items {
 		resp = append(resp, domainresponses.RankingEntry{
@@ -121,6 +121,6 @@ func (h *PublicHandlers) ListRankings(c *gin.Context) {
 			Votes:    it.Votes,
 		})
 	}
-	// Sin headers adicionales de paginación no normados.
+	// Sin headers adicionales de paginaci�n no normados.
 	c.JSON(http.StatusOK, resp)
 }

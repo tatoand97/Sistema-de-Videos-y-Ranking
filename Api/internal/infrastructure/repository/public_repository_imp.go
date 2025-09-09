@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const joinCityOnUser = "JOIN city c ON c.city_id = u.city_id"
+
 type publicRepository struct {
 	db *gorm.DB
 }
@@ -23,7 +25,7 @@ func (r *publicRepository) ListPublicVideos(ctx context.Context) ([]responses.Pu
 		Table("video v").
 		Select("v.video_id AS video_id, v.title, v.processed_file AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
 		Joins("JOIN users u ON u.user_id = v.user_id").
-		Joins("JOIN city c ON c.city_id = u.city_id").
+		Joins(joinCityOnUser).
 		Joins("LEFT JOIN vote vt ON vt.video_id = v.video_id").
 		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
 		Group("v.video_id, v.title, v.processed_file, c.name")
@@ -40,7 +42,7 @@ func (r *publicRepository) GetPublicByID(ctx context.Context, id uint) (*respons
 		Table("video v").
 		Select("v.video_id AS video_id, v.title, v.processed_file AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
 		Joins("JOIN users u ON u.user_id = v.user_id").
-		Joins("JOIN city c ON c.city_id = u.city_id").
+		Joins(joinCityOnUser).
 		Joins("LEFT JOIN vote vt ON vt.video_id = v.video_id").
 		Where("v.video_id = ? AND v.status = ? AND v.processed_file IS NOT NULL", id, "PROCESSED").
 		Group("v.video_id, v.title, v.processed_file, c.name")
@@ -68,7 +70,7 @@ func (r *publicRepository) Rankings(ctx context.Context, city *string, page, pag
 	q := r.db.WithContext(ctx).
 		Table("users u").
 		Select("split_part(u.email, '@', 1) AS username, c.name AS city, COUNT(vt.vote_id) AS votes").
-		Joins("JOIN city c ON c.city_id = u.city_id").
+		Joins(joinCityOnUser).
 		Joins("JOIN video v ON v.user_id = u.user_id").
 		Joins("LEFT JOIN vote vt ON vt.video_id = v.video_id").
 		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
