@@ -3,11 +3,10 @@ module statesmachine
 go 1.21
 
 require (
-	github.com/streadway/amqp v1.1.0
-	github.com/joho/godotenv v1.4.0
 	github.com/sirupsen/logrus v1.9.3
-	gorm.io/gorm v1.25.5
+	github.com/streadway/amqp v1.1.0
 	gorm.io/driver/postgres v1.5.4
+	gorm.io/gorm v1.25.5
 	shared v0.0.0
 )
 
@@ -22,4 +21,4 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 )
 
-replace shared => ./shared
+replace shared => ../shared
