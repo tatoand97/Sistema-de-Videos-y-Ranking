@@ -6,6 +6,7 @@ import (
 	"api/internal/domain/entities"
 	"api/internal/domain/requests"
 	"api/tests/mocks"
+	"api/tests/testdata"
 	"bytes"
 	"context"
 	"errors"
@@ -33,7 +34,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 			userID: 1,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
-				FileHeader: createMockFileHeader("test.mp4", createValidMP4()),
+				FileHeader: createMockFileHeader("test.mp4", testdata.CreateValidMP4()),
 				Status:     string(entities.StatusUploaded),
 			},
 			mockRepo: &mocks.MockVideoRepository{
@@ -55,7 +56,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 			userID: 0,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
-				FileHeader: createMockFileHeader("test.mp4", createValidMP4()),
+				FileHeader: createMockFileHeader("test.mp4", testdata.CreateValidMP4()),
 				Status:     string(entities.StatusUploaded),
 			},
 			wantErr:        true,
@@ -66,7 +67,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 			userID: 1,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
-				FileHeader: createMockFileHeader("test.mp4", []byte("invalid content")),
+				FileHeader: createMockFileHeader("test.mp4", testdata.CreateInvalidMP4()),
 				Status:     string(entities.StatusUploaded),
 			},
 			wantErr: true,
@@ -76,7 +77,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 			userID: 1,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
-				FileHeader: createMockFileHeader("test.mp4", createValidMP4()),
+				FileHeader: createMockFileHeader("test.mp4", testdata.CreateValidMP4()),
 				Status:     string(entities.StatusUploaded),
 			},
 			mockStorage: &mocks.MockVideoStorage{
@@ -91,7 +92,7 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 			userID: 1,
 			input: useCase.UploadVideoInput{
 				Title:      "Test Video",
-				FileHeader: createMockFileHeader("test.mp4", createValidMP4()),
+				FileHeader: createMockFileHeader("test.mp4", testdata.CreateValidMP4()),
 				Status:     string(entities.StatusUploaded),
 			},
 			mockRepo: &mocks.MockVideoRepository{
@@ -296,12 +297,3 @@ func createMockFileHeader(filename string, content []byte) *multipart.FileHeader
 	return form.File["file"][0]
 }
 
-func createValidMP4() []byte {
-	// Minimal valid MP4 header
-	return []byte{
-		0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, // ftyp box
-		0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02, 0x00,
-		0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
-		0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31,
-	}
-}

@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"api/internal/application/validations"
+	"api/tests/testdata"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,14 +15,14 @@ func TestCheckMP4(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid MP4 with ftyp box",
-			data: []byte{
-				0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, // ftyp box
-				0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02, 0x00,
-				0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
-				0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31,
-			},
+			name:    "valid MP4 with proper structure",
+			data:    testdata.CreateValidMP4(),
 			wantErr: false,
+		},
+		{
+			name:    "valid MP4 with low resolution",
+			data:    testdata.CreateValidMP4WithResolution(1280, 720),
+			wantErr: true, // Should fail due to resolution requirement
 		},
 		{
 			name:    "empty data",
@@ -51,13 +52,10 @@ func TestCheckMP4(t *testing.T) {
 			
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.Zero(t, width)
-				assert.Zero(t, height)
 			} else {
 				assert.NoError(t, err)
-				// For basic MP4 validation, width and height might be 0
-				assert.GreaterOrEqual(t, width, 0)
-				assert.GreaterOrEqual(t, height, 0)
+				assert.GreaterOrEqual(t, width, 1920)
+				assert.GreaterOrEqual(t, height, 1080)
 			}
 		})
 	}
