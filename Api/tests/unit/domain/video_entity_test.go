@@ -38,7 +38,7 @@ func TestVideoStatus_Constants(t *testing.T) {
 
 func TestAllVideoStatuses(t *testing.T) {
 	statuses := entities.AllVideoStatuses()
-	
+
 	expected := []entities.VideoStatus{
 		entities.StatusUploaded,
 		entities.StatusTrimming,
@@ -49,7 +49,7 @@ func TestAllVideoStatuses(t *testing.T) {
 		entities.StatusProcessed,
 		entities.StatusFailed,
 	}
-	
+
 	assert.Equal(t, expected, statuses)
 	assert.Len(t, statuses, 8)
 }
@@ -57,7 +57,7 @@ func TestAllVideoStatuses(t *testing.T) {
 func TestVideo_Creation(t *testing.T) {
 	now := time.Now()
 	processedAt := now.Add(time.Hour)
-	
+
 	video := entities.Video{
 		VideoID:       1,
 		UserID:        123,
@@ -68,7 +68,7 @@ func TestVideo_Creation(t *testing.T) {
 		UploadedAt:    now,
 		ProcessedAt:   &processedAt,
 	}
-	
+
 	assert.Equal(t, uint(1), video.VideoID)
 	assert.Equal(t, uint(123), video.UserID)
 	assert.Equal(t, "Test Video", video.Title)
