@@ -8,12 +8,14 @@ require (
 	github.com/streadway/amqp v1.1.0
 )
 
-require github.com/minio/minio-go/v7 v7.0.95
+require (
+	github.com/minio/minio-go/v7 v7.0.95
+	github.com/stretchr/testify v1.11.1
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 )
 
 require (

@@ -13,7 +13,9 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
-    env_file: .env
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -32,10 +34,12 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    env_file: .env
     environment:
-      - LC_ALL=C.UTF-8
-      - LANG=C.UTF-8
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: videorank
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
     ports: ["5432:5432"]
     volumes: [pg-data:/var/lib/postgresql/data]
     restart: unless-stopped
@@ -53,7 +57,8 @@ services:
         condition: service_healthy
     volumes:
       - ./Api/internal/infrastructure/migrations:/migrations:ro
-    env_file: .env
+    environment:
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
     entrypoint: ["/bin/sh","-c"]
     command: |
       echo "Listing /migrations to verify mount:" \
@@ -101,7 +106,9 @@ services:
   minio:
     image: minio/minio:latest
     command: ["server","/data","--console-address",":9001"]
-    env_file: .env
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
     ports: ["9000:9000","9001:9001"]
     volumes: [minio-data:/data]
     restart: unless-stopped
@@ -116,7 +123,9 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-    env_file: .env
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
     entrypoint: >
       /bin/sh -c "
       until /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
@@ -168,13 +177,17 @@ services:
         condition: service_healthy
       minio-buckets:
         condition: service_completed_successfully
-    env_file: .env
     environment:
-      - RAW_BUCKET=raw-videos
-      - PROCESSED_BUCKET=processed-videos-trim
-      - QUEUE_NAME=trim_video_queue
-      - STATE_MACHINE_QUEUE=states_machine_queue
-      - MAX_SECONDS=30
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      RAW_BUCKET: raw-videos
+      PROCESSED_BUCKET: processed-videos-trim
+      QUEUE_NAME: trim_video_queue
+      STATE_MACHINE_QUEUE: states_machine_queue
+      MAX_SECONDS: "30"
+      MAX_RETRIES: "3"
     restart: unless-stopped
 
   # EditVideo Worker (2º - processed-videos-trim → processed-videos-edit)
@@ -189,13 +202,17 @@ services:
         condition: service_healthy
       minio-buckets:
         condition: service_completed_successfully
-    env_file: .env
     environment:
-      - RAW_BUCKET=processed-videos-trim
-      - PROCESSED_BUCKET=processed-videos-edit
-      - QUEUE_NAME=edit_video_queue
-      - STATE_MACHINE_QUEUE=states_machine_queue
-      - MAX_SECONDS=30
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      RAW_BUCKET: processed-videos-trim
+      PROCESSED_BUCKET: processed-videos-edit
+      QUEUE_NAME: edit_video_queue
+      STATE_MACHINE_QUEUE: states_machine_queue
+      MAX_SECONDS: "30"
+      MAX_RETRIES: "3"
     restart: unless-stopped
 
   # AudioRemoval Worker (3º - processed-videos-edit → processed-videos-audio-removal)
@@ -210,12 +227,16 @@ services:
         condition: service_healthy
       minio-buckets:
         condition: service_completed_successfully
-    env_file: .env
     environment:
-      - RAW_BUCKET=processed-videos-edit
-      - PROCESSED_BUCKET=processed-videos-audio-removal
-      - QUEUE_NAME=audio_removal_queue
-      - STATE_MACHINE_QUEUE=states_machine_queue
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      RAW_BUCKET: processed-videos-edit
+      PROCESSED_BUCKET: processed-videos-audio-removal
+      QUEUE_NAME: audio_removal_queue
+      STATE_MACHINE_QUEUE: states_machine_queue
+      MAX_RETRIES: "3"
     restart: unless-stopped
 
   # Watermarking Worker (4º - processed-videos-audio-removal → processed-videos-watermarking)
@@ -230,13 +251,17 @@ services:
         condition: service_healthy
       minio-buckets:
         condition: service_completed_successfully
-    env_file: .env
     environment:
-      - RAW_BUCKET=processed-videos-audio-removal
-      - PROCESSED_BUCKET=processed-videos-watermarking
-      - QUEUE_NAME=watermarking_queue
-      - STATE_MACHINE_QUEUE=states_machine_queue
-      - MAX_SECONDS=30
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      RAW_BUCKET: processed-videos-audio-removal
+      PROCESSED_BUCKET: processed-videos-watermarking
+      QUEUE_NAME: watermarking_queue
+      STATE_MACHINE_QUEUE: states_machine_queue
+      MAX_SECONDS: "30"
+      MAX_RETRIES: "3"
     restart: unless-stopped
 
   # StatesMachine Worker (Orchestrator)
@@ -249,15 +274,15 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    env_file: .env
     environment:
-      - QUEUE_NAME=states_machine_queue
-      - EDIT_VIDEO_QUEUE=edit_video_queue
-      - AUDIO_REMOVAL_QUEUE=audio_removal_queue
-      - WATERMARKING_QUEUE=watermarking_queue
-      - DATABASE_URL=postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
-      - MAX_RETRIES=3
-      - RETRY_DELAY_MINUTES=5
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      QUEUE_NAME: states_machine_queue
+      EDIT_VIDEO_QUEUE: edit_video_queue
+      AUDIO_REMOVAL_QUEUE: audio_removal_queue
+      WATERMARKING_QUEUE: watermarking_queue
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+      MAX_RETRIES: "3"
+      RETRY_DELAY_MINUTES: "5"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pgrep", "-f", "statesmachine"]
@@ -278,22 +303,24 @@ services:
         condition: service_healthy
       minio-buckets:
         condition: service_completed_successfully
-    env_file: .env
     environment:
-      - MINIO_BUCKET_RAW=processed-videos-watermarking
-      - MINIO_BUCKET_PROCESSED=processed-videos
-      - QUEUE_NAME=gossip_open_close_queue
-      - MAX_SECONDS=30
-      - INTRO_SECONDS=2.5
-      - OUTRO_SECONDS=2.5
-      - TARGET_WIDTH=1280
-      - TARGET_HEIGHT=720
-      - FPS=30
-      - LOGO_PATH=./assets/nba-logo-removebg-preview.png
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      MINIO_BUCKET_RAW: processed-videos-watermarking
+      MINIO_BUCKET_PROCESSED: processed-videos
+      QUEUE_NAME: gossip_open_close_queue
+      MAX_SECONDS: "30"
+      INTRO_SECONDS: "2.5"
+      OUTRO_SECONDS: "2.5"
+      TARGET_WIDTH: "1280"
+      TARGET_HEIGHT: "720"
+      FPS: "30"
+      LOGO_PATH: ./assets/nba-logo-removebg-preview.png
+      MAX_RETRIES: "3"
     restart: unless-stopped
-    env_file:
-      - ./Workers/gossipOpenClose/.env
-  
+
   admin-cache:
     build:
       context: ./Workers/AdminCache
@@ -305,10 +332,11 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    env_file:
-      - ./Workers/AdminCache/.env
+    environment:
+      DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379
     restart: unless-stopped
-
 
 volumes:
   redis-data:
