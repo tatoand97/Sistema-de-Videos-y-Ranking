@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"api/internal/domain/entities"
 	"api/internal/domain/requests"
 	"api/internal/domain/responses"
+	hdl "api/internal/presentation/handlers"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,7 +70,7 @@ func (f *fakeStorage) PresignedPostPolicy(_ context.Context, _ requests.CreateUp
 
 func setupVideoRouter(uc *useCase.UploadsUseCase, withAuth bool) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	h := NewVideoHandlers(uc)
+	h := hdl.NewVideoHandlers(uc)
 	r := gin.New()
 	if withAuth {
 		r.Use(func(c *gin.Context) { c.Set("userID", uint(10)); c.Next() })

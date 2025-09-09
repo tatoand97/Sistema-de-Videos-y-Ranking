@@ -3,9 +3,10 @@ module api
 go 1.24.3
 
 require (
-	github.com/Eyevinn/mp4ff v0.49.0
-	github.com/jackc/pgx/v5 v5.7.5
-	github.com/streadway/amqp v1.1.0
+    github.com/Eyevinn/mp4ff v0.49.0
+    github.com/jackc/pgx/v5 v5.7.5
+    github.com/streadway/amqp v1.1.0
+    github.com/stretchr/testify v1.11.1
 )
 
 require (
@@ -14,8 +15,8 @@ require (
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+    github.com/davecgh/go-spew v1.1.1 // indirect
+    github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 
 require (

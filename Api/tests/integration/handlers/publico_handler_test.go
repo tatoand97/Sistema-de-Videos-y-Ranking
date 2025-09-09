@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"api/internal/application/useCase"
 	"api/internal/domain"
 	"api/internal/domain/responses"
+	hdl "api/internal/presentation/handlers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -83,7 +84,7 @@ func (f *fakeVoteRepo) Create(ctx context.Context, videoID, userID uint) error {
 }
 
 // Helper to setup Gin with handler and a middleware to set userID
-func setupRouter(h *PublicHandlers, withAuth bool) *gin.Engine {
+func setupRouter(h *hdl.PublicHandlers, withAuth bool) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	if withAuth {
@@ -98,7 +99,7 @@ func TestVotePublicVideo_OK(t *testing.T) {
 	pub := &fakePublicRepo{exists: true}
 	votes := &fakeVoteRepo{hasVoted: false, createErr: nil}
 	svc := useCase.NewPublicService(pub, votes)
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, true)
 
 	w := httptest.NewRecorder()
@@ -114,7 +115,7 @@ func TestVotePublicVideo_AlreadyVoted(t *testing.T) {
 	pub := &fakePublicRepo{exists: true}
 	votes := &fakeVoteRepo{hasVoted: true}
 	svc := useCase.NewPublicService(pub, votes)
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, true)
 
 	w := httptest.NewRecorder()
@@ -132,7 +133,7 @@ func TestVotePublicVideo_UniqueViolation(t *testing.T) {
 	pgErr := &pgconn.PgError{Code: "23505"}
 	votes := &fakeVoteRepo{hasVoted: false, createErr: pgErr}
 	svc := useCase.NewPublicService(pub, votes)
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, true)
 
 	w := httptest.NewRecorder()
@@ -148,7 +149,7 @@ func TestVotePublicVideo_NotFound(t *testing.T) {
 	pub := &fakePublicRepo{exists: false}
 	votes := &fakeVoteRepo{}
 	svc := useCase.NewPublicService(pub, votes)
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, true)
 
 	w := httptest.NewRecorder()
@@ -164,7 +165,7 @@ func TestVotePublicVideo_Unauthorized(t *testing.T) {
 	pub := &fakePublicRepo{exists: true}
 	votes := &fakeVoteRepo{}
 	svc := useCase.NewPublicService(pub, votes)
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, false) // no auth middleware
 
 	w := httptest.NewRecorder()
@@ -187,7 +188,7 @@ func TestListRankings_OK_NoFilters(t *testing.T) {
 	}
 	pub := &fakePublicRepo{exists: true, rankings: data}
 	svc := useCase.NewPublicService(pub, &fakeVoteRepo{})
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, false)
 
 	w := httptest.NewRecorder()
@@ -220,7 +221,7 @@ func TestListRankings_CityFilter(t *testing.T) {
 	}
 	pub := &fakePublicRepo{exists: true, rankings: data}
 	svc := useCase.NewPublicService(pub, &fakeVoteRepo{})
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, false)
 
 	q := url.Values{"city": []string{"Bogotá"}}
@@ -250,7 +251,7 @@ func TestListRankings_Pagination_Page2Size1(t *testing.T) {
 	}
 	pub := &fakePublicRepo{exists: true, rankings: data}
 	svc := useCase.NewPublicService(pub, &fakeVoteRepo{})
-	h := NewPublicHandlers(svc)
+	h := hdl.NewPublicHandlers(svc)
 	r := setupRouter(h, false)
 
 	w := httptest.NewRecorder()
@@ -288,7 +289,7 @@ func TestListRankings_BadParams(t *testing.T) {
 		t.Run(fmt.Sprintf("case-%d", i), func(t *testing.T) {
 			pub := &fakePublicRepo{exists: true}
 			svc := useCase.NewPublicService(pub, &fakeVoteRepo{})
-			h := NewPublicHandlers(svc)
+			h := hdl.NewPublicHandlers(svc)
 			r := setupRouter(h, false)
 
 			w := httptest.NewRecorder()
