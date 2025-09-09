@@ -1,0 +1,141 @@
+# Workflow name
+name: SonarCloud (monorepo Go)
+
+# Trigger events
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  sonar:
+    name: Analyze ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    
+    # Matrix strategy configuration
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # API Service
+          - name: Api
+            path: Api
+            sonar_project_key: API_Video_Sistema_key
+            sonar_project_name: API_Video_Sistema
+            env: Api
+
+          # Worker Services
+          - name: Workers-AudioRemoval
+            path: Workers/AudioRemoval
+            sonar_project_key: WRKR_audio_removal_key
+            sonar_project_name: WRKR_audio_removal
+            env: Workers-AudioRemoval
+
+          - name: Workers-EditVideo
+            path: Workers/EditVideo
+            sonar_project_key: WRKR_edit_video_key
+            sonar_project_name: WRKR_edit_video
+            env: Workers-EditVideo
+
+          - name: Workers-gossipOpenClose
+            path: Workers/gossipOpenClose
+            sonar_project_key: WRKR_gossip_open_close_key
+            sonar_project_name: WRKR_gossip_open_close
+            env: Workers-gossipOpenClose
+
+          - name: Workers-TrimVideo
+            path: Workers/TrimVideo
+            sonar_project_key: WRKR_trim_video_key
+            sonar_project_name: WRKR_trim_video
+            env: Workers-TrimVideo
+
+          - name: Workers-Watermarking
+            path: Workers/Watermarking
+            sonar_project_key: WRKR_watermarking_key
+            sonar_project_name: WRKR_watermarking
+            env: Workers-Watermarking
+
+          # Infrastructure Services
+          - name: Workers-AdminCache
+            path: Workers/AdminCache
+            sonar_project_key: WRKR_admin_cache_key
+            sonar_project_name: WRKR_admin_cache
+            env: Workers-AdminCache
+
+          - name: Workers-StatesMachine
+            path: Workers/StatesMachine
+            sonar_project_key: WRKR_state_machine_key
+            sonar_project_name: WRKR_state_machine
+            env: Workers-StatesMachine
+
+    # Environment configuration
+    environment: ${{ matrix.env }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.path }}
+
+    # Job steps
+    steps:
+      # Checkout repository
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Setup Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      # Verify go.sum integrity
+      - name: Sanity check go.sum
+        if: hashFiles(format('{0}/go.mod', matrix.path)) != ''
+        working-directory: ${{ matrix.path }}
+        shell: bash
+        run: |
+          if [ -f go.sum ]; then
+            # Quick view of first 10 lines
+            nl -ba go.sum | sed -n '1,10p'
+
+            # Check for merge markers
+            grep -nE '^(<<<<<<<|=======|>>>>>>>)' go.sum && {
+              echo "::error ::go.sum contains merge markers. Please fix and commit.";
+              exit 1;
+            } || true
+
+            # Verify line format
+            awk 'NF!=3 {print "Line", NR, "=>", $0; exit 1}' go.sum || true
+          else
+            echo "No go.sum found; will be generated with go mod tidy/download if needed."
+          fi
+
+      # Download dependencies
+      - name: Download deps
+        if: hashFiles(format('{0}/go.mod', matrix.path)) != ''
+        working-directory: ${{ matrix.path }}
+        run: go mod download
+
+      # Run tests with coverage
+      - name: Run tests with coverage
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+
+      # SonarCloud analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.organization=tatoand97
+            -Dsonar.projectKey=${{ matrix.sonar_project_key }}
+            -Dsonar.projectName=${{ matrix.sonar_project_name }}
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions=**/*_test.go
+            -Dsonar.exclusions=**/vendor/**,**/static/**,**/assets/**,**/migrations/**,**/*.yaml,**/*.yml
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.sourceEncoding=UTF-8
