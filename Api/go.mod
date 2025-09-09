@@ -9,7 +9,10 @@ require (
     github.com/stretchr/testify v1.11.1
 )
 
-require github.com/minio/minio-go/v7 v7.0.95
+require (
+	github.com/minio/minio-go/v7 v7.0.95
+	github.com/stretchr/testify v1.11.1
+)
 
 require (
     github.com/davecgh/go-spew v1.1.1 // indirect
