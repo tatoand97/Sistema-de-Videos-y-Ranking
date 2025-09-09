@@ -2,7 +2,6 @@ package application_test
 
 import (
 	"api/internal/application/validations"
-	"api/tests/testdata"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
