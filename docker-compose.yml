@@ -291,7 +291,23 @@ services:
       - FPS=30
       - LOGO_PATH=./assets/nba-logo-removebg-preview.png
     restart: unless-stopped
-
+    env_file:
+      - ./Workers/gossipOpenClose/.env
+  
+  admin-cache:
+    build:
+      context: ./Workers/AdminCache
+    container_name: admin-cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./Workers/AdminCache/.env
+    restart: unless-stopped
 
 
 volumes:
