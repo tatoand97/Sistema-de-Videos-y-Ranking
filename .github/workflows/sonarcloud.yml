@@ -34,6 +34,7 @@ jobs:
 
           - name: Workers-EditVideo
             path: Workers/EditVideo
+
             sonar_project_key: WRKR_edit_video
             sonar_project_name: WRKR_edit_video
             env: Workers-EditVideo
