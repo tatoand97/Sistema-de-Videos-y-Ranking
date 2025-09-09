@@ -59,8 +59,4 @@ func createTestValidMP4() []byte {
 	}
 }
 
-func createTestValidMP4WithResolution(width, height int) []byte {
-	// For testing low resolution, return the same basic structure
-	// The actual resolution validation happens in the MP4 parsing
-	return createTestValidMP4()
-}
+// Note: resolution-specific helper removed as it was unused.
