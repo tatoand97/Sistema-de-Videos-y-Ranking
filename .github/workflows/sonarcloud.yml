@@ -129,7 +129,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: .
+          projectBaseDir: ${{ matrix.path }}
           args: >
             -Dsonar.organization=tatoand97
             -Dsonar.projectKey=${{ matrix.sonar_project_key }}
