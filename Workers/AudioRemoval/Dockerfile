@@ -5,8 +5,9 @@ COPY AudioRemoval/go.mod AudioRemoval/go.sum ./
 COPY shared ./shared
 COPY AudioRemoval/internal/ ./internal/
 COPY AudioRemoval/cmd/ ./cmd/
-RUN go mod tidy
+RUN sed -i 's|replace shared => ../shared|replace shared => ./shared|' go.mod
 RUN go mod download
+RUN go mod tidy
 RUN go build -o audioremoval cmd/main.go
 
 FROM alpine:latest

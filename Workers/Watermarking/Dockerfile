@@ -3,6 +3,7 @@ RUN apk add --no-cache git
 WORKDIR /app
 COPY Watermarking/go.mod .
 COPY shared ./shared
+RUN sed -i 's|replace shared => ../shared|replace shared => ./shared|' go.mod
 RUN go mod download
 COPY Watermarking/internal/ ./internal/
 COPY Watermarking/cmd/ ./cmd/
