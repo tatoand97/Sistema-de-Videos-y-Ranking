@@ -228,6 +228,20 @@ services:
     restart: unless-stopped
     env_file:
       - ./Workers/gossipOpenClose/.env
+  
+  admin-cache:
+    build:
+      context: ./Workers/AdminCache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      # Redis
+      - ./Workers/AdminCache/.env
 
 volumes:
   redis-data:
