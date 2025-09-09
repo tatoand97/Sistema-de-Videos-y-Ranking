@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@store/auth';
 
 export default function NavBar() {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const navigate = useNavigate();
 
   const onLogout = async () => {
@@ -17,9 +17,9 @@ export default function NavBar() {
         <Link to="/rankings">Rankings</Link>
         <Link to="/videos">Mis Videos</Link>
         <div className="spacer" />
-        {user ? (
+        {token ? (
           <>
-            <span className="muted">Hola, {user.first_name}</span>
+            <span className="muted">Hola{user ? `, ${user.first_name}` : ''}</span>
             <Link className="btn secondary" to="/profile">Perfil</Link>
             <button className="btn" onClick={onLogout}>Salir</button>
           </>
@@ -33,4 +33,3 @@ export default function NavBar() {
     </nav>
   );
 }
-

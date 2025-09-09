@@ -27,11 +27,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const login = async (email: string, password: string) => {
-    const res = await endpoints.login({ email, password });
-    // @ts-ignore shape response aligns with AuthResponse
-    const { token: t, user: u } = res as any;
+    const res: any = await endpoints.login({ email, password });
+    const t: string | undefined = res?.access_token || res?.token;
+    if (!t) throw new Error('Respuesta de login inválida');
     setToken(t);
-    setUser(u);
+    try {
+      const me: any = await endpoints.me(t);
+      setUser(me?.user || me || null);
+    } catch {
+      // If /api/me fails, keep token but no user details
+      setUser(null);
+    }
   };
 
   const logout = async () => {
@@ -56,4 +62,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-
