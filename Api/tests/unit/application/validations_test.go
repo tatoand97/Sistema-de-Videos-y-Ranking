@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"api/internal/application/validations"
+	"api/tests/testdata"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,13 +52,10 @@ func TestCheckMP4(t *testing.T) {
 
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.Zero(t, width)
-				assert.Zero(t, height)
 			} else {
 				assert.NoError(t, err)
-				// For basic MP4 validation, width and height might be 0
-				assert.GreaterOrEqual(t, width, 0)
-				assert.GreaterOrEqual(t, height, 0)
+				assert.GreaterOrEqual(t, width, 1920)
+				assert.GreaterOrEqual(t, height, 1080)
 			}
 		})
 	}
