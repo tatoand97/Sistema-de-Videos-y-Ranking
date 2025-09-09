@@ -21,51 +21,51 @@ jobs:
           # API Service
           - name: Api
             path: Api
-            sonar_project_key: API_Video_Sistema_key
+            sonar_project_key: API_Video_Sistema
             sonar_project_name: API_Video_Sistema
             env: Api
 
           # Worker Services
           - name: Workers-AudioRemoval
             path: Workers/AudioRemoval
-            sonar_project_key: WRKR_audio_removal_key
+            sonar_project_key: WRKR_audio_removal
             sonar_project_name: WRKR_audio_removal
             env: Workers-AudioRemoval
 
           - name: Workers-EditVideo
             path: Workers/EditVideo
-            sonar_project_key: WRKR_edit_video_key
+            sonar_project_key: WRKR_edit_video
             sonar_project_name: WRKR_edit_video
             env: Workers-EditVideo
 
           - name: Workers-gossipOpenClose
             path: Workers/gossipOpenClose
-            sonar_project_key: WRKR_gossip_open_close_key
+            sonar_project_key: WRKR_gossip_open_close
             sonar_project_name: WRKR_gossip_open_close
             env: Workers-gossipOpenClose
 
           - name: Workers-TrimVideo
             path: Workers/TrimVideo
-            sonar_project_key: WRKR_trim_video_key
+            sonar_project_key: WRKR_trim_video
             sonar_project_name: WRKR_trim_video
             env: Workers-TrimVideo
 
           - name: Workers-Watermarking
             path: Workers/Watermarking
-            sonar_project_key: WRKR_watermarking_key
+            sonar_project_key: WRKR_watermarking
             sonar_project_name: WRKR_watermarking
             env: Workers-Watermarking
 
           # Infrastructure Services
           - name: Workers-AdminCache
             path: Workers/AdminCache
-            sonar_project_key: WRKR_admin_cache_key
+            sonar_project_key: WRKR_admin_cache
             sonar_project_name: WRKR_admin_cache
             env: Workers-AdminCache
 
           - name: Workers-StatesMachine
             path: Workers/StatesMachine
-            sonar_project_key: WRKR_state_machine_key
+            sonar_project_key: WRKR_state_machine
             sonar_project_name: WRKR_state_machine
             env: Workers-StatesMachine
 
@@ -119,7 +119,7 @@ jobs:
 
       # Run tests with coverage
       - name: Run tests with coverage
-        run: go test ./... -coverpkg=./... -covermode=atomic -coverprofile=coverage.out
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
 
       # SonarCloud analysis
       - name: SonarCloud Scan
@@ -131,7 +131,7 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.organization=tatoand97
-            -Dsonar.projectKey=${{ matrix.sonar_project_key }}
+            -Dsonar.projectKey=${{ matrix.sonar_project_ke
             -Dsonar.projectName=${{ matrix.sonar_project_name }}
             -Dsonar.sources=.
             -Dsonar.tests=.
