@@ -22,7 +22,7 @@ func NewUserHandlers(service *useCase.UserService) *UserHandlers {
 func (handler *UserHandlers) Register(context *gin.Context) {
 	var request requests.RegisterUserRequest
 	if err := context.ShouldBindJSON(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": err.Error()})
 		return
 	}
 
@@ -32,12 +32,12 @@ func (handler *UserHandlers) Register(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	} else if exists {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "email already in use"})
+		context.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "email already in use"})
 		return
 	}
 
 	if request.Password1 != request.Password2 {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "passwords do not match"})
+		context.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "passwords do not match"})
 		return
 	}
 
@@ -52,7 +52,7 @@ func (handler *UserHandlers) Register(context *gin.Context) {
 	)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, domain.ErrInvalid) {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "invalid city or country"})
+			context.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "invalid city or country"})
 			return
 		}
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
