@@ -120,12 +120,29 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	}
 
 	// Publicar la ID del video guardado para procesamiento asíncrono
-	if uc.publisher != nil && strings.TrimSpace(uc.queue) != "" {
+	// No fallar el upload si el messaging falla
+	fmt.Printf("DEBUG: Checking publisher - publisher nil: %t, queue: '%s'\n", uc.publisher == nil, uc.queue)
+	
+	if uc.publisher == nil {
+		fmt.Printf("ERROR: Publisher is nil, cannot publish message for video ID: %d\n", video.VideoID)
+	} else if strings.TrimSpace(uc.queue) == "" {
+		fmt.Printf("ERROR: Queue name is empty, cannot publish message for video ID: %d\n", video.VideoID)
+	} else {
 		payload := struct {
-			VideoID uint `json:"video_id"`
-		}{VideoID: video.VideoID}
+			VideoID string `json:"videoId"`
+		}{VideoID: fmt.Sprintf("%d", video.VideoID)}
+		
 		if b, err := json.Marshal(payload); err == nil {
-			_ = uc.publisher.Publish(uc.queue, b)
+			fmt.Printf("DEBUG: Publishing message for video ID: %d to queue: %s, payload: %s\n", video.VideoID, uc.queue, string(b))
+			
+			// Hacer síncrono temporalmente para debug
+			if publishErr := uc.publisher.Publish(uc.queue, b); publishErr != nil {
+				fmt.Printf("ERROR: Failed to publish message to queue %s: %v\n", uc.queue, publishErr)
+			} else {
+				fmt.Printf("SUCCESS: Message published to queue %s for video ID: %d\n", uc.queue, video.VideoID)
+			}
+		} else {
+			fmt.Printf("ERROR: Failed to marshal message payload: %v\n", err)
 		}
 	}
 

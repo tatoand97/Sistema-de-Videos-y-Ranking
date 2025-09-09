@@ -3,19 +3,20 @@ package usecases
 
 import (
 	"fmt"
-	"mime"
 	"os"
-	"path/filepath"
 	"strconv"
+	"time"
 
 	"gossipopenclose/internal/domain"
 	"gossipopenclose/internal/application/services"
+	"github.com/sirupsen/logrus"
 )
 
 type OpenCloseUseCase struct {
 	videoRepo            domain.VideoRepository
 	storageRepo          domain.StorageRepository
 	processingService    *services.OpenCloseVideoProcessingService
+	notificationService  domain.NotificationService
 	rawBucket            string
 	processedBucket      string
 	introSeconds         float64
@@ -30,6 +31,7 @@ func NewOpenCloseUseCase(
 	videoRepo domain.VideoRepository,
 	storageRepo domain.StorageRepository,
 	processingService *services.OpenCloseVideoProcessingService,
+	notificationService domain.NotificationService,
 	rawBucket, processedBucket, logoPath string,
 	introSeconds, outroSeconds float64,
 	targetW, targetH, fps int,
@@ -38,6 +40,7 @@ func NewOpenCloseUseCase(
 		videoRepo: videoRepo,
 		storageRepo: storageRepo,
 		processingService: processingService,
+		notificationService: notificationService,
 		rawBucket: rawBucket,
 		processedBucket: processedBucket,
 		introSeconds: introSeconds,
@@ -63,7 +66,7 @@ func envInt(key string, def int) int {
 	return def
 }
 
-func (uc *OpenCloseUseCase) Execute(filename string) error {
+func (uc *OpenCloseUseCase) Execute(videoID, filename string) error {
 	video, err := uc.videoRepo.FindByFilename(filename)
 	if err != nil { return fmt.Errorf("find video: %w", err) }
 
@@ -83,11 +86,7 @@ func (uc *OpenCloseUseCase) Execute(filename string) error {
 		return fmt.Errorf("process: %w", err)
 	}
 
-	outName := fmt.Sprintf("processed_%s", filename)
-	if ext := filepath.Ext(outName); ext == "" {
-		outName += ".mp4"
-	}
-	if err := uc.storageRepo.Upload(uc.processedBucket, outName, processedData); err != nil {
+	if err := uc.storageRepo.Upload(uc.processedBucket, filename, processedData); err != nil {
 		_ = uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("upload: %w", err)
 	}
@@ -96,6 +95,18 @@ func (uc *OpenCloseUseCase) Execute(filename string) error {
 		return fmt.Errorf("update final status: %w", err)
 	}
 
-	_ = mime.TypeByExtension(".mp4") // placeholder para mantenener simetría con watermarking
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(videoID, filename, bucketPath); err != nil {
+		logrus.Errorf("Failed to notify state machine: %v", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id": video.ID,
+		"filename": filename,
+		"bucket_from": uc.rawBucket,
+		"bucket_to": uc.processedBucket,
+		"timestamp": time.Now().UTC(),
+	}).Info("GossipOpenClose processing completed successfully")
+
 	return nil
 }

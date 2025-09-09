@@ -42,8 +42,8 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		// Usa RABBIT_URL (coincide con el .env.example)
-		RabbitMQURL:     os.Getenv("RABBIT_URL"),
+		// Usa RABBITMQ_URL
+		RabbitMQURL:     os.Getenv("RABBITMQ_URL"),
 		MinIOEndpoint:   os.Getenv("MINIO_ENDPOINT"),
 		MinIOAccessKey:  os.Getenv("MINIO_ACCESS_KEY"),
 		MinIOSecretKey:  os.Getenv("MINIO_SECRET_KEY"),

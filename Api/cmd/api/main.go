@@ -97,7 +97,7 @@ func main() {
 					maxLen = n
 				}
 			}
-			_ = p.EnsureQueue(audioQueue, maxLen, true)
+			_ = p.EnsureQueue(audioQueue, maxLen, false)
 			messagePublisher = p
 			defer messagePublisher.Close()
 		}

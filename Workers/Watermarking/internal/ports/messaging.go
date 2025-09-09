@@ -8,3 +8,7 @@ type MessageConsumer interface {
 	StartConsuming(queueName string, handler MessageHandler) error
 	Close() error
 }
+
+type MessagePublisher interface {
+	PublishMessage(queueName string, message interface{}) error
+}

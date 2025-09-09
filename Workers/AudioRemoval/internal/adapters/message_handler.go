@@ -4,9 +4,11 @@ import (
 	"audioremoval/internal/application/usecases"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"shared/security"
 )
 
 type VideoMessage struct {
+	VideoID  string `json:"video_id"`
 	Filename string `json:"filename"`
 }
 
@@ -19,7 +21,7 @@ func NewMessageHandler(processVideoUC *usecases.ProcessVideoUseCase) *MessageHan
 }
 
 func (h *MessageHandler) HandleMessage(body []byte) error {
-	logrus.Infof("Received message: %s", string(body))
+	logrus.Infof("Received message: %s", security.SanitizeLogInput(string(body)))
 	
 	var msg VideoMessage
 	if err := json.Unmarshal(body, &msg); err != nil {
@@ -27,14 +29,14 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return err
 	}
 
-	logrus.Infof("Parsed filename: '%s'", msg.Filename)
-	logrus.Infof("Processing video: %s", msg.Filename)
+	logrus.Infof("Processing video_id: %s, filename: %s", security.SanitizeLogInput(msg.VideoID), security.SanitizeLogInput(msg.Filename))
 	
-	if err := h.processVideoUC.Execute(msg.Filename); err != nil {
-		logrus.Errorf("Error processing video %s: %v", msg.Filename, err)
+	if err := h.processVideoUC.Execute(msg.VideoID, msg.Filename); err != nil {
+		logrus.Errorf("Error processing video %s: %v", security.SanitizeLogInput(msg.Filename), err)
 		return err
 	}
 
-	logrus.Infof("Video processed successfully: %s", msg.Filename)
+	logrus.Infof("Video processed successfully: %s", security.SanitizeLogInput(msg.Filename))
 	return nil
 }
+

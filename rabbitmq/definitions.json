@@ -22,6 +22,54 @@
         "x-dead-letter-routing-key": "orders.dead",
         "x-message-ttl": 60000
       }
+    },
+    { 
+      "name": "trim_video_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "edit_video_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "audio_removal_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "watermarking_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "gossip_open_close_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
+    },
+    { 
+      "name": "states_machine_queue", 
+      "vhost": "/", 
+      "durable": true,
+      "arguments": {
+        "x-max-length": 1000
+      }
     }
   ],
   "bindings": [

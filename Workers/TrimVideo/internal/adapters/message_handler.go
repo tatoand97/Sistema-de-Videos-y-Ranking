@@ -4,9 +4,11 @@ import (
 	"trimvideo/internal/application/usecases"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"shared/security"
 )
 
 type VideoMessage struct {
+	VideoID  string `json:"video_id"`
 	Filename string `json:"filename"`
 }
 
@@ -25,6 +27,10 @@ func (h *MessageHandler) HandleMessage(body []byte) error {
 		return err
 	}
 
-	logrus.Infof("Recibido filename: '%s'", msg.Filename)
-	return h.processVideoUC.Execute(msg.Filename)
+	logrus.Infof("Received video_id: '%s', filename: '%s'", security.SanitizeLogInput(msg.VideoID), security.SanitizeLogInput(msg.Filename))
+	return h.processVideoUC.Execute(msg.VideoID, msg.Filename)
 }
+
+
+
+

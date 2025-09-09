@@ -2,15 +2,16 @@ package usecases
 
 import (
     "fmt"
-    "mime"
     "time"
     "trimvideo/internal/domain"
+    "github.com/sirupsen/logrus"
 )
 
 type ProcessVideoUseCase struct {
 	videoRepo            domain.VideoRepository
 	storageRepo          domain.StorageRepository
 	processingService    domain.VideoProcessingService
+	notificationService  domain.NotificationService
 	rawBucket            string
 	processedBucket      string
 	maxSeconds           int
@@ -20,6 +21,7 @@ func NewProcessVideoUseCase(
 	videoRepo domain.VideoRepository,
 	storageRepo domain.StorageRepository,
 	processingService domain.VideoProcessingService,
+	notificationService domain.NotificationService,
 	rawBucket, processedBucket string,
 	maxSeconds int,
 ) *ProcessVideoUseCase {
@@ -27,13 +29,14 @@ func NewProcessVideoUseCase(
 		videoRepo: videoRepo,
 		storageRepo: storageRepo,
 		processingService: processingService,
+		notificationService: notificationService,
 		rawBucket: rawBucket,
 		processedBucket: processedBucket,
 		maxSeconds: maxSeconds,
 	}
 }
 
-func (uc *ProcessVideoUseCase) Execute(filename string) error {
+func (uc *ProcessVideoUseCase) Execute(videoID, filename string) error {
 	video, err := uc.videoRepo.FindByFilename(filename)
 	if err != nil { return fmt.Errorf("find video: %w", err) }
 	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusProcessing); err != nil { return err }
@@ -50,8 +53,7 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 		return fmt.Errorf("processing: %w", err)
 	}
 
-	outName := fmt.Sprintf("processed_%s", filename)
-	if err := uc.storageRepo.Upload(uc.processedBucket, outName, processedData); err != nil {
+	if err := uc.storageRepo.Upload(uc.processedBucket, filename, processedData); err != nil {
 		_ = uc.videoRepo.UpdateStatus(video.ID, domain.StatusFailed)
 		return fmt.Errorf("upload: %w", err)
 	}
@@ -59,8 +61,20 @@ func (uc *ProcessVideoUseCase) Execute(filename string) error {
 	if err := uc.videoRepo.UpdateStatus(video.ID, domain.StatusCompleted); err != nil {
 		return fmt.Errorf("update final status: %w", err)
 	}
-	_ = mime.TypeByExtension(".mp4") // placeholder like AudioRemoval; could be used for content-type
 
-	_ = time.Now()
+	bucketPath := fmt.Sprintf("%s/%s", uc.processedBucket, filename)
+	if err := uc.notificationService.NotifyVideoProcessed(videoID, filename, bucketPath); err != nil {
+		logrus.Errorf("Failed to notify state machine: %v", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"video_id": video.ID,
+		"filename": filename,
+		"bucket_from": uc.rawBucket,
+		"bucket_to": uc.processedBucket,
+		"max_seconds": uc.maxSeconds,
+		"timestamp": time.Now().UTC(),
+	}).Info("TrimVideo processing completed successfully")
+
 	return nil
 }
