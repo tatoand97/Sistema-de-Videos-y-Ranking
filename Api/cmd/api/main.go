@@ -103,18 +103,7 @@ func setupRedisCacheFromEnv() interfaces.Cache {
 	return infraCache.NewRedisCache(rdb, prefix, ttl)
 }
 
-// setupAggregatesFromEnv initializes Redis Aggregates for leaderboards/stats.
-// Uses the same REDIS_ADDR and CACHE_PREFIX. Optional tenant via TENANT_ID.
-func setupAggregatesFromEnv() interfaces.Aggregates {
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		return nil
-	}
-	prefix := getEnvOrDefault("CACHE_PREFIX", "videorank:")
-	tenant := os.Getenv("TENANT_ID")
-	rdb := infraCache.MustRedisClient(addr)
-	return infraCache.NewRedisAggregates(rdb, prefix, tenant)
-}
+// Redis Aggregates removed; rankings served from DB.
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
@@ -162,9 +151,8 @@ func main() {
 	// Redis cache and idempotency TTL
 	cache := setupRedisCacheFromEnv()
 	idemTTL := atoiOrDefault(os.Getenv("IDEMPOTENCY_TTL_SECONDS"), 3600)
-	// Redis aggregates (leaderboards/stats)
-	aggregates := setupAggregatesFromEnv()
-	publicService := useCase.NewPublicServiceWithAgg(publicRepo, voteRepo, aggregates)
+	// Public service without Redis aggregates
+	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
 	handlers.NewRouter(r, handlers.RouterConfig{
 		AuthService:     authService,
@@ -176,7 +164,6 @@ func main() {
 		JWTSecret:       jwtSecret,
 		Cache:           cache,
 		IdemTTLSeconds:  idemTTL,
-		Aggregates:      aggregates,
 	})
 
 	port := getEnvOrDefault("PORT", "8080")

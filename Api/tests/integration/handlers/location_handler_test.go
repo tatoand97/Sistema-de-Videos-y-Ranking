@@ -14,11 +14,11 @@ import (
 )
 
 type fakeLocationRepo struct {
-	cityID uint
+	cityID int
 	err    error
 }
 
-func (f *fakeLocationRepo) GetCityID(ctx context.Context, country, city string) (uint, error) {
+func (f *fakeLocationRepo) GetCityID(ctx context.Context, country, city string) (int, error) {
 	if f.err != nil {
 		return 0, f.err
 	}

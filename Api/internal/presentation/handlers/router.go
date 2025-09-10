@@ -20,7 +20,6 @@ type RouterConfig struct {
 	JWTSecret       string
 	Cache           interfaces.Cache
 	IdemTTLSeconds  int
-	Aggregates      interfaces.Aggregates
 }
 
 func NewRouter(router *gin.Engine, cfg RouterConfig) {
@@ -28,8 +27,8 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	userHandlers := NewUserHandlers(cfg.UserService)
 	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
 	locationHandlers := NewLocationHandlers(cfg.LocationService)
-	// Prefer constructor with cache & aggregates; keep simple one available for tests
-	publicHandlers := NewPublicHandlersFull(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds, cfg.Aggregates)
+	// Constructor con cache para idempotencia; sin agregados Redis
+	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds)
 	statusHandlers := NewStatusHandlers(cfg.StatusService)
 
 	router.GET("/health", func(c *gin.Context) {
@@ -39,10 +38,7 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	router.GET("/api/location/city-id", locationHandlers.GetCityID)
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
 	router.GET("/api/public/rankings", publicHandlers.ListRankings)
-	// Leaderboards/Stats via Redis aggregates
-	router.GET("/api/public/leaderboard/:poll_id", publicHandlers.GetLeaderboard)
-	router.GET("/api/public/stats/:poll_id", publicHandlers.GetStats)
-	router.GET("/api/public/count/:poll_id/:member", publicHandlers.GetCount)
+	// Se eliminaron endpoints basados en poll_id (leaderboard/stats/count)
 	router.POST("/api/auth/signup", userHandlers.Register)
 	router.POST("/api/auth/login", authHandlers.Login)
 
