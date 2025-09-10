@@ -1,9 +1,9 @@
-package domain_test
+package domain
 
 import (
-	"editvideo/internal/domain"
 	"testing"
 	"time"
+	"watermarking/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 )

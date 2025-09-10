@@ -24,7 +24,7 @@ func (m *mockLocationRepo) GetCityID(ctx context.Context, country, city string) 
 	if m.err != nil {
 		return 0, m.err
 	}
-	return m.cityID, nil
+	return int(m.cityID), nil
 }
 
 func TestLocationHandlers_GetCityID_Success(t *testing.T) {
