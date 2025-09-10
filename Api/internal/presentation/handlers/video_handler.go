@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -288,8 +289,15 @@ func toVideoResponse(v *entities.Video) responses.VideoResponse {
 		OriginalURL: originalURL,
 	}
 	if v.ProcessedFile != nil && *v.ProcessedFile != "" {
-		processedURL := fmt.Sprintf("http://localhost:8081/processed-videos/%s", *v.ProcessedFile)
-		resp.ProcessedURL = &processedURL
+		// Check if ProcessedFile already contains a full URL
+		if strings.HasPrefix(*v.ProcessedFile, "http://") || strings.HasPrefix(*v.ProcessedFile, "https://") {
+			// ProcessedFile already contains the full URL
+			resp.ProcessedURL = v.ProcessedFile
+		} else {
+			// ProcessedFile contains only the filename, construct the full URL
+			processedURL := fmt.Sprintf("http://localhost:8084/processed-videos/%s", *v.ProcessedFile)
+			resp.ProcessedURL = &processedURL
+		}
 	}
 	return resp
 }
