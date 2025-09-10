@@ -12,6 +12,6 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates netcat-openbsd
 WORKDIR /root/
 COPY --from=builder /app/statesmachine .
-COPY StatesMachine/wait-for-services.sh .
+COPY --from=builder /app/wait-for-services.sh .
 RUN chmod +x wait-for-services.sh
 CMD ["./wait-for-services.sh", "./statesmachine"]
