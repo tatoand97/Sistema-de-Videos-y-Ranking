@@ -31,18 +31,17 @@ func TestVideoResponse_Fields(t *testing.T) {
 }
 
 func TestPublicVideoResponse_Fields(t *testing.T) {
+	url := "https://example.com/public.mp4"
 	response := responses.PublicVideoResponse{
 		VideoID:      1,
 		Title:        "Public Video",
-		Username:     "testuser",
-		ProcessedURL: "https://example.com/public.mp4",
+		ProcessedURL: &url,
 		Votes:        42,
 	}
 
 	assert.Equal(t, uint(1), response.VideoID)
 	assert.Equal(t, "Public Video", response.Title)
-	assert.Equal(t, "testuser", response.Username)
-	assert.Equal(t, "https://example.com/public.mp4", response.ProcessedURL)
+	assert.Equal(t, &url, response.ProcessedURL)
 	assert.Equal(t, 42, response.Votes)
 }
 
@@ -75,32 +74,16 @@ func TestRankingEntry_Fields(t *testing.T) {
 }
 
 func TestUserBasic_Fields(t *testing.T) {
+	city := "Bogotá"
 	user := responses.UserBasic{
-		UserID:    123,
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "john@example.com",
+		UserID:   123,
+		Username: "john",
+		City:     &city,
 	}
 
 	assert.Equal(t, uint(123), user.UserID)
-	assert.Equal(t, "John", user.FirstName)
-	assert.Equal(t, "Doe", user.LastName)
-	assert.Equal(t, "john@example.com", user.Email)
+	assert.Equal(t, "john", user.Username)
+	assert.Equal(t, &city, user.City)
 }
 
-func TestCreateUploadResponsePostPolicy_Fields(t *testing.T) {
-	fields := map[string]string{
-		"key":    "uploads/video.mp4",
-		"policy": "base64-encoded-policy",
-	}
-
-	response := responses.CreateUploadResponsePostPolicy{
-		URL:    "https://s3.amazonaws.com/bucket",
-		Fields: fields,
-	}
-
-	assert.Equal(t, "https://s3.amazonaws.com/bucket", response.URL)
-	assert.Equal(t, fields, response.Fields)
-	assert.Equal(t, "uploads/video.mp4", response.Fields["key"])
-	assert.Equal(t, "base64-encoded-policy", response.Fields["policy"])
-}
+// Removed: CreateUploadResponsePostPolicy is not part of current API
