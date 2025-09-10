@@ -74,8 +74,8 @@ func TestOpenCloseVideoProcessingService_Process_BoundaryValues(t *testing.T) {
 		{"max duration", 3.0, 3.0, 1920, 1080, 30}, // Should scale to 2.5/2.5
 		{"negative values", -1.0, -2.0, 1920, 1080, 30}, // Should become 0.0/0.0
 		{"very small values", 0.1, 0.1, 1920, 1080, 30},
-		{"minimum resolution", 320, 240, 15},
-		{"high fps", 1920, 1080, 60},
+		{"minimum resolution", 0.1, 0.1, 320, 240, 15},
+		{"high fps", 2.0, 2.0, 1920, 1080, 60},
 	}
 	
 	for _, tt := range tests {

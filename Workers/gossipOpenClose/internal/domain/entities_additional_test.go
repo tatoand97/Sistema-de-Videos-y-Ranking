@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVideo_Creation(t *testing.T) {
+func TestVideo_CreationWithDefaults(t *testing.T) {
 	now := time.Now()
 	video := Video{
 		ID:        "test-id",
@@ -40,7 +40,7 @@ func TestVideo_WithProcessedTime(t *testing.T) {
 	assert.Equal(t, processedTime, *video.ProcessedAt)
 }
 
-func TestProcessingStatus_Constants(t *testing.T) {
+func TestProcessingStatus_Values(t *testing.T) {
 	assert.Equal(t, ProcessingStatus("pending"), StatusPending)
 	assert.Equal(t, ProcessingStatus("processing"), StatusProcessing)
 	assert.Equal(t, ProcessingStatus("completed"), StatusCompleted)

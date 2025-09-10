@@ -138,6 +138,7 @@ services:
       /usr/bin/mc mb myminio/processed-videos-audio-removal --ignore-existing;
       /usr/bin/mc mb myminio/processed-videos-watermarking --ignore-existing;
       /usr/bin/mc mb myminio/processed-videos --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/processed-videos;
       echo 'Buckets created successfully';
       exit 0;
       "
