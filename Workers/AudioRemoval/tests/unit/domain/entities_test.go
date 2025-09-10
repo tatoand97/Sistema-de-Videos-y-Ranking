@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"audioremoval/internal/domain"
 	"testing"
 	"time"
 
@@ -10,13 +11,13 @@ import (
 func TestProcessingStatus_Constants(t *testing.T) {
 	tests := []struct {
 		name     string
-		status   ProcessingStatus
+		status   domain.ProcessingStatus
 		expected string
 	}{
-		{"StatusPending", StatusPending, "pending"},
-		{"StatusProcessing", StatusProcessing, "processing"},
-		{"StatusCompleted", StatusCompleted, "completed"},
-		{"StatusFailed", StatusFailed, "failed"},
+		{"StatusPending", domain.StatusPending, "pending"},
+		{"StatusProcessing", domain.StatusProcessing, "processing"},
+		{"StatusCompleted", domain.StatusCompleted, "completed"},
+		{"StatusFailed", domain.StatusFailed, "failed"},
 	}
 
 	for _, tt := range tests {
@@ -30,23 +31,23 @@ func TestVideo_Creation(t *testing.T) {
 	now := time.Now()
 	processedAt := now.Add(time.Hour)
 	
-	video := &Video{
+	video := &domain.Video{
 		ID:          "video-123",
 		Filename:    "test.mp4",
-		Status:      StatusPending,
+		Status:      domain.StatusPending,
 		CreatedAt:   now,
 		ProcessedAt: &processedAt,
 	}
 	
 	assert.Equal(t, "video-123", video.ID)
 	assert.Equal(t, "test.mp4", video.Filename)
-	assert.Equal(t, StatusPending, video.Status)
+	assert.Equal(t, domain.StatusPending, video.Status)
 	assert.Equal(t, now, video.CreatedAt)
 	assert.Equal(t, processedAt, *video.ProcessedAt)
 }
 
 func TestProcessingResult_Creation(t *testing.T) {
-	result := &ProcessingResult{
+	result := &domain.ProcessingResult{
 		Success:      true,
 		ErrorMessage: "",
 		OutputPath:   "/path/to/output.mp4",
@@ -58,7 +59,7 @@ func TestProcessingResult_Creation(t *testing.T) {
 }
 
 func TestProcessingResult_WithError(t *testing.T) {
-	result := &ProcessingResult{
+	result := &domain.ProcessingResult{
 		Success:      false,
 		ErrorMessage: "processing failed",
 		OutputPath:   "",

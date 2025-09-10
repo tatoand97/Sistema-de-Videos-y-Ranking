@@ -1,6 +1,7 @@
 package adapters_test
 
 import (
+	"audioremoval/internal/adapters"
 	"encoding/json"
 	"testing"
 
@@ -9,12 +10,12 @@ import (
 
 func TestNewMessageHandler(t *testing.T) {
 	// Test constructor with nil (we'll test functionality separately)
-	handler := &MessageHandler{processVideoUC: nil}
+	handler := &adapters.MessageHandler{}
 	assert.NotNil(t, handler)
 }
 
 func TestMessageHandler_HandleMessage_InvalidJSON(t *testing.T) {
-	handler := &MessageHandler{processVideoUC: nil}
+	handler := &adapters.MessageHandler{}
 	
 	invalidJSON := []byte(`{"invalid": json}`)
 	
@@ -25,7 +26,7 @@ func TestMessageHandler_HandleMessage_InvalidJSON(t *testing.T) {
 }
 
 func TestMessageHandler_HandleMessage_MalformedJSON(t *testing.T) {
-	handler := &MessageHandler{processVideoUC: nil}
+	handler := &adapters.MessageHandler{}
 	
 	malformedJSON := []byte(`{"video_id": "test", "filename":}`)
 	
@@ -35,7 +36,7 @@ func TestMessageHandler_HandleMessage_MalformedJSON(t *testing.T) {
 }
 
 func TestVideoMessage_Structure(t *testing.T) {
-	msg := VideoMessage{
+	msg := adapters.VideoMessage{
 		VideoID:  "test-id",
 		Filename: "test.mp4",
 	}
@@ -45,7 +46,7 @@ func TestVideoMessage_Structure(t *testing.T) {
 }
 
 func TestVideoMessage_JSONMarshaling(t *testing.T) {
-	msg := VideoMessage{
+	msg := adapters.VideoMessage{
 		VideoID:  "video-123",
 		Filename: "test.mp4",
 	}
@@ -57,9 +58,14 @@ func TestVideoMessage_JSONMarshaling(t *testing.T) {
 	assert.Contains(t, string(data), "test.mp4")
 	
 	// Test unmarshaling
-	var unmarshaled VideoMessage
+	var unmarshaled adapters.VideoMessage
 	err = json.Unmarshal(data, &unmarshaled)
 	assert.NoError(t, err)
 	assert.Equal(t, msg.VideoID, unmarshaled.VideoID)
 	assert.Equal(t, msg.Filename, unmarshaled.Filename)
+}
+
+func TestNewMessageHandler_Constructor(t *testing.T) {
+	handler := adapters.NewMessageHandler(nil)
+	assert.NotNil(t, handler)
 }

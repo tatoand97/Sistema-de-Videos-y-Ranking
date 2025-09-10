@@ -1,6 +1,7 @@
 package services_test
 
 import (
+	"audioremoval/internal/application/services"
 	"os"
 	"os/exec"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestNewMP4VideoProcessingService(t *testing.T) {
-	service := NewMP4VideoProcessingService()
+	service := services.NewMP4VideoProcessingService()
 	assert.NotNil(t, service)
 }
 
@@ -19,7 +20,7 @@ func TestMP4VideoProcessingService_RemoveAudio_FFmpegNotFound(t *testing.T) {
 		t.Skip("ffmpeg is available, skipping test for missing ffmpeg")
 	}
 	
-	service := NewMP4VideoProcessingService()
+	service := services.NewMP4VideoProcessingService()
 	inputData := []byte("fake video data")
 	
 	_, err := service.RemoveAudio(inputData)
@@ -34,7 +35,7 @@ func TestMP4VideoProcessingService_RemoveAudio_EmptyInput(t *testing.T) {
 		t.Skip("ffmpeg not available, skipping integration test")
 	}
 	
-	service := NewMP4VideoProcessingService()
+	service := services.NewMP4VideoProcessingService()
 	inputData := []byte{}
 	
 	_, err := service.RemoveAudio(inputData)
@@ -49,7 +50,7 @@ func TestMP4VideoProcessingService_RemoveAudio_InvalidMP4(t *testing.T) {
 		t.Skip("ffmpeg not available, skipping integration test")
 	}
 	
-	service := NewMP4VideoProcessingService()
+	service := services.NewMP4VideoProcessingService()
 	inputData := []byte("not a valid mp4 file")
 	
 	_, err := service.RemoveAudio(inputData)
@@ -64,7 +65,7 @@ func TestMP4VideoProcessingService_RemoveAudio_TempDirCreation(t *testing.T) {
 	originalTempDir := os.TempDir()
 	
 	// This test is more complex to implement properly, so we'll focus on the happy path
-	service := NewMP4VideoProcessingService()
+	service := services.NewMP4VideoProcessingService()
 	assert.NotNil(t, service)
 	
 	// Restore original temp dir
@@ -78,7 +79,7 @@ func TestMP4VideoProcessingService_RemoveAudio_ValidMP4(t *testing.T) {
 		t.Skip("ffmpeg not available, skipping integration test")
 	}
 	
-	service := NewMP4VideoProcessingService()
+	service := services.NewMP4VideoProcessingService()
 	
 	// Create a minimal valid MP4 file for testing
 	// This is a very basic MP4 structure - in real scenarios you'd use actual test files
@@ -103,4 +104,12 @@ func createMinimalMP4() []byte {
 		0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
 		0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31,
 	}
+}
+
+func TestMP4VideoProcessingService_RemoveAudio_NilInput(t *testing.T) {
+	service := services.NewMP4VideoProcessingService()
+	
+	_, err := service.RemoveAudio(nil)
+	
+	assert.Error(t, err)
 }
