@@ -1,14 +1,14 @@
 package scheduler
 
 import (
-	"context"
-	"encoding/json"
-	"log/slog"
-	"time"
+    "context"
+    "encoding/json"
+    "log/slog"
+    "time"
 
-	"admincache/internal/application/keys"
-	"admincache/internal/application/ranking"
-	"admincache/internal/infrastructure"
+    "admincache/internal/application/keys"
+    "admincache/internal/application/ranking"
+    "admincache/internal/infrastructure"
 )
 
 func mustJSON(v any) []byte {
@@ -36,20 +36,21 @@ func StartWarmup(comp ranking.Computer, cache *infrastructure.Cache, cfg infrast
 			}
 		}
 
-		// City pages
-		for _, c := range cfg.WarmCities {
-			cslug := c
-			for p := 1; p <= cfg.WarmPages; p++ {
-				items, err := comp.Compute(ctx, &cslug, p, size)
-				if err != nil {
-					log.Warn("warmup city compute error", "city", cslug, "page", p, "err", err)
-					continue
-				}
-				if err := cache.SetBytes(ctx, keys.RankCity(cslug, p, size), mustJSON(items)); err != nil {
-					log.Warn("warmup city set cache error", "city", cslug, "page", p, "err", err)
-				}
-			}
-		}
+        // City pages
+        for _, c := range cfg.WarmCities {
+            cityName := c
+            slug := keys.SlugCity(cityName)
+            for p := 1; p <= cfg.WarmPages; p++ {
+                items, err := comp.Compute(ctx, &cityName, p, size)
+                if err != nil {
+                    log.Warn("warmup city compute error", "city", cityName, "page", p, "err", err)
+                    continue
+                }
+                if err := cache.SetBytes(ctx, keys.RankCity(slug, p, size), mustJSON(items)); err != nil {
+                    log.Warn("warmup city set cache error", "city", cityName, "slug", slug, "page", p, "err", err)
+                }
+            }
+        }
 		log.Info("warmup done")
 	}
 
