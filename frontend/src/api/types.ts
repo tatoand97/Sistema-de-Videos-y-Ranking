@@ -23,8 +23,9 @@ export type Video = {
 };
 
 export type RankingItem = {
-  video_id: string;
-  title: string;
+  // position puede no venir siempre; el backend lo incluye por página
+  position?: number;
+  username: string;
   votes: number;
-  city?: string;
+  city?: string | null;
 };

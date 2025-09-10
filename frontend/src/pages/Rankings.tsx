@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '@api/client';
 import Pagination from '@components/Pagination';
-
-type RankingItem = { video_id: string; title: string; votes: number; city?: string };
+import type { RankingItem } from '@api/types';
 
 export default function Rankings() {
   const [items, setItems] = useState<RankingItem[]>([]);
@@ -47,10 +46,14 @@ export default function Rankings() {
       {loading && <div className="muted">Cargando…</div>}
       {error && <div className="card" style={{ borderColor: '#553' }}>{error}</div>}
       <table className="table" style={{ marginTop: 12 }}>
-        <thead><tr><th>Título</th><th>Votos</th><th>Ciudad</th></tr></thead>
+        <thead><tr><th>Usuario</th><th>Votos</th><th>Ciudad</th></tr></thead>
         <tbody>
-          {items.map(it => (
-            <tr key={it.video_id}><td>{it.title}</td><td>{it.votes}</td><td>{it.city || '-'}</td></tr>
+          {items.map((it, idx) => (
+            <tr key={`${it.username}-${idx}`}>
+              <td>{it.username}</td>
+              <td>{it.votes}</td>
+              <td>{it.city || '-'}</td>
+            </tr>
           ))}
         </tbody>
       </table>
@@ -58,4 +61,3 @@ export default function Rankings() {
     </div>
   );
 }
-
