@@ -16,11 +16,11 @@ import (
 )
 
 type mockLocationRepo struct {
-	cityID uint
+	cityID int
 	err    error
 }
 
-func (m *mockLocationRepo) GetCityID(ctx context.Context, country, city string) (uint, error) {
+func (m *mockLocationRepo) GetCityID(ctx context.Context, country, city string) (int, error) {
 	if m.err != nil {
 		return 0, m.err
 	}
@@ -63,7 +63,7 @@ func TestLocationHandlers_GetCityID_MissingParams(t *testing.T) {
 		{"missing city", "/api/location/city-id?country=Colombia"},
 		{"empty country", "/api/location/city-id?country=&city=Bogotá"},
 		{"empty city", "/api/location/city-id?country=Colombia&city="},
-		{"whitespace only", "/api/location/city-id?country=   &city=   "},
+		{"whitespace only", "/api/location/city-id?country=%20%20%20&city=%20%20%20"},
 	}
 
 	for _, tt := range tests {

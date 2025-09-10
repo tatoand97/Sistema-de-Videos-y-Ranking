@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,8 +10,6 @@ import (
 	"api/internal/application/useCase"
 	"api/internal/domain"
 	"api/internal/domain/entities"
-	"api/internal/domain/requests"
-	"api/internal/domain/responses"
 	"api/internal/presentation/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -26,10 +23,14 @@ type mockVideoRepo struct {
 }
 
 func (m *mockVideoRepo) Create(ctx context.Context, video *entities.Video) error { return nil }
-func (m *mockVideoRepo) GetByID(ctx context.Context, id uint) (*entities.Video, error) { return nil, nil }
+func (m *mockVideoRepo) GetByID(ctx context.Context, id uint) (*entities.Video, error) {
+	return m.video, m.err
+}
 func (m *mockVideoRepo) List(ctx context.Context) ([]*entities.Video, error) { return nil, nil }
-func (m *mockVideoRepo) Delete(ctx context.Context, id uint) error { return m.err }
-func (m *mockVideoRepo) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error { return m.err }
+func (m *mockVideoRepo) Delete(ctx context.Context, id uint) error           { return m.err }
+func (m *mockVideoRepo) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error {
+	return m.err
+}
 
 func (m *mockVideoRepo) ListByUser(ctx context.Context, userID uint) ([]*entities.Video, error) {
 	if m.err != nil {
@@ -51,10 +52,6 @@ type mockVideoStorage struct {
 
 func (m *mockVideoStorage) Save(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
 	return "", nil
-}
-
-func (m *mockVideoStorage) PresignedPostPolicy(ctx context.Context, req requests.CreateUploadRequest) (*responses.CreateUploadResponsePostPolicy, error) {
-	return nil, nil
 }
 
 func TestVideoHandlers_ListVideos_Success(t *testing.T) {
@@ -174,17 +171,20 @@ func TestVideoHandlers_DeleteVideo_Success(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "eliminado")
 }
 
 func TestVideoHandlers_PublishVideo_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
+	processed := "https://example.com/processed.mp4"
 	video := &entities.Video{
-		VideoID: 123,
-		UserID:  10,
-		Status:  string(entities.StatusProcessed),
+		VideoID:       123,
+		UserID:        10,
+		Status:        string(entities.StatusProcessed),
+		ProcessedFile: &processed,
 	}
 	repo := &mockVideoRepo{video: video}
 	storage := &mockVideoStorage{}
@@ -193,6 +193,7 @@ func TestVideoHandlers_PublishVideo_Success(t *testing.T) {
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
+		c.Set("permissions", []string{"edit_video"})
 		c.Next()
 	})
 	r.POST("/api/videos/:video_id/publish", h.PublishVideo)
@@ -220,6 +221,7 @@ func TestVideoHandlers_PublishVideo_NotProcessed(t *testing.T) {
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
+		c.Set("permissions", []string{"moderate_content"})
 		c.Next()
 	})
 	r.POST("/api/videos/:video_id/publish", h.PublishVideo)

@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	hdl "api/internal/presentation/handlers"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type fakeUserRepoAuth struct {
@@ -28,15 +28,22 @@ func (f *fakeUserRepoAuth) GetByEmail(ctx context.Context, email string) (*entit
 	}
 	return f.user, nil
 }
-func (f *fakeUserRepoAuth) EmailExists(ctx context.Context, email string) (bool, error) { return false, nil }
+func (f *fakeUserRepoAuth) EmailExists(ctx context.Context, email string) (bool, error) {
+	return false, nil
+}
+func (f *fakeUserRepoAuth) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	return []string{"read"}, nil
+}
 
 type fakeCacheAuth struct {
 	blacklisted bool
 }
 
-func (f *fakeCacheAuth) Set(ctx context.Context, key string, value interface{}, ttl int) error { return nil }
+func (f *fakeCacheAuth) Set(ctx context.Context, key string, value interface{}, ttl int) error {
+	return nil
+}
 func (f *fakeCacheAuth) Get(ctx context.Context, key string) (string, error) { return "", nil }
-func (f *fakeCacheAuth) Delete(ctx context.Context, key string) error { return nil }
+func (f *fakeCacheAuth) Delete(ctx context.Context, key string) error        { return nil }
 func (f *fakeCacheAuth) IsBlacklisted(ctx context.Context, token string) (bool, error) {
 	return f.blacklisted, nil
 }
@@ -44,7 +51,8 @@ func (f *fakeCacheAuth) BlacklistToken(ctx context.Context, token string, ttl in
 
 func setupAuthRouter(userRepo *fakeUserRepoAuth, cache *fakeCacheAuth) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	svc := useCase.NewAuthServiceWithCache(userRepo, "secret", cache)
+	// Compat: el servicio actual no usa cache; se mantiene firma
+	svc := useCase.NewAuthService(userRepo, "secret")
 	h := hdl.NewAuthHandlers(svc)
 	r := gin.New()
 	r.POST("/api/auth/login", h.Login)
@@ -54,18 +62,20 @@ func setupAuthRouter(userRepo *fakeUserRepoAuth, cache *fakeCacheAuth) *gin.Engi
 }
 
 func TestLogin_Success(t *testing.T) {
+	// Generate a valid bcrypt hash for the test password
+	pwHash, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 	user := &entities.User{
-		UserID:    1,
-		Email:     "test@example.com",
-		Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
-		FirstName: "Test",
-		LastName:  "User",
+		UserID:       1,
+		Email:        "test@example.com",
+		PasswordHash: string(pwHash),
+		FirstName:    "Test",
+		LastName:     "User",
 	}
 	userRepo := &fakeUserRepoAuth{user: user}
 	cache := &fakeCacheAuth{}
 	r := setupAuthRouter(userRepo, cache)
 
-	body := `{"email":"test@example.com","password":"secret"}`
+	body := `{"email":"test@example.com","password":"password"}`
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
