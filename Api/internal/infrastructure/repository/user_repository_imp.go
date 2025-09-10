@@ -31,7 +31,7 @@ func (r *userRepository) Create(ctx context.Context, user *entities.User) error 
 		var roleID int
 		if err := tx.Table("role").
 			Select("role_id").
-			Where("name = ?", "player").
+			Where("name = ?", "user").
 			Take(&roleID).Error; err != nil {
 			return err
 		}
