@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -29,6 +28,7 @@ func (f *fakeUserRepoAuth) GetByEmail(ctx context.Context, email string) (*entit
 	return f.user, nil
 }
 func (f *fakeUserRepoAuth) EmailExists(ctx context.Context, email string) (bool, error) { return false, nil }
+func (f *fakeUserRepoAuth) GetPermissions(ctx context.Context, userID uint) ([]string, error) { return []string{"read"}, nil }
 
 type fakeCacheAuth struct {
 	blacklisted bool
@@ -44,7 +44,7 @@ func (f *fakeCacheAuth) BlacklistToken(ctx context.Context, token string, ttl in
 
 func setupAuthRouter(userRepo *fakeUserRepoAuth, cache *fakeCacheAuth) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	svc := useCase.NewAuthServiceWithCache(userRepo, "secret", cache)
+	svc := useCase.NewAuthService(userRepo, "secret")
 	h := hdl.NewAuthHandlers(svc)
 	r := gin.New()
 	r.POST("/api/auth/login", h.Login)
@@ -55,11 +55,11 @@ func setupAuthRouter(userRepo *fakeUserRepoAuth, cache *fakeCacheAuth) *gin.Engi
 
 func TestLogin_Success(t *testing.T) {
 	user := &entities.User{
-		UserID:    1,
-		Email:     "test@example.com",
-		Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
-		FirstName: "Test",
-		LastName:  "User",
+		UserID:       1,
+		Email:        "test@example.com",
+		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
+		FirstName:    "Test",
+		LastName:     "User",
 	}
 	userRepo := &fakeUserRepoAuth{user: user}
 	cache := &fakeCacheAuth{}

@@ -31,18 +31,20 @@ func TestVideoResponse_Fields(t *testing.T) {
 }
 
 func TestPublicVideoResponse_Fields(t *testing.T) {
+	processedURL := "https://example.com/public.mp4"
+	city := "Bogotá"
 	response := responses.PublicVideoResponse{
 		VideoID:      1,
 		Title:        "Public Video",
-		Username:     "testuser",
-		ProcessedURL: "https://example.com/public.mp4",
+		ProcessedURL: &processedURL,
+		City:         &city,
 		Votes:        42,
 	}
 
 	assert.Equal(t, uint(1), response.VideoID)
 	assert.Equal(t, "Public Video", response.Title)
-	assert.Equal(t, "testuser", response.Username)
-	assert.Equal(t, "https://example.com/public.mp4", response.ProcessedURL)
+	assert.Equal(t, &processedURL, response.ProcessedURL)
+	assert.Equal(t, &city, response.City)
 	assert.Equal(t, 42, response.Votes)
 }
 
@@ -75,32 +77,40 @@ func TestRankingEntry_Fields(t *testing.T) {
 }
 
 func TestUserBasic_Fields(t *testing.T) {
+	city := "Bogotá"
 	user := responses.UserBasic{
-		UserID:    123,
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "john@example.com",
+		UserID:   123,
+		Username: "johndoe",
+		City:     &city,
 	}
 
 	assert.Equal(t, uint(123), user.UserID)
-	assert.Equal(t, "John", user.FirstName)
-	assert.Equal(t, "Doe", user.LastName)
-	assert.Equal(t, "john@example.com", user.Email)
+	assert.Equal(t, "johndoe", user.Username)
+	assert.Equal(t, &city, user.City)
 }
 
 func TestCreateUploadResponsePostPolicy_Fields(t *testing.T) {
-	fields := map[string]string{
-		"key":    "uploads/video.mp4",
-		"policy": "base64-encoded-policy",
+	form := responses.S3PostPolicyForm{
+		Key:               "uploads/video.mp4",
+		Policy:            "base64-encoded-policy",
+		Algorithm:         "AWS4-HMAC-SHA256",
+		Credential:        "credential",
+		Date:              "20240101T000000Z",
+		Signature:         "signature",
+		ContentType:       "video/mp4",
+		SuccessActionCode: "201",
 	}
 
 	response := responses.CreateUploadResponsePostPolicy{
-		URL:    "https://s3.amazonaws.com/bucket",
-		Fields: fields,
+		UploadURL:   "https://s3.amazonaws.com/bucket",
+		ResourceURL: "https://s3.amazonaws.com/bucket/uploads/video.mp4",
+		ExpiresAt:   "2024-01-01T01:00:00Z",
+		Form:        form,
 	}
 
-	assert.Equal(t, "https://s3.amazonaws.com/bucket", response.URL)
-	assert.Equal(t, fields, response.Fields)
-	assert.Equal(t, "uploads/video.mp4", response.Fields["key"])
-	assert.Equal(t, "base64-encoded-policy", response.Fields["policy"])
+	assert.Equal(t, "https://s3.amazonaws.com/bucket", response.UploadURL)
+	assert.Equal(t, "https://s3.amazonaws.com/bucket/uploads/video.mp4", response.ResourceURL)
+	assert.Equal(t, form, response.Form)
+	assert.Equal(t, "uploads/video.mp4", response.Form.Key)
+	assert.Equal(t, "base64-encoded-policy", response.Form.Policy)
 }

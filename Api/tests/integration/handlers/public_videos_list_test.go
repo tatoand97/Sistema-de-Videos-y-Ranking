@@ -48,9 +48,11 @@ func setupPublicVideosRouter(repo *fakePublicRepoList) *gin.Engine {
 }
 
 func TestListPublicVideos_Success(t *testing.T) {
+	city1 := "Bogotá"
+	city2 := "Medellín"
 	videos := []responses.PublicVideoResponse{
-		{VideoID: 1, Title: "Video 1", Username: "user1"},
-		{VideoID: 2, Title: "Video 2", Username: "user2"},
+		{VideoID: 1, Title: "Video 1", City: &city1, Votes: 10},
+		{VideoID: 2, Title: "Video 2", City: &city2, Votes: 5},
 	}
 	repo := &fakePublicRepoList{videos: videos}
 	r := setupPublicVideosRouter(repo)

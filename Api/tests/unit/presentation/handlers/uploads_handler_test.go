@@ -52,10 +52,12 @@ func TestUploadsHandler_CreatePostPolicy_Success(t *testing.T) {
 	r := gin.New()
 
 	policy := &responses.CreateUploadResponsePostPolicy{
-		URL: "https://example.com/upload",
-		Fields: map[string]string{
-			"key":    "test-key",
-			"policy": "test-policy",
+		UploadURL:   "https://example.com/upload",
+		ResourceURL: "https://example.com/resource",
+		ExpiresAt:   "2024-01-01T01:00:00Z",
+		Form: responses.S3PostPolicyForm{
+			Key:    "test-key",
+			Policy: "test-policy",
 		},
 	}
 	repo := &mockUploadsRepo{}
@@ -69,7 +71,7 @@ func TestUploadsHandler_CreatePostPolicy_Success(t *testing.T) {
 	})
 	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body := `{"title":"Test Video","status":"UPLOADED"}`
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -94,7 +96,7 @@ func TestUploadsHandler_CreatePostPolicy_InvalidJSON(t *testing.T) {
 	})
 	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body := `{"title":"Test Video"`
+	body := `{"filename":"test.mp4"`
 	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -114,7 +116,7 @@ func TestUploadsHandler_CreatePostPolicy_Unauthorized(t *testing.T) {
 
 	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body := `{"title":"Test Video","status":"UPLOADED"}`
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -138,7 +140,7 @@ func TestUploadsHandler_CreatePostPolicy_StorageError(t *testing.T) {
 	})
 	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body := `{"title":"Test Video","status":"UPLOADED"}`
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -152,10 +154,12 @@ func TestUploadsHandler_CreatePostPolicy_RepoError(t *testing.T) {
 	r := gin.New()
 
 	policy := &responses.CreateUploadResponsePostPolicy{
-		URL: "https://example.com/upload",
-		Fields: map[string]string{
-			"key":    "test-key",
-			"policy": "test-policy",
+		UploadURL:   "https://example.com/upload",
+		ResourceURL: "https://example.com/resource",
+		ExpiresAt:   "2024-01-01T01:00:00Z",
+		Form: responses.S3PostPolicyForm{
+			Key:    "test-key",
+			Policy: "test-policy",
 		},
 	}
 	repo := &mockUploadsRepo{err: errors.New("database error")}
@@ -169,7 +173,7 @@ func TestUploadsHandler_CreatePostPolicy_RepoError(t *testing.T) {
 	})
 	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body := `{"title":"Test Video","status":"UPLOADED"}`
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()

@@ -110,24 +110,30 @@ func TestCreateUploadRequest_Validation(t *testing.T) {
 		{
 			name: "valid request",
 			request: requests.CreateUploadRequest{
-				Title:  "Test Video",
-				Status: "UPLOADED",
+				Filename:  "test.mp4",
+				MimeType:  "video/mp4",
+				SizeBytes: 1024,
+				Checksum:  "abc123",
 			},
 			valid: true,
 		},
 		{
-			name: "empty title",
+			name: "empty filename",
 			request: requests.CreateUploadRequest{
-				Title:  "",
-				Status: "UPLOADED",
+				Filename:  "",
+				MimeType:  "video/mp4",
+				SizeBytes: 1024,
+				Checksum:  "abc123",
 			},
 			valid: false,
 		},
 		{
-			name: "empty status",
+			name: "empty mime type",
 			request: requests.CreateUploadRequest{
-				Title:  "Test Video",
-				Status: "",
+				Filename:  "test.mp4",
+				MimeType:  "",
+				SizeBytes: 1024,
+				Checksum:  "abc123",
 			},
 			valid: false,
 		},
@@ -136,10 +142,11 @@ func TestCreateUploadRequest_Validation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.valid {
-				assert.NotEmpty(t, tt.request.Title)
-				assert.NotEmpty(t, tt.request.Status)
+				assert.NotEmpty(t, tt.request.Filename)
+				assert.NotEmpty(t, tt.request.MimeType)
+				assert.Greater(t, tt.request.SizeBytes, int64(0))
 			} else {
-				assert.True(t, tt.request.Title == "" || tt.request.Status == "")
+				assert.True(t, tt.request.Filename == "" || tt.request.MimeType == "")
 			}
 		})
 	}

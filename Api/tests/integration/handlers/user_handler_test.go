@@ -33,16 +33,20 @@ func (f *fakeUserRepoForReg) EmailExists(ctx context.Context, email string) (boo
 	return f.emailExists, nil
 }
 
+func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	return []string{"read"}, nil
+}
+
 type fakeLocationRepoForReg struct {
 	cityID uint
 	err    error
 }
 
-func (f *fakeLocationRepoForReg) GetCityID(ctx context.Context, country, city string) (uint, error) {
+func (f *fakeLocationRepoForReg) GetCityID(ctx context.Context, country, city string) (int, error) {
 	if f.err != nil {
 		return 0, f.err
 	}
-	return f.cityID, nil
+	return int(f.cityID), nil
 }
 
 func setupUserRouter(userRepo *fakeUserRepoForReg, locationRepo *fakeLocationRepoForReg) *gin.Engine {
