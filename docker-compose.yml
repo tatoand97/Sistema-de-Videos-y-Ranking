@@ -88,6 +88,11 @@ services:
       CORS_ORIGIN: "*"
       UPLOAD_DIR: "/uploads"
 
+      # Redis cache configuration (used by API PublicService)
+      REDIS_ADDR: redis:6379
+      CACHE_PREFIX: "videorank:"
+      CACHE_TTL_SECONDS: "120"
+
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio12345
@@ -96,6 +101,8 @@ services:
       # RabbitMQ to publish processing jobs
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
       STATES_MACHINE_QUEUE: states_machine_queue
+      # Optional: limit queue length (used by publisher EnsureQueue)
+      RABBITMQ_QUEUE_MAXLEN: "1000"
     restart: unless-stopped
     healthcheck:
       test: [ "CMD","wget","--no-verbose","--tries=1","--spider","http://localhost:8080/health" ]

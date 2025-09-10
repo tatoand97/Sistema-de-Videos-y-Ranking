@@ -64,6 +64,11 @@ func (f *fakePublicRepo) Rankings(ctx context.Context, city *string, page, pageS
 	return filtered[start:end], nil
 }
 
+// Satisfy new interface method; not used in these tests
+func (f *fakePublicRepo) GetUsersBasicByIDs(ctx context.Context, ids []uint) ([]responses.UserBasic, error) {
+	return []responses.UserBasic{}, nil
+}
+
 type fakeVoteRepo struct {
 	hasVoted  bool
 	createErr error

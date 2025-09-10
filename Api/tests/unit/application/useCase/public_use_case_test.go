@@ -36,6 +36,11 @@ func (m *mockPublicRepo) Rankings(ctx context.Context, city *string, page, pageS
 	return nil, nil
 }
 
+// Satisfy new interface method; not used in these unit tests
+func (m *mockPublicRepo) GetUsersBasicByIDs(ctx context.Context, ids []uint) ([]responses.UserBasic, error) {
+	return []responses.UserBasic{}, nil
+}
+
 type mockVoteRepo struct {
 	HasUserVotedFunc func(ctx context.Context, videoID, userID uint) (bool, error)
 	CreateFunc       func(ctx context.Context, videoID, userID uint) error

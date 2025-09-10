@@ -79,3 +79,20 @@ func (r *videoRepository) Delete(ctx context.Context, id uint) error {
 	}
 	return nil
 }
+
+// UpdateStatus updates the status of a video by id.
+func (r *videoRepository) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error {
+	updates := map[string]interface{}{
+		"status": string(status),
+	}
+	// processed_at constraint in DB allows non-null when status IN ('PROCESSED','PUBLISHED').
+	// Here we don't touch processed_at (keeps existing value if any)
+	res := r.db.WithContext(ctx).Model(&entities.Video{}).Where("video_id = ?", id).Updates(updates)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}

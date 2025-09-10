@@ -233,6 +233,7 @@ paths:
                   - "REMOVING_AUDIO"
                   - "ADDING_INTRO_OUTRO"
                   - "PROCESSED"
+                  - "PUBLISHED"
                   - "FAILED"
 
   /api/videos/{video_id}:
@@ -287,6 +288,36 @@ paths:
                   video_id: { type: string }
               example:
                 message: "El video ha sido eliminado exitosamente."
+                video_id: "a1b2c3d4"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/videos/{video_id}/publish:
+    post:
+      summary: Publicar video procesado
+      description: Cambia el estado de un video de PROCESSED a PUBLISHED. Requiere permisos de moderación.
+      tags: [Videos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: video_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Publicado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  video_id: { type: string }
+              example:
+                message: "Video publicado exitosamente."
                 video_id: "a1b2c3d4"
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -559,7 +590,7 @@ components:
       properties:
         video_id: { type: string }
         title: { type: string }
-        status: { type: string, enum: [uploaded, processed] }
+        status: { type: string, enum: [uploaded, processed, published] }
         uploaded_at: { type: string, format: date-time }
         processed_at: { type: string, format: date-time, nullable: true }
         original_url: { type: string, format: uri, nullable: true }
