@@ -186,6 +186,54 @@ func (h *VideoHandlers) DeleteVideo(c *gin.Context) {
 	})
 }
 
+// PublishVideo handles POST /api/videos/:video_id/publish (moderation action)
+// Requires permission: edit_video or moderate_content
+func (h *VideoHandlers) PublishVideo(c *gin.Context) {
+	// 1) Auth
+	if _, ok := userIDFromContextOrAbort(c); !ok {
+		return
+	}
+	// 2) Permissions
+	permsVal, ok := c.Get("permissions")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "permissions missing in context"})
+		return
+	}
+	perms, ok := permsVal.([]string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid permissions in context"})
+		return
+	}
+	allowed := slices.Contains(perms, "edit_video") || slices.Contains(perms, "moderate_content")
+	if !allowed {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	// 3) Path param
+	vidUint, ok := parseVideoIDOrAbort(c)
+	if !ok {
+		return
+	}
+
+	// 4) Publish via use case
+	if err := h.uploadsUC.PublishVideo(c.Request.Context(), vidUint); err != nil {
+		switch {
+		case errors.Is(err, domain.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found", "message": "Video no encontrado."})
+			return
+		case errors.Is(err, domain.ErrInvalid):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "El video no está listo para publicarse."})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Video publicado exitosamente.", "video_id": c.Param("video_id")})
+}
+
 // --- Helpers to reduce duplication ---
 
 // userIDFromContextOrAbort extracts userID from context or writes a 401 and returns false.
@@ -221,7 +269,9 @@ func parseVideoIDOrAbort(c *gin.Context) (uint, bool) {
 // toVideoResponse maps an entities.Video to responses.VideoResponse.
 func toVideoResponse(v *entities.Video) responses.VideoResponse {
 	status := "uploaded"
-	if v.Status == string(entities.StatusProcessed) {
+	if v.Status == string(entities.StatusPublished) {
+		status = "published"
+	} else if v.Status == string(entities.StatusProcessed) {
 		status = "processed"
 	}
 	var originalURL *string

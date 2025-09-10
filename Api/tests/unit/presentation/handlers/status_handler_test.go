@@ -28,6 +28,6 @@ func TestStatusHandlers_ListVideoStatuses(t *testing.T) {
 
 	var body map[string][]string
 	_ = json.Unmarshal(w.Body.Bytes(), &body)
-	expected := []string{"UPLOADED", "TRIMMING", "ADJUSTING_RESOLUTION", "ADDING_WATERMARK", "REMOVING_AUDIO", "ADDING_INTRO_OUTRO", "PROCESSED", "FAILED"}
+	expected := []string{"UPLOADED", "TRIMMING", "ADJUSTING_RESOLUTION", "ADDING_WATERMARK", "REMOVING_AUDIO", "ADDING_INTRO_OUTRO", "PROCESSED", "PUBLISHED", "FAILED"}
 	assert.Equal(t, expected, body["statuses"])
 }

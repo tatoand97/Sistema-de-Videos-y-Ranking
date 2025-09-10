@@ -17,4 +17,6 @@ type VideoRepository interface {
 	GetByIDAndUser(ctx context.Context, id, userID uint) (*entities.Video, error)
 	// Delete removes a video by id. Returns domain.ErrNotFound if it doesn't exist.
 	Delete(ctx context.Context, id uint) error
+	// UpdateStatus sets the status column for a video id
+	UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error
 }
