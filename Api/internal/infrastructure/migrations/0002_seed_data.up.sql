@@ -119,15 +119,15 @@ FROM (VALUES
 -- Videos (usar ENUM 'status'; FK por email)
 INSERT INTO video (user_id, title, original_file, processed_file, status, processed_at) VALUES
                                                                                             ((SELECT user_id FROM users WHERE email='juan.perez@email.com'),
-                                                                                             'Jugada defensiva destacada','juan_video_001.mp4','juan_video_001_anb_processed.mp4','PUBLISHED', now()),
+                                                                                             'Jugada defensiva destacada','juan_video_001.mp4','juan_video_001_anb_processed.mp4','PROCESSED', now()),
                                                                                             ((SELECT user_id FROM users WHERE email='juan.perez@email.com'),
                                                                                              'Triple desde media cancha','juan_video_002.mp4',NULL,'UPLOADED', NULL),
                                                                                             ((SELECT user_id FROM users WHERE email='maria.garcia@email.com'),
-                                                                                             'Estrategia ofensiva avanzada','maria_video_001.mp4','maria_video_001_anb_processed.mp4','PUBLISHED', now()),
+                                                                                             'Estrategia ofensiva avanzada','maria_video_001.mp4','maria_video_001_anb_processed.mp4','PROCESSED', now()),
                                                                                             ((SELECT user_id FROM users WHERE email='pedro.lopez@email.com'),
                                                                                              'Fundamentos de dribleo','pedro_video_001.mp4',NULL,'UPLOADED', NULL),
                                                                                             ((SELECT user_id FROM users WHERE email='ana.martinez@email.com'),
-                                                                                             'Competencia nacional ANB','ana_video_001.mp4','ana_video_001_anb_processed.mp4','PUBLISHED', now()),
+                                                                                             'Competencia nacional ANB','ana_video_001.mp4','ana_video_001_anb_processed.mp4','PROCESSED', now()),
                                                                                             ((SELECT user_id FROM users WHERE email='luis.rodriguez@email.com'),
                                                                                              'Mejores jugadas del torneo','luis_video_001.mp4',NULL,'UPLOADED', NULL),
                                                                                             ((SELECT user_id FROM users WHERE email='carmen.fernandez@email.com'),

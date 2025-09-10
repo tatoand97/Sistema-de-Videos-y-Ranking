@@ -31,7 +31,6 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	// Prefer constructor with cache & aggregates; keep simple one available for tests
 	publicHandlers := NewPublicHandlersFull(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds, cfg.Aggregates)
 	statusHandlers := NewStatusHandlers(cfg.StatusService)
-	uploadsHandlers := NewUploadsHandlers(cfg.UploadsUC)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -61,9 +60,6 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	videoGroup.GET("/:video_id", videoHandlers.GetVideoDetail)
 	videoGroup.DELETE("/:video_id", videoHandlers.DeleteVideo)
 	videoGroup.POST("/:video_id/publish", videoHandlers.PublishVideo)
-
-	// New: S3/MinIO POST Policy for direct uploads
-	authGroup.POST("/api/uploads", uploadsHandlers.CreatePostPolicy)
 
 	// Ruta protegida para votar por un video público
 	authGroup.POST("/api/public/videos/:video_id/vote", publicHandlers.VotePublicVideo)
