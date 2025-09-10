@@ -7,21 +7,16 @@ import (
 )
 
 type Config struct {
-	RedisAddr       string
-	CachePrefix     string
-	CacheTTLSeconds int
+    RedisAddr       string
+    CachePrefix     string
+    CacheTTLSeconds int
 
-	PostgresDSN string
+    PostgresDSN string
 
-	RabbitURL      string
-	EventsExchange string
-	VoteQueue      string
-	VoteRoutingKey string
-
-	RefreshIntervalSeconds int
-	WarmPages              int
-	WarmCities             []string
-	PageSizeDefault        int
+    RefreshIntervalSeconds int
+    WarmPages              int
+    WarmCities             []string
+    PageSizeDefault        int
 }
 
 func getenv(key, def string) string {
@@ -36,19 +31,15 @@ func getenvInt(key string, def int) int {
 }
 
 func LoadConfig() Config {
-	cfg := Config{
-		RedisAddr:              getenv("REDIS_ADDR", "redis:6379"),
-		CachePrefix:            getenv("CACHE_PREFIX", "videorank:"),
-		CacheTTLSeconds:        getenvInt("CACHE_TTL_SECONDS", 120),
-		PostgresDSN:            getenv("POSTGRES_DSN", "postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable"),
-		RabbitURL:              getenv("RABBITMQ_URL", "amqp://admin:admin@rabbitmq:5672/"),
-		EventsExchange:         getenv("EVENTS_EXCHANGE", "events.exchange"),
-		VoteQueue:              getenv("VOTE_QUEUE", "vote_events"),
-		VoteRoutingKey:         getenv("EVENTS_ROUTING_KEY_PUBLIC_VOTE", "public.vote.registered"),
-		RefreshIntervalSeconds: getenvInt("REFRESH_INTERVAL_SECONDS", 60),
-		WarmPages:              getenvInt("WARM_PAGES", 3),
-		PageSizeDefault:        getenvInt("PAGE_SIZE_DEFAULT", 20),
-	}
+    cfg := Config{
+        RedisAddr:              getenv("REDIS_ADDR", "redis:6379"),
+        CachePrefix:            getenv("CACHE_PREFIX", "videorank:"),
+        CacheTTLSeconds:        getenvInt("CACHE_TTL_SECONDS", 120),
+        PostgresDSN:            getenv("POSTGRES_DSN", "postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable"),
+        RefreshIntervalSeconds: getenvInt("REFRESH_INTERVAL_SECONDS", 60),
+        WarmPages:              getenvInt("WARM_PAGES", 3),
+        PageSizeDefault:        getenvInt("PAGE_SIZE_DEFAULT", 20),
+    }
 	cities := getenv("WARM_CITIES", "bogota,medellin,cali")
 	if cities != "" {
 		for _, c := range strings.Split(cities, ",") {
