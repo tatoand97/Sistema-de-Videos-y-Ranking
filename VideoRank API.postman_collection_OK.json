@@ -271,27 +271,6 @@
       "response": []
     },
     {
-      "name": "Uploads / Create signed URL (protected)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwt}}" },
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"filename\": \"clip.mp4\",\n  \"mimeType\": \"video/mp4\",\n  \"sizeBytes\": 73400320,\n  \"checksum\": \"<optional_sha256_hex>\"\n}"
-        },
-        "url": {
-          "raw": "{{host}}:{{port}}/api/uploads",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","uploads"]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Location / City ID",
       "request": {
         "method": "GET",

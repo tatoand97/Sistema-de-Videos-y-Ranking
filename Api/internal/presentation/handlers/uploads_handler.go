@@ -8,7 +8,6 @@ import (
 
 	"api/internal/application/useCase"
 	"api/internal/domain"
-	"api/internal/domain/requests"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,25 +22,6 @@ func NewUploadsHandlers(uploadsUC *useCase.UploadsUseCase) *UploadsHandlers {
 // NewUploadsHandler provides backward-compatible constructor name expected by some tests.
 func NewUploadsHandler(uploadsUC *useCase.UploadsUseCase) *UploadsHandlers {
 	return NewUploadsHandlers(uploadsUC)
-}
-
-// CreatePostPolicy handles POST /api/uploads and returns a signed S3 POST policy for direct uploads.
-func (h *UploadsHandlers) CreatePostPolicy(c *gin.Context) {
-	var req requests.CreateUploadRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
-		return
-	}
-	resp, err := h.uploadsUC.CreatePostPolicy(c.Request.Context(), req)
-	if err != nil {
-		if errors.Is(err, domain.ErrInvalid) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, resp)
 }
 
 // UploadVideo handles POST /api/uploads multipart uploads.

@@ -13,7 +13,6 @@ import (
 	"api/internal/application/useCase"
 	"api/internal/domain"
 	"api/internal/domain/entities"
-	"api/internal/domain/requests"
 	"api/internal/domain/responses"
 	hdl "api/internal/presentation/handlers"
 
@@ -67,9 +66,6 @@ type fakeStorage struct{}
 
 func (f *fakeStorage) Save(_ context.Context, _ string, _ io.Reader, _ int64, _ string) (string, error) {
 	return "", nil
-}
-func (f *fakeStorage) PresignedPostPolicy(_ context.Context, _ requests.CreateUploadRequest) (*responses.CreateUploadResponsePostPolicy, error) {
-	return nil, nil
 }
 
 func setupVideoRouter(uc *useCase.UploadsUseCase, withAuth bool) *gin.Engine {
