@@ -6,7 +6,6 @@ import (
 	"api/internal/domain/responses"
 	"context"
 	"errors"
-	"strings"
 )
 
 // PublicService expone operaciones publicas relacionadas con videos.
@@ -95,29 +94,5 @@ func (s *PublicService) Rankings(ctx context.Context, city *string, page, pageSi
 }
 
 // normalizeCityKey replica la normalización usada en handlers para claves por ciudad.
-func normalizeCityKey(s string) string {
-	s = strings.TrimSpace(strings.ToLower(s))
-	if s == "" {
-		return s
-	}
-	r := strings.NewReplacer(
-		"á", "a", "à", "a", "ä", "a", "â", "a", "ã", "a",
-		"é", "e", "è", "e", "ë", "e", "ê", "e",
-		"í", "i", "ì", "i", "ï", "i", "î", "i",
-		"ó", "o", "ò", "o", "ö", "o", "ô", "o", "õ", "o",
-		"ú", "u", "ù", "u", "ü", "u", "û", "u",
-		"ñ", "n",
-	)
-	s = r.Replace(s)
-	s = strings.ReplaceAll(s, " ", "-")
-	b := make([]rune, 0, len(s))
-	for _, ch := range s {
-		if (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-' || ch == '_' {
-			b = append(b, ch)
-		}
-	}
-	return string(b)
-}
-
 // GetUsersBasicByIDs expone informacion basica de usuarios para enriquecer rankings desde Redis.
 // GetUsersBasicByIDs removido; se usaba solo para enriquecer rankings desde Redis.
