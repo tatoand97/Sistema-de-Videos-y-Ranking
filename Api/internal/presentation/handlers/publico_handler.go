@@ -74,7 +74,7 @@ func normalizeCityKey(s string) string {
 func (h *PublicHandlers) ListPublicVideos(c *gin.Context) {
 	results, err := h.service.ListPublicVideos(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, results)
@@ -85,7 +85,7 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 	// 1) Auth: extraer userID del contexto
 	userID := c.GetUint("userID")
 	if userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token invalido o expirado."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": invalidTokenExpiredMsg})
 		return
 	}
 
