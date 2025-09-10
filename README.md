@@ -1,5 +1,15 @@
 # Sistema de Videos y Ranking
 
+[![Ver el video corto en YouTube](https://img.youtube.com/vi/LyWnp02K7Fs/maxresdefault.jpg)](https://www.youtube.com/watch?v=LyWnp02K7Fs)
+
+[![Video Demo](https://img.shields.io/badge/🎥_Video_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/eRjMitL2NRw)
+
+> **🎬 [Ver Demo del Sistema en Acción](https://youtu.be/eRjMitL2NRw)** - Demostración completa del funcionamiento del sistema
+
+[![Ver el video en YouTube](https://img.youtube.com/vi/eRjMitL2NRw/maxresdefault.jpg)](https://www.youtube.com/watch?v=eRjMitL2NRw)
+
+
+
 Sistema distribuido para procesamiento de videos con arquitectura de microservicios, implementando patrones de mensajería asíncrona y observabilidad completa.
 
 ## 👥 Equipo de Desarrollo
@@ -9,6 +19,13 @@ Sistema distribuido para procesamiento de videos con arquitectura de microservic
 - **Cristian David Paredes Bravo** - c.paredesb@uniandes.edu.co - Developer
 - **Andrea Carolina Cely Duarte** - a.celyd@uniandes.edu.co - Developer
 - **Juan Carlos Martinez Muñoz** - jc.martinezm1@uniandes.edu.co - Developer
+
+## Integración con sonar cloud
+https://sonarcloud.io/organizations/tatoand97/projects
+
+![Evidencia SonarCloud](Evidencia-sonar-cloud.png)
+
+
 
 ## 🏗️ Arquitectura del Sistema
 
@@ -941,8 +958,6 @@ components:
 | GET | `/videos` | Listar todos los videos |
 | GET | `/videos/{id}` | Obtener detalles de un video |
 | GET | `/videos/{id}/status` | Estado del procesamiento |
-| GET | `/jobs` | Listar trabajos de procesamiento |
-| POST | `/jobs/{id}/retry` | Reintentar trabajo fallido |
 | GET | `/health` | Health check del sistema |
 | GET | `/metrics` | Métricas para Prometheus |
 
@@ -1085,7 +1100,58 @@ tests/
 - **Performance Tuning**: Optimización de rendimiento
 
 ---
+Video land VideoRank – Frontend
+================================
+
+Resumen
+- React + Vite + TypeScript.
+- Consumo de la API basada en la colección Postman incluida (auth, videos, rankings, ubicación).
+- Se entrega como build estático servido por Nginx en el mismo `docker-compose` del backend (puerto 8081).
+
+Variables de entorno
+- `VITE_API_BASE_URL` (default `http://localhost:8080`)
+
+Desarrollo local
+1) Instalar dependencias: `npm install`
+2) Ejecutar dev server: `npm run dev`
+3) App: http://localhost:5173
+
+Cómo levantar el Backend/API
+- El frontend asume la API en `http://localhost:8080` (nginx → api).
+- Desde la raíz del repo, levanta los servicios necesarios:
+
+  1) Infra de soporte: `docker compose up -d postgres redis rabbitmq minio minio-buckets`
+  2) Migraciones (one-off): `docker compose up --build migrate && docker compose rm -f migrate`
+  3) API + Nginx: `docker compose up -d api nginx`
+
+- Verificación: `curl http://localhost:8080/health` → `{ "status": "ok" }`
+
+Build de producción
+1) `npm run build` → genera `frontend/dist`
+2) Con `docker-compose up -d nginx` la app queda servida en http://localhost:8081
+
+Estructura de features principales
+- Autenticación (login, registro, logout; token guardado en localStorage).
+- Videos (listar mis videos, detalle, subir multipart, eliminar).
+- Público (listar videos públicos, votar video).
+- Rankings (paginado y filtro por ciudad).
+
+Rutas
+- `/` públicos + votar
+- `/rankings` listados
+- `/login`, `/register`
+- `/profile` (protegida)
+- `/videos` (protegida)
+- `/upload` (protegida)
+- `/videos/:id` (protegida)
+
+Notas
+- El backend define CORS abierto (`*`) en `docker-compose.yml`, por lo que el dev server funciona sin proxy adicional.
+- Para el despliegue, sólo es necesario construir (`dist/`) y dejar que Nginx lo sirva en el puerto 8081.
+
+
+---
 
 **Versión**: 1.0.0  
-**Última actualización**: 2024  
+**Última actualización**: 2025  
 **Mantenido por**: Equipo de Desarrollo
