@@ -24,7 +24,7 @@ func (r *publicRepository) ListPublicVideos(ctx context.Context) ([]responses.Pu
 	var results []responses.PublicVideoResponse
 	q := r.db.WithContext(ctx).
 		Table("video v").
-		Select("v.video_id AS video_id, v.title, v.processed_file AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
+		Select("v.video_id AS video_id, v.title, CONCAT('http://localhost:8081/processed-videos/', v.processed_file) AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
 		Joins("JOIN users u ON u.user_id = v.user_id").
 		Joins(joinCityOnUser).
 		Joins(leftJoinVoteOnVideo).
@@ -41,7 +41,7 @@ func (r *publicRepository) GetPublicByID(ctx context.Context, id uint) (*respons
 	var result responses.PublicVideoResponse
 	q := r.db.WithContext(ctx).
 		Table("video v").
-		Select("v.video_id AS video_id, v.title, v.processed_file AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
+		Select("v.video_id AS video_id, v.title, CONCAT('http://localhost:8081/processed-videos/', v.processed_file) AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
 		Joins("JOIN users u ON u.user_id = v.user_id").
 		Joins(joinCityOnUser).
 		Joins(leftJoinVoteOnVideo).

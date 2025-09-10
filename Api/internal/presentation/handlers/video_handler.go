@@ -238,7 +238,8 @@ func toVideoResponse(v *entities.Video) responses.VideoResponse {
 		OriginalURL: originalURL,
 	}
 	if v.ProcessedFile != nil && *v.ProcessedFile != "" {
-		resp.ProcessedURL = v.ProcessedFile
+		processedURL := fmt.Sprintf("http://localhost:8081/processed-videos/%s", *v.ProcessedFile)
+		resp.ProcessedURL = &processedURL
 	}
 	return resp
 }
