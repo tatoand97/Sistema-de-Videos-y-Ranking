@@ -10,7 +10,9 @@ const (
 	StatusRemovingAudio    VideoStatus = "REMOVING_AUDIO"
 	StatusAddingIntroOutro VideoStatus = "ADDING_INTRO_OUTRO"
 	StatusProcessed        VideoStatus = "PROCESSED"
-	StatusFailed           VideoStatus = "FAILED"
+	// StatusPublished indica que el video ya fue publicado para votación pública
+	StatusPublished VideoStatus = "PUBLISHED"
+	StatusFailed    VideoStatus = "FAILED"
 )
 
 func AllVideoStatuses() []VideoStatus {
@@ -22,6 +24,7 @@ func AllVideoStatuses() []VideoStatus {
 		StatusRemovingAudio,
 		StatusAddingIntroOutro,
 		StatusProcessed,
+		StatusPublished,
 		StatusFailed,
 	}
 }

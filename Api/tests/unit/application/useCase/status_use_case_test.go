@@ -20,6 +20,7 @@ func TestStatusService_ListVideoStatuses(t *testing.T) {
 		"REMOVING_AUDIO",
 		"ADDING_INTRO_OUTRO",
 		"PROCESSED",
+		"PUBLISHED",
 		"FAILED",
 	}
 	assert.Equal(t, expected, got)

@@ -26,6 +26,7 @@ func TestVideoStatus_Constants(t *testing.T) {
 		{"StatusRemovingAudio", entities.StatusRemovingAudio, "REMOVING_AUDIO"},
 		{"StatusAddingIntroOutro", entities.StatusAddingIntroOutro, "ADDING_INTRO_OUTRO"},
 		{"StatusProcessed", entities.StatusProcessed, "PROCESSED"},
+		{"StatusPublished", entities.StatusPublished, "PUBLISHED"},
 		{"StatusFailed", entities.StatusFailed, "FAILED"},
 	}
 
@@ -47,11 +48,12 @@ func TestAllVideoStatuses(t *testing.T) {
 		entities.StatusRemovingAudio,
 		entities.StatusAddingIntroOutro,
 		entities.StatusProcessed,
+		entities.StatusPublished,
 		entities.StatusFailed,
 	}
 
 	assert.Equal(t, expected, statuses)
-	assert.Len(t, statuses, 8)
+	assert.Len(t, statuses, 9)
 }
 
 func TestVideo_Creation(t *testing.T) {
