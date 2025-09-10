@@ -270,61 +270,6 @@
       "response": []
     },
     {
-      "name": "Ranking / Leaderboard by poll_id",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}:{{port}}/api/public/leaderboard/{{poll_id}}?city=&start=0&stop=9",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","public","leaderboard","{{poll_id}}"],
-          "query": [
-            { "key": "city", "value": "" },
-            { "key": "start", "value": "0" },
-            { "key": "stop", "value": "9" }
-          ],
-          "variable": [ { "key": "poll_id", "value": "default_poll" } ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Ranking / Stats by poll_id",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}:{{port}}/api/public/stats/{{poll_id}}?city=",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","public","stats","{{poll_id}}"],
-          "query": [ { "key": "city", "value": "" } ],
-          "variable": [ { "key": "poll_id", "value": "default_poll" } ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Ranking / Count by poll_id/member",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}:{{port}}/api/public/count/{{poll_id}}/{{member}}?city=",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","public","count","{{poll_id}}","{{member}}"],
-          "query": [ { "key": "city", "value": "" } ],
-          "variable": [
-            { "key": "poll_id", "value": "default_poll" },
-            { "key": "member", "value": "some_user" }
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Location / City ID",
       "request": {
         "method": "GET",
