@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+    "strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -103,18 +104,7 @@ func setupRedisCacheFromEnv() interfaces.Cache {
 	return infraCache.NewRedisCache(rdb, prefix, ttl)
 }
 
-// setupAggregatesFromEnv initializes Redis Aggregates for leaderboards/stats.
-// Uses the same REDIS_ADDR and CACHE_PREFIX. Optional tenant via TENANT_ID.
-func setupAggregatesFromEnv() interfaces.Aggregates {
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		return nil
-	}
-	prefix := getEnvOrDefault("CACHE_PREFIX", "videorank:")
-	tenant := os.Getenv("TENANT_ID")
-	rdb := infraCache.MustRedisClient(addr)
-	return infraCache.NewRedisAggregates(rdb, prefix, tenant)
-}
+// Redis Aggregates removed; rankings served from DB.
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
@@ -157,14 +147,47 @@ func main() {
 	uploadsUC := useCase.NewUploadsUseCase(videoRepo, videoStorage, messagePublisher, audioQueue)
 
 	r := gin.Default()
+
+	// Lightweight CORS middleware (avoids external deps)
+	allowed := getEnvOrDefault("CORS_ORIGIN", "*")
+	var allowAll bool
+	var allowList []string
+	if allowed == "*" || allowed == "" {
+		allowAll = true
+	} else {
+		allowList = strings.Split(allowed, ",")
+	}
+	r.Use(func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		if allowAll {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		} else {
+			for _, o := range allowList {
+				if strings.EqualFold(strings.TrimSpace(o), origin) {
+					c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+					break
+				}
+			}
+		}
+		c.Writer.Header().Set("Vary", "Origin")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Accept,Origin")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
 	r.Static("/static", "./static")
 	statusService := useCase.NewStatusService()
 	// Redis cache and idempotency TTL
 	cache := setupRedisCacheFromEnv()
 	idemTTL := atoiOrDefault(os.Getenv("IDEMPOTENCY_TTL_SECONDS"), 3600)
-	// Redis aggregates (leaderboards/stats)
-	aggregates := setupAggregatesFromEnv()
-	publicService := useCase.NewPublicServiceWithAgg(publicRepo, voteRepo, aggregates)
+	// Public service without Redis aggregates
+	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
 	handlers.NewRouter(r, handlers.RouterConfig{
 		AuthService:     authService,
@@ -176,7 +199,6 @@ func main() {
 		JWTSecret:       jwtSecret,
 		Cache:           cache,
 		IdemTTLSeconds:  idemTTL,
-		Aggregates:      aggregates,
 	})
 
 	port := getEnvOrDefault("PORT", "8080")

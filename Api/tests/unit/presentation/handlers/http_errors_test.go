@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"testing"
 
+	"api/internal/application/useCase"
 	"api/internal/domain"
 
 	"github.com/stretchr/testify/assert"

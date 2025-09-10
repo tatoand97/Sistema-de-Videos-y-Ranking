@@ -18,6 +18,22 @@ tags:
 security:
   - bearerAuth: []
 paths:
+  /health:
+    get:
+      summary: Estado del servicio
+      description: Devuelve un estado simple para supervisión.
+      tags: [Público]
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+              example: { status: "ok" }
   /api/auth/signup:
     post:
       summary: Registro de nuevos jugadores
@@ -324,37 +340,7 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
-  /api/videos/{video_id}/file:
-    get:
-      summary: Descargar/servir archivo del video (privado)
-      description: Devuelve binario del **original** o **procesado** del dueño del video.
-      tags: [Videos]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: string }
-        - name: variant
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [original, processed]
-            default: processed
-          description: Variante a servir.
-      responses:
-        "200":
-          description: Binario del video.
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
+  
 
   /api/public/videos:
     get:
@@ -417,10 +403,6 @@ paths:
       responses:
         "200":
           description: Ranking actual.
-          headers:
-            X-Total-Count:
-              description: Total de elementos (si se pagina).
-              schema: { type: integer }
           content:
             application/json:
               schema:
@@ -438,51 +420,8 @@ paths:
                   votes: 1495
         "400": { $ref: "#/components/responses/BadRequest" }
 
-  /api/uploads:
-    post:
-      summary: Crear URL firmada de subida (POST Policy S3)
-      description: >
-        Endpoint opcional (patrón S3-like). Incluir sólo si el almacenamiento lo requiere.
-        **No está explicitado en el documento** (campos y semántica marcados TBD).
-      tags: [Videos]
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateUploadRequest"
-            example:
-              filename: "clip.mp4"
-              mimeType: "video/mp4"
-              sizeBytes: 73400320
-              checksum: "TBD_SHA256_HEX"
-      responses:
-        "201":
-          description: URL y campos firmados para POST Policy
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CreateUploadResponsePostPolicy"
-              example:
-                uploadUrl: "https://minio.example.com/my-bucket"
-                resourceUrl: "s3://my-bucket/uploads/2025/09/06/5a1d...-clip.mp4"
-                expiresAt: "2025-09-06T23:59:59Z"
-                form:
-                  key: "uploads/2025/09/06/5a1d...-clip.mp4"
-                  policy: "eyJleHBpcmF0aW9uIjoiMjAyNS0wOS..."
-                  x-amz-algorithm: "AWS4-HMAC-SHA256"
-                  x-amz-credential: "ACCESSKEY/20250906/auto/s3/aws4_request"
-                  x-amz-date: "20250906T201122Z"
-                  x-amz-signature: "b5f3a1..."
-                  Content-Type: "video/mp4"
-                  x-amz-meta-sha256: "a2c3...f9"
-                  success_action_status: "201"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+
+  
 
   /api/location/city-id:
     get:
@@ -505,9 +444,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  city_id: { type: integer }
+                $ref: "#/components/schemas/CityIDResponse"
               example: { city_id: 123 }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -555,6 +492,10 @@ components:
       properties:
         error: { type: string }
         message: { type: string }
+    CityIDResponse:
+      type: object
+      properties:
+        city_id: { type: integer }
     SignupRequest:
       type: object
       required: [first_name, last_name, email, password1, password2, city, country]
@@ -617,53 +558,3 @@ components:
         username: { type: string }
         city: { type: string, nullable: true }
         votes: { type: integer, minimum: 0 }
-    CreateUploadRequest:
-      type: object
-      properties:
-        filename: { type: string }
-        mimeType: { type: string }
-        sizeBytes: { type: integer, minimum: 0 }
-        checksum:
-          type: string
-          description: "Opcional. SHA-256 en hex del archivo; se refleja en x-amz-meta-sha256."
-      required: [filename, mimeType]
-    CreateUploadResponsePostPolicy:
-      type: object
-      required: [uploadUrl, resourceUrl, expiresAt, form]
-      properties:
-        uploadUrl:
-          type: string
-          format: uri
-          description: "Endpoint HTTPS del bucket MinIO/S3 que acepta POST multipart/form-data."
-        resourceUrl:
-          type: string
-          description: "Identificador del objeto (s3://bucket/key o URL HTTP no firmada)."
-        expiresAt:
-          type: string
-          format: date-time
-        form:
-          $ref: "#/components/schemas/S3PostPolicyForm"
-    S3PostPolicyForm:
-      type: object
-      description: "Campos que el cliente debe enviar como fields del multipart/form-data a uploadUrl."
-      properties:
-        key: { type: string, description: "Ruta/clave del objeto dentro del bucket." }
-        policy: { type: string }
-        x-amz-algorithm: { type: string, enum: ["AWS4-HMAC-SHA256"] }
-        x-amz-credential: { type: string }
-        x-amz-date: { type: string }
-        x-amz-signature: { type: string }
-        Content-Type: { type: string }
-        x-amz-meta-sha256: { type: string, nullable: true }
-        success_action_status:
-          type: string
-          enum: ["201", "204"]
-          default: "201"
-      required:
-        - key
-        - policy
-        - x-amz-algorithm
-        - x-amz-credential
-        - x-amz-date
-        - x-amz-signature
-        - Content-Type

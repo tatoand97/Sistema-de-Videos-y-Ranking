@@ -26,11 +26,17 @@ func (f *fakeUserRepoForReg) Create(ctx context.Context, user *entities.User) er
 }
 
 func (f *fakeUserRepoForReg) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
-	return nil, nil
+	if f.emailExists {
+		return &entities.User{Email: email}, nil
+	}
+	return nil, domain.ErrNotFound
 }
 
 func (f *fakeUserRepoForReg) EmailExists(ctx context.Context, email string) (bool, error) {
 	return f.emailExists, nil
+}
+func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	return []string{}, nil
 }
 
 func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
@@ -38,7 +44,7 @@ func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([
 }
 
 type fakeLocationRepoForReg struct {
-	cityID uint
+	cityID int
 	err    error
 }
 

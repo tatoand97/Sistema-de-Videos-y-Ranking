@@ -1,20 +1,20 @@
 package handlers_test
 
 import (
+	"api/internal/application/useCase"
+	"api/internal/presentation/handlers"
+	"bytes"
 	"context"
 	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"api/internal/application/useCase"
 	"api/internal/domain/entities"
-	"api/internal/domain/requests"
 	"api/internal/domain/responses"
-	"api/internal/presentation/handlers"
-
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,12 +24,20 @@ type mockUploadsRepo struct {
 }
 
 func (m *mockUploadsRepo) Create(ctx context.Context, video *entities.Video) error { return m.err }
-func (m *mockUploadsRepo) GetByID(ctx context.Context, id uint) (*entities.Video, error) { return nil, nil }
+func (m *mockUploadsRepo) GetByID(ctx context.Context, id uint) (*entities.Video, error) {
+	return nil, nil
+}
 func (m *mockUploadsRepo) List(ctx context.Context) ([]*entities.Video, error) { return nil, nil }
-func (m *mockUploadsRepo) ListByUser(ctx context.Context, userID uint) ([]*entities.Video, error) { return nil, nil }
-func (m *mockUploadsRepo) GetByIDAndUser(ctx context.Context, id, userID uint) (*entities.Video, error) { return nil, nil }
+func (m *mockUploadsRepo) ListByUser(ctx context.Context, userID uint) ([]*entities.Video, error) {
+	return nil, nil
+}
+func (m *mockUploadsRepo) GetByIDAndUser(ctx context.Context, id, userID uint) (*entities.Video, error) {
+	return nil, nil
+}
 func (m *mockUploadsRepo) Delete(ctx context.Context, id uint) error { return nil }
-func (m *mockUploadsRepo) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error { return nil }
+func (m *mockUploadsRepo) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error {
+	return nil
+}
 
 type mockUploadsStorage struct {
 	policy *responses.CreateUploadResponsePostPolicy
@@ -37,14 +45,19 @@ type mockUploadsStorage struct {
 }
 
 func (m *mockUploadsStorage) Save(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
-	return "", nil
+	return "https://example.com/video.mp4", nil
 }
 
-func (m *mockUploadsStorage) PresignedPostPolicy(ctx context.Context, req requests.CreateUploadRequest) (*responses.CreateUploadResponsePostPolicy, error) {
-	if m.err != nil {
-		return nil, m.err
+func multipartWithFile(fields map[string]string, filename string, content []byte) (*bytes.Buffer, string) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	for k, v := range fields {
+		writer.WriteField(k, v)
 	}
-	return m.policy, nil
+	part, _ := writer.CreateFormFile("file", filename)
+	part.Write(content)
+	writer.Close()
+	return body, writer.FormDataContentType()
 }
 
 func TestUploadsHandler_CreatePostPolicy_Success(t *testing.T) {
@@ -102,16 +115,14 @@ func TestUploadsHandler_CreatePostPolicy_InvalidJSON(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code) // invalid mp4 will trigger Bad Request via validations
 }
 
-func TestUploadsHandler_CreatePostPolicy_Unauthorized(t *testing.T) {
+func TestUploadsHandler_UploadVideo_Unauthorized(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	repo := &mockUploadsRepo{}
-	storage := &mockUploadsStorage{}
-	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
+	uc := useCase.NewUploadsUseCase(&mockUploadsRepo{}, &mockUploadsStorage{}, nil, "")
 	h := handlers.NewUploadsHandlers(uc)
 
 	r.POST("/api/uploads", h.CreatePostPolicy)

@@ -49,7 +49,7 @@ func (h *VideoHandlers) ListVideos(c *gin.Context) {
 func (h *VideoHandlers) Upload(c *gin.Context) {
 	title := c.PostForm("title")
 	if title == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "title is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "title is required"})
 		return
 	}
 
@@ -59,19 +59,24 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 		file, err = c.FormFile("video")
 	}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "video file is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "video file is required"})
 		return
 	}
 
-	// Validar MIME declarado
-	if ct := file.Header.Get("Content-Type"); ct != "video/mp4" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "mimeType must be video/mp4"})
+	// Validar MIME declarado: usar form field mimeType si viene; fallback a Content-Type del archivo.
+	// Si ninguno viene, aceptar por defecto (OpenAPI define default video/mp4).
+	mimeFromForm := strings.TrimSpace(c.PostForm("mimeType"))
+	if mimeFromForm == "" {
+		mimeFromForm = file.Header.Get("Content-Type")
+	}
+	if mimeFromForm != "" && mimeFromForm != "video/mp4" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "mimeType must be video/mp4"})
 		return
 	}
 
 	// Validar tamaño declarado (=100MB)
 	if file.Size > validations.MaxBytes {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file too large (max 100MB)"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "file too large (max 100MB)"})
 		return
 	}
 
@@ -82,19 +87,19 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 
 	permsVal, ok := c.Get("permissions")
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "permissions missing in context"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "permissions missing in context"})
 		return
 	}
 	perms, ok := permsVal.([]string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid permissions in context"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "invalid permissions in context"})
 		return
 	}
 	// Align with OpenAPI: expect "videos:upload".
 	// Keep backward compatibility with legacy "upload_video".
 	allowed := slices.Contains(perms, "videos:upload") || slices.Contains(perms, "upload_video")
 	if !allowed {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
 
@@ -110,10 +115,10 @@ func (h *VideoHandlers) Upload(c *gin.Context) {
 	output, err := h.uploadsUC.UploadMultipart(ctx, input)
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalid) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	}
 

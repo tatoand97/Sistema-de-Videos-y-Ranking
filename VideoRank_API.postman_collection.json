@@ -265,36 +265,6 @@
 			]
 		},
 		{
-			"name": "Uploads (S3 Direct)",
-			"item": [
-				{
-					"name": "Create Upload Policy",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"filename\": \"test-video.mp4\",\n  \"mimeType\": \"video/mp4\",\n  \"sizeBytes\": 1048576,\n  \"checksum\": \"a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/uploads",
-							"host": ["{{base_url}}"],
-							"path": ["api", "uploads"]
-						}
-					}
-				}
-			]
-		},
-		{
 			"name": "Public",
 			"item": [
 				{

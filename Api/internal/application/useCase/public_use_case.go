@@ -6,7 +6,6 @@ import (
 	"api/internal/domain/responses"
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 )
 
@@ -14,7 +13,6 @@ import (
 type PublicService struct {
 	repo     interfaces.PublicRepository
 	voteRepo interfaces.VoteRepository
-	agg      interfaces.Aggregates
 }
 
 func NewPublicService(repo interfaces.PublicRepository, voteRepo interfaces.VoteRepository) *PublicService {
@@ -22,9 +20,7 @@ func NewPublicService(repo interfaces.PublicRepository, voteRepo interfaces.Vote
 }
 
 // NewPublicServiceWithAgg permite inyectar un lector de agregados (Redis) sin acoplar al handler.
-func NewPublicServiceWithAgg(repo interfaces.PublicRepository, voteRepo interfaces.VoteRepository, agg interfaces.Aggregates) *PublicService {
-	return &PublicService{repo: repo, voteRepo: voteRepo, agg: agg}
-}
+// NewPublicServiceWithAgg eliminado (sin agregados Redis)
 
 func (s *PublicService) ListPublicVideos(ctx context.Context) ([]responses.PublicVideoResponse, error) {
 	return s.repo.ListPublicVideos(ctx)
@@ -95,40 +91,6 @@ func (s *PublicService) VotePublicVideoWithEvent(ctx context.Context, videoID, u
 // Rankings retorna el ranking paginado por votos acumulados por usuario.
 func (s *PublicService) Rankings(ctx context.Context, city *string, page, pageSize int) ([]responses.RankingItem, error) {
 	// Orquestación: primero intentar desde agregados (Redis) si está disponible.
-	if s.agg != nil {
-		// Construir pollId de usuarios (global o por ciudad)
-		poll := "users"
-		if city != nil && *city != "" {
-			poll = poll + ":city:" + normalizeCityKey(*city)
-		}
-		start := int64((page - 1) * pageSize)
-		stop := start + int64(pageSize) - 1
-		items, err := s.agg.GetLeaderboard(ctx, poll, start, stop)
-		if err == nil && len(items) > 0 {
-			// Enriquecer con username y ciudad desde BD
-			ids := make([]uint, 0, len(items))
-			for _, it := range items {
-				if uid64, e := strconv.ParseUint(it.Member, 10, 64); e == nil {
-					ids = append(ids, uint(uid64))
-				}
-			}
-			basics, berr := s.repo.GetUsersBasicByIDs(ctx, ids)
-			if berr == nil {
-				bm := make(map[uint]responses.UserBasic, len(basics))
-				for _, b := range basics {
-					bm[b.UserID] = b
-				}
-				out := make([]responses.RankingItem, 0, len(items))
-				for _, it := range items {
-					uid64, _ := strconv.ParseUint(it.Member, 10, 64)
-					b := bm[uint(uid64)]
-					out = append(out, responses.RankingItem{Username: b.Username, City: b.City, Votes: int(it.Score)})
-				}
-				return out, nil
-			}
-		}
-		// Si no hay datos en agregados o hay error -> caer a BD
-	}
 	return s.repo.Rankings(ctx, city, page, pageSize)
 }
 
@@ -158,6 +120,4 @@ func normalizeCityKey(s string) string {
 }
 
 // GetUsersBasicByIDs expone informacion basica de usuarios para enriquecer rankings desde Redis.
-func (s *PublicService) GetUsersBasicByIDs(ctx context.Context, ids []uint) ([]responses.UserBasic, error) {
-	return s.repo.GetUsersBasicByIDs(ctx, ids)
-}
+// GetUsersBasicByIDs removido; se usaba solo para enriquecer rankings desde Redis.

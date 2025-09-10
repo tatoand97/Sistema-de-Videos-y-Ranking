@@ -21,7 +21,6 @@ type PublicHandlers struct {
 	service        *useCase.PublicService
 	cache          interfaces.Cache
 	idemTTLSeconds int
-	agg            interfaces.Aggregates
 }
 
 // NewPublicHandlers mantiene compatibilidad para tests y uso sin cache/idempotencia.
@@ -34,10 +33,7 @@ func NewPublicHandlersWithCache(service *useCase.PublicService, cache interfaces
 	return &PublicHandlers{service: service, cache: cache, idemTTLSeconds: idemTTLSeconds}
 }
 
-// NewPublicHandlersFull allows injecting cache (for idempotency) and aggregates (for leaderboards/stats).
-func NewPublicHandlersFull(service *useCase.PublicService, cache interfaces.Cache, idemTTLSeconds int, agg interfaces.Aggregates) *PublicHandlers {
-	return &PublicHandlers{service: service, cache: cache, idemTTLSeconds: idemTTLSeconds, agg: agg}
-}
+// NewPublicHandlersFull fue removido junto con soporte de agregados Redis.
 
 // normalizeCityKey crea una clave segura (slug ASCII) para usar en Redis a partir del nombre de ciudad.
 // - minúsculas
@@ -74,7 +70,7 @@ func normalizeCityKey(s string) string {
 func (h *PublicHandlers) ListPublicVideos(c *gin.Context) {
 	results, err := h.service.ListPublicVideos(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, results)
@@ -85,7 +81,7 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 	// 1) Auth: extraer userID del contexto
 	userID := c.GetUint("userID")
 	if userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "Token invalido o expirado."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": invalidTokenExpiredMsg})
 		return
 	}
 
@@ -154,33 +150,7 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 		return
 	}
 
-	// 5) Actualizar agregados en Redis (best-effort, la BD es fuente de verdad)
-	if h.agg != nil {
-		nowUnix := time.Now().Unix()
-		uniq := strconv.FormatUint(uint64(userID), 10)
-		// Ranking de videos (global y por ciudad)
-		videoMember := strconv.FormatUint(uint64(videoID), 10)
-		_ = h.agg.UpdateAfterVote(c.Request.Context(), "videos", videoMember, &uniq, nowUnix, true)
-		var cityKey string
-		var ownerUserID uint
-		if vid, err := h.service.GetPublicByID(c.Request.Context(), videoID); err == nil && vid != nil {
-			if vid.City != nil {
-				cityKey = normalizeCityKey(*vid.City)
-				if cityKey != "" {
-					_ = h.agg.UpdateAfterVote(c.Request.Context(), "videos:city:"+cityKey, videoMember, &uniq, nowUnix, true)
-				}
-			}
-			ownerUserID = vid.OwnerUserID
-		}
-		// Ranking de usuarios (global y por ciudad)
-		if ownerUserID != 0 {
-			userMember := strconv.FormatUint(uint64(ownerUserID), 10)
-			_ = h.agg.UpdateAfterVote(c.Request.Context(), "users", userMember, &uniq, nowUnix, true)
-			if cityKey != "" {
-				_ = h.agg.UpdateAfterVote(c.Request.Context(), "users:city:"+cityKey, userMember, &uniq, nowUnix, true)
-			}
-		}
-	}
+	// 5) Agregados Redis removidos; BD es fuente de verdad.
 
 	// 6) OK
 	c.JSON(http.StatusOK, gin.H{"message": "Voto registrado exitosamente."})
@@ -233,109 +203,4 @@ func (h *PublicHandlers) ListRankings(c *gin.Context) {
 		})
 	}
 	c.JSON(http.StatusOK, resp)
-}
-
-// GetLeaderboard maneja GET /api/public/leaderboard/:poll_id
-// Devuelve miembros y puntajes desde Redis (ZSET) paginados por rango start..stop.
-func (h *PublicHandlers) GetLeaderboard(c *gin.Context) {
-	if h.agg == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Service Unavailable", "message": "Aggregates not configured"})
-		return
-	}
-	pollId := strings.TrimSpace(c.Param("poll_id"))
-	if pollId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "poll_id requerido"})
-		return
-	}
-	// Filtro opcional por ciudad: si viene, usamos <pollId>:city:<cityKey>
-	if city := strings.TrimSpace(c.Query("city")); city != "" {
-		cityKey := normalizeCityKey(city)
-		// Evitar duplicar sufijo si ya vino formado
-		if !strings.Contains(pollId, ":city:") {
-			pollId = pollId + ":city:" + cityKey
-		}
-	}
-	// Rango: defaults Top-10
-	start := int64(0)
-	stop := int64(9)
-	if s := strings.TrimSpace(c.Query("start")); s != "" {
-		if v, err := strconv.ParseInt(s, 10, 64); err == nil && v >= 0 {
-			start = v
-		}
-	}
-	if s := strings.TrimSpace(c.Query("stop")); s != "" {
-		if v, err := strconv.ParseInt(s, 10, 64); err == nil && v >= start {
-			stop = v
-		}
-	}
-	items, err := h.agg.GetLeaderboard(c.Request.Context(), pollId, start, stop)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
-		return
-	}
-	type entry struct {
-		Member string `json:"member"`
-		Score  int64  `json:"score"`
-	}
-	out := make([]entry, 0, len(items))
-	for _, it := range items {
-		out = append(out, entry{Member: it.Member, Score: it.Score})
-	}
-	c.JSON(http.StatusOK, out)
-}
-
-// GetStats maneja GET /api/public/stats/:poll_id
-func (h *PublicHandlers) GetStats(c *gin.Context) {
-	if h.agg == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Service Unavailable", "message": "Aggregates not configured"})
-		return
-	}
-	pollId := strings.TrimSpace(c.Param("poll_id"))
-	if pollId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "poll_id requerido"})
-		return
-	}
-	if city := strings.TrimSpace(c.Query("city")); city != "" {
-		cityKey := normalizeCityKey(city)
-		if !strings.Contains(pollId, ":city:") {
-			pollId = pollId + ":city:" + cityKey
-		}
-	}
-	st, err := h.agg.GetStats(c.Request.Context(), pollId)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"total":   st.Total,
-		"last_ts": st.LastTS,
-		"version": st.Version,
-		"uniques": st.Uniques,
-	})
-}
-
-// GetCount maneja GET /api/public/count/:poll_id/:member (ZSCORE)
-func (h *PublicHandlers) GetCount(c *gin.Context) {
-	if h.agg == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Service Unavailable", "message": "Aggregates not configured"})
-		return
-	}
-	pollId := strings.TrimSpace(c.Param("poll_id"))
-	member := strings.TrimSpace(c.Param("member"))
-	if pollId == "" || member == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": badRequest, "message": "parametros requeridos"})
-		return
-	}
-	if city := strings.TrimSpace(c.Query("city")); city != "" {
-		cityKey := normalizeCityKey(city)
-		if !strings.Contains(pollId, ":city:") {
-			pollId = pollId + ":city:" + cityKey
-		}
-	}
-	score, err := h.agg.GetScore(c.Request.Context(), pollId, member)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"member": member, "score": score})
 }

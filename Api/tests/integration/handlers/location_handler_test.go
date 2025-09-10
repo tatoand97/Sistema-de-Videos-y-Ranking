@@ -14,7 +14,7 @@ import (
 )
 
 type fakeLocationRepo struct {
-	cityID uint
+	cityID int
 	err    error
 }
 

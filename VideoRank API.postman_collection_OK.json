@@ -207,16 +207,15 @@
       "response": []
     },
     {
-      "name": "Videos / Download file (protected)",
+      "name": "Videos / Publish (protected)",
       "request": {
-        "method": "GET",
+        "method": "POST",
         "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
         "url": {
-          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}/file?variant=processed",
+          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}/publish",
           "host": ["{{host}}"],
           "port": "{{port}}",
-          "path": ["api","videos","{{video_id}}","file"],
-          "query": [ { "key": "variant", "value": "processed" } ],
+          "path": ["api","videos","{{video_id}}","publish"],
           "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
         }
       },
@@ -266,27 +265,6 @@
             { "key": "page", "value": "1" },
             { "key": "pageSize", "value": "20" }
           ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Uploads / Create signed URL (protected)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwt}}" },
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"filename\": \"clip.mp4\",\n  \"mimeType\": \"video/mp4\",\n  \"sizeBytes\": 73400320,\n  \"checksum\": \"<optional_sha256_hex>\"\n}"
-        },
-        "url": {
-          "raw": "{{host}}:{{port}}/api/uploads",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","uploads"]
         }
       },
       "response": []

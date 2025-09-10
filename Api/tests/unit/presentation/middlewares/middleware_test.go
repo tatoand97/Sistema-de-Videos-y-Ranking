@@ -11,6 +11,7 @@ import (
 	"api/internal/presentation/middlewares"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,29 +34,36 @@ type mockCacheMiddleware struct {
 	blacklisted bool
 }
 
-func (m *mockCacheMiddleware) Set(ctx context.Context, key string, value interface{}, ttl int) error { return nil }
+func (m *mockCacheMiddleware) Set(ctx context.Context, key string, value interface{}, ttl int) error {
+	return nil
+}
 func (m *mockCacheMiddleware) Get(ctx context.Context, key string) (string, error) { return "", nil }
-func (m *mockCacheMiddleware) Delete(ctx context.Context, key string) error { return nil }
+func (m *mockCacheMiddleware) Delete(ctx context.Context, key string) error        { return nil }
 func (m *mockCacheMiddleware) IsBlacklisted(ctx context.Context, token string) (bool, error) {
 	return m.blacklisted, nil
 }
-func (m *mockCacheMiddleware) BlacklistToken(ctx context.Context, token string, ttl int) error { return nil }
+func (m *mockCacheMiddleware) BlacklistToken(ctx context.Context, token string, ttl int) error {
+	return nil
+}
 
 func TestJWTMiddleware_ValidToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
 	user := &entities.User{
-		UserID:    1,
-		Email:     "test@example.com",
-		FirstName: "Test",
-		LastName:  "User",
+		UserID:       1,
+		Email:        "test@example.com",
+		FirstName:    "Test",
+		LastName:     "User",
+		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
 	}
 	userRepo := &mockUserRepoMiddleware{user: user}
 	authService := useCase.NewAuthService(userRepo, "secret")
 
-	// Generate a valid token
-	token, _, _ := authService.Login(context.Background(), "test@example.com", "password")
+	// Generate a valid token (avoid bcrypt dependency in test)
+	claims := useCase.AuthClaims{RegisteredClaims: jwt.RegisteredClaims{Subject: "1"}}
+	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, _ := tk.SignedString([]byte("secret"))
 
 	r.Use(middlewares.JWTMiddleware(authService, "secret"))
 	r.GET("/protected", func(c *gin.Context) {
@@ -114,21 +122,27 @@ func TestJWTMiddleware_BlacklistedToken(t *testing.T) {
 	r := gin.New()
 
 	user := &entities.User{
-		UserID:    1,
-		Email:     "test@example.com",
-		FirstName: "Test",
-		LastName:  "User",
+		UserID:       1,
+		Email:        "test@example.com",
+		FirstName:    "Test",
+		LastName:     "User",
+		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
 	}
 	userRepo := &mockUserRepoMiddleware{user: user}
 	authService := useCase.NewAuthService(userRepo, "secret")
 
 	// Generate a valid token
-	token, _, _ := authService.Login(context.Background(), "test@example.com", "password")
+	claims := useCase.AuthClaims{RegisteredClaims: jwt.RegisteredClaims{Subject: "1"}}
+	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, _ := tk.SignedString([]byte("secret"))
 
 	r.Use(middlewares.JWTMiddleware(authService, "secret"))
 	r.GET("/protected", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
+
+	// Simular token invalidado (blacklist) con Logout
+	_ = authService.Logout(token)
 
 	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 	req.Header.Set("Authorization", "Bearer "+token)

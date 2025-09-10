@@ -16,7 +16,7 @@ import (
 )
 
 type mockLocationRepo struct {
-	cityID uint
+	cityID int
 	err    error
 }
 
