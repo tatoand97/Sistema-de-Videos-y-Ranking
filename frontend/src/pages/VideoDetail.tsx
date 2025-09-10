@@ -25,7 +25,7 @@ export default function VideoDetail() {
       if (!token || !id) return;
       try {
         setLoading(true);
-        const d = await endpoints.getVideo(token, id);
+        const d = await endpoints.getVideo<VideoDetailResponse>(token, id);
         setData(d);
       } catch (e: any) {
         setError(e.message);

@@ -55,7 +55,7 @@ export const endpoints = {
   videoStatuses: () => apiFetch<string[]>('/api/videos/statuses'),
   myVideos: (token: string) => apiFetch('/api/videos', { token }),
   uploadVideo: (token: string, form: FormData) => apiFetch('/api/videos/upload', { method: 'POST', token, body: form }),
-  getVideo: (token: string, id: string) => apiFetch(`/api/videos/${id}`, { token }),
+  getVideo: <T = any>(token: string, id: string) => apiFetch<T>(`/api/videos/${id}`, { token }),
   deleteVideo: (token: string, id: string) => apiFetch(`/api/videos/${id}`, { method: 'DELETE', token }),
 
   publicVideos: () => apiFetch('/api/public/videos'),
