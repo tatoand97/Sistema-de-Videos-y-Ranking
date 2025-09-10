@@ -28,7 +28,7 @@ func (r *publicRepository) ListPublicVideos(ctx context.Context) ([]responses.Pu
 		Joins("JOIN users u ON u.user_id = v.user_id").
 		Joins(joinCityOnUser).
 		Joins(leftJoinVoteOnVideo).
-		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
+		Where("v.status = ? AND v.processed_file IS NOT NULL", "PUBLISHED").
 		Group("v.video_id, v.title, v.processed_file, c.name, u.user_id")
 
 	if err := q.Scan(&results).Error; err != nil {
@@ -45,7 +45,7 @@ func (r *publicRepository) GetPublicByID(ctx context.Context, id uint) (*respons
 		Joins("JOIN users u ON u.user_id = v.user_id").
 		Joins(joinCityOnUser).
 		Joins(leftJoinVoteOnVideo).
-		Where("v.video_id = ? AND v.status = ? AND v.processed_file IS NOT NULL", id, "PROCESSED").
+		Where("v.video_id = ? AND v.status = ? AND v.processed_file IS NOT NULL", id, "PUBLISHED").
 		Group("v.video_id, v.title, v.processed_file, c.name, u.user_id")
 
 	if err := q.Take(&result).Error; err != nil {
@@ -74,7 +74,7 @@ func (r *publicRepository) Rankings(ctx context.Context, city *string, page, pag
 		Joins(joinCityOnUser).
 		Joins("JOIN video v ON v.user_id = u.user_id").
 		Joins(leftJoinVoteOnVideo).
-		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
+		Where("v.status = ? AND v.processed_file IS NOT NULL", "PUBLISHED").
 		Group("u.user_id, u.email, c.name").
 		Order("votes DESC, u.user_id ASC"). // desempate interno estable (TBD)
 		Limit(pageSize).

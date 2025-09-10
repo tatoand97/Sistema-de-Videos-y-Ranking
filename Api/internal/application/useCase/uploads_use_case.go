@@ -228,8 +228,8 @@ func (uc *UploadsUseCase) DeleteUserVideoIfEligible(ctx context.Context, userID,
 	if err != nil {
 		return err
 	}
-	// Eligibility: not allowed if processed (published for voting)
-	if v.Status == string(entities.StatusProcessed) {
+	// Eligibility: not allowed if processed or published (published for voting)
+	if v.Status == string(entities.StatusProcessed) || v.Status == string(entities.StatusPublished) {
 		return domain.ErrInvalid
 	}
 	// Proceed to delete
@@ -237,4 +237,26 @@ func (uc *UploadsUseCase) DeleteUserVideoIfEligible(ctx context.Context, userID,
 		return err
 	}
 	return nil
+}
+
+// PublishVideo sets a processed video to PUBLISHED status.
+// Rules:
+// - Video must exist and be in PROCESSED status.
+// - processed_file should be present (best-effort validation).
+// - Idempotent: if already PUBLISHED, returns nil.
+func (uc *UploadsUseCase) PublishVideo(ctx context.Context, videoID uint) error {
+	v, err := uc.videoRepo.GetByID(ctx, videoID)
+	if err != nil {
+		return err
+	}
+	if v.Status == string(entities.StatusPublished) {
+		return nil
+	}
+	if v.Status != string(entities.StatusProcessed) {
+		return domain.ErrInvalid
+	}
+	if v.ProcessedFile == nil || *v.ProcessedFile == "" {
+		return domain.ErrInvalid
+	}
+	return uc.videoRepo.UpdateStatus(ctx, videoID, entities.StatusPublished)
 }
