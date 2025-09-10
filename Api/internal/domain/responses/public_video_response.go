@@ -7,4 +7,5 @@ type PublicVideoResponse struct {
 	ProcessedURL *string `json:"processed_url"`
 	City         *string `json:"city"`
 	Votes        int     `json:"votes"`
+	OwnerUserID  uint    `json:"-" gorm:"column:owner_user_id"`
 }
