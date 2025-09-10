@@ -22,7 +22,7 @@ func (f *fakeLocationRepo) GetCityID(ctx context.Context, country, city string) 
 	if f.err != nil {
 		return 0, f.err
 	}
-	return f.cityID, nil
+	return int(f.cityID), nil
 }
 
 func setupLocationRouter(repo *fakeLocationRepo) *gin.Engine {

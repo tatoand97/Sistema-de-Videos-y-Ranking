@@ -31,17 +31,20 @@ func TestVideoResponse_Fields(t *testing.T) {
 }
 
 func TestPublicVideoResponse_Fields(t *testing.T) {
-	url := "https://example.com/public.mp4"
+	processedURL := "https://example.com/public.mp4"
+	city := "Bogotá"
 	response := responses.PublicVideoResponse{
 		VideoID:      1,
 		Title:        "Public Video",
-		ProcessedURL: &url,
+		ProcessedURL: &processedURL,
+		City:         &city,
 		Votes:        42,
 	}
 
 	assert.Equal(t, uint(1), response.VideoID)
 	assert.Equal(t, "Public Video", response.Title)
-	assert.Equal(t, &url, response.ProcessedURL)
+	assert.Equal(t, &processedURL, response.ProcessedURL)
+	assert.Equal(t, &city, response.City)
 	assert.Equal(t, 42, response.Votes)
 }
 
@@ -77,13 +80,37 @@ func TestUserBasic_Fields(t *testing.T) {
 	city := "Bogotá"
 	user := responses.UserBasic{
 		UserID:   123,
-		Username: "john",
+		Username: "johndoe",
 		City:     &city,
 	}
 
 	assert.Equal(t, uint(123), user.UserID)
-	assert.Equal(t, "john", user.Username)
+	assert.Equal(t, "johndoe", user.Username)
 	assert.Equal(t, &city, user.City)
 }
 
-// Removed: CreateUploadResponsePostPolicy is not part of current API
+func TestCreateUploadResponsePostPolicy_Fields(t *testing.T) {
+	form := responses.S3PostPolicyForm{
+		Key:               "uploads/video.mp4",
+		Policy:            "base64-encoded-policy",
+		Algorithm:         "AWS4-HMAC-SHA256",
+		Credential:        "credential",
+		Date:              "20240101T000000Z",
+		Signature:         "signature",
+		ContentType:       "video/mp4",
+		SuccessActionCode: "201",
+	}
+
+	response := responses.CreateUploadResponsePostPolicy{
+		UploadURL:   "https://s3.amazonaws.com/bucket",
+		ResourceURL: "https://s3.amazonaws.com/bucket/uploads/video.mp4",
+		ExpiresAt:   "2024-01-01T01:00:00Z",
+		Form:        form,
+	}
+
+	assert.Equal(t, "https://s3.amazonaws.com/bucket", response.UploadURL)
+	assert.Equal(t, "https://s3.amazonaws.com/bucket/uploads/video.mp4", response.ResourceURL)
+	assert.Equal(t, form, response.Form)
+	assert.Equal(t, "uploads/video.mp4", response.Form.Key)
+	assert.Equal(t, "base64-encoded-policy", response.Form.Policy)
+}

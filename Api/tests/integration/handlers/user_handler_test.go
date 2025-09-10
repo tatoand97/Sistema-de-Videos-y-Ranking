@@ -39,6 +39,10 @@ func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([
 	return []string{}, nil
 }
 
+func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	return []string{"read"}, nil
+}
+
 type fakeLocationRepoForReg struct {
 	cityID int
 	err    error
@@ -48,7 +52,7 @@ func (f *fakeLocationRepoForReg) GetCityID(ctx context.Context, country, city st
 	if f.err != nil {
 		return 0, f.err
 	}
-	return f.cityID, nil
+	return int(f.cityID), nil
 }
 
 func setupUserRouter(userRepo *fakeUserRepoForReg, locationRepo *fakeLocationRepoForReg) *gin.Engine {
