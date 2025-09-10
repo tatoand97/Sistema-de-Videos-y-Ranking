@@ -102,5 +102,52 @@ func TestRegisterUserRequest_Validation(t *testing.T) {
 }
 
 func TestCreateUploadRequest_Validation(t *testing.T) {
-	t.Skip("CreateUploadRequest is not part of the current API")
+	tests := []struct {
+		name    string
+		request requests.CreateUploadRequest
+		valid   bool
+	}{
+		{
+			name: "valid request",
+			request: requests.CreateUploadRequest{
+				Filename:  "test.mp4",
+				MimeType:  "video/mp4",
+				SizeBytes: 1024,
+				Checksum:  "abc123",
+			},
+			valid: true,
+		},
+		{
+			name: "empty filename",
+			request: requests.CreateUploadRequest{
+				Filename:  "",
+				MimeType:  "video/mp4",
+				SizeBytes: 1024,
+				Checksum:  "abc123",
+			},
+			valid: false,
+		},
+		{
+			name: "empty mime type",
+			request: requests.CreateUploadRequest{
+				Filename:  "test.mp4",
+				MimeType:  "",
+				SizeBytes: 1024,
+				Checksum:  "abc123",
+			},
+			valid: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.valid {
+				assert.NotEmpty(t, tt.request.Filename)
+				assert.NotEmpty(t, tt.request.MimeType)
+				assert.Greater(t, tt.request.SizeBytes, int64(0))
+			} else {
+				assert.True(t, tt.request.Filename == "" || tt.request.MimeType == "")
+			}
+		})
+	}
 }

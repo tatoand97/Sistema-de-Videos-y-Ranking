@@ -1,8 +1,8 @@
-package services_test
+package services
 
 import (
-	"editvideo/internal/application/services"
 	"testing"
+	"watermarking/internal/application/services"
 
 	"github.com/stretchr/testify/assert"
 )

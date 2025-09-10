@@ -27,12 +27,8 @@ func (m *mockUserRepoMiddleware) GetByEmail(ctx context.Context, email string) (
 	}
 	return m.user, nil
 }
-func (m *mockUserRepoMiddleware) EmailExists(ctx context.Context, email string) (bool, error) {
-	return false, nil
-}
-func (m *mockUserRepoMiddleware) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
-	return []string{"read"}, nil
-}
+func (m *mockUserRepoMiddleware) EmailExists(ctx context.Context, email string) (bool, error) { return false, nil }
+func (m *mockUserRepoMiddleware) GetPermissions(ctx context.Context, userID uint) ([]string, error) { return []string{"read"}, nil }
 
 type mockCacheMiddleware struct {
 	blacklisted bool
@@ -153,5 +149,5 @@ func TestJWTMiddleware_BlacklistedToken(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 }

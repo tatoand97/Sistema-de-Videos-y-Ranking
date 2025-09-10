@@ -5,13 +5,16 @@ import (
 	"api/internal/presentation/handlers"
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"api/internal/domain/entities"
+	"api/internal/domain/responses"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,7 +39,10 @@ func (m *mockUploadsRepo) UpdateStatus(ctx context.Context, id uint, status enti
 	return nil
 }
 
-type mockUploadsStorage struct{}
+type mockUploadsStorage struct {
+	policy *responses.CreateUploadResponsePostPolicy
+	err    error
+}
 
 func (m *mockUploadsStorage) Save(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
 	return "https://example.com/video.mp4", nil
@@ -54,7 +60,41 @@ func multipartWithFile(fields map[string]string, filename string, content []byte
 	return body, writer.FormDataContentType()
 }
 
-func TestUploadsHandler_UploadVideo_Success(t *testing.T) {
+func TestUploadsHandler_CreatePostPolicy_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	policy := &responses.CreateUploadResponsePostPolicy{
+		UploadURL:   "https://example.com/upload",
+		ResourceURL: "https://example.com/resource",
+		ExpiresAt:   "2024-01-01T01:00:00Z",
+		Form: responses.S3PostPolicyForm{
+			Key:    "test-key",
+			Policy: "test-policy",
+		},
+	}
+	repo := &mockUploadsRepo{}
+	storage := &mockUploadsStorage{policy: policy}
+	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
+	h := handlers.NewUploadsHandlers(uc)
+
+	r.Use(func(c *gin.Context) {
+		c.Set("userID", uint(10))
+		c.Next()
+	})
+	r.POST("/api/uploads", h.CreatePostPolicy)
+
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Contains(t, w.Body.String(), "https://example.com/upload")
+}
+
+func TestUploadsHandler_CreatePostPolicy_InvalidJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
@@ -67,11 +107,11 @@ func TestUploadsHandler_UploadVideo_Success(t *testing.T) {
 		c.Set("userID", uint(10))
 		c.Next()
 	})
-	r.POST("/api/uploads", h.UploadVideo)
+	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body, ctype := multipartWithFile(map[string]string{"title": "Test Video", "status": "UPLOADED"}, "video.mp4", []byte{0, 0, 0, 0})
-	req := httptest.NewRequest(http.MethodPost, "/api/uploads", body)
-	req.Header.Set("Content-Type", ctype)
+	body := `{"filename":"test.mp4"`
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -85,13 +125,70 @@ func TestUploadsHandler_UploadVideo_Unauthorized(t *testing.T) {
 	uc := useCase.NewUploadsUseCase(&mockUploadsRepo{}, &mockUploadsStorage{}, nil, "")
 	h := handlers.NewUploadsHandlers(uc)
 
-	r.POST("/api/uploads", h.UploadVideo)
+	r.POST("/api/uploads", h.CreatePostPolicy)
 
-	body, ctype := multipartWithFile(map[string]string{"title": "Test Video"}, "video.mp4", []byte{0, 0, 0, 0})
-	req := httptest.NewRequest(http.MethodPost, "/api/uploads", body)
-	req.Header.Set("Content-Type", ctype)
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestUploadsHandler_CreatePostPolicy_StorageError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	repo := &mockUploadsRepo{}
+	storage := &mockUploadsStorage{err: errors.New("storage error")}
+	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
+	h := handlers.NewUploadsHandlers(uc)
+
+	r.Use(func(c *gin.Context) {
+		c.Set("userID", uint(10))
+		c.Next()
+	})
+	r.POST("/api/uploads", h.CreatePostPolicy)
+
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestUploadsHandler_CreatePostPolicy_RepoError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	policy := &responses.CreateUploadResponsePostPolicy{
+		UploadURL:   "https://example.com/upload",
+		ResourceURL: "https://example.com/resource",
+		ExpiresAt:   "2024-01-01T01:00:00Z",
+		Form: responses.S3PostPolicyForm{
+			Key:    "test-key",
+			Policy: "test-policy",
+		},
+	}
+	repo := &mockUploadsRepo{err: errors.New("database error")}
+	storage := &mockUploadsStorage{policy: policy}
+	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
+	h := handlers.NewUploadsHandlers(uc)
+
+	r.Use(func(c *gin.Context) {
+		c.Set("userID", uint(10))
+		c.Next()
+	})
+	r.POST("/api/uploads", h.CreatePostPolicy)
+
+	body := `{"filename":"test.mp4","mimeType":"video/mp4","sizeBytes":1024,"checksum":"abc123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
