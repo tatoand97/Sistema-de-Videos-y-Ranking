@@ -14,7 +14,7 @@ export default function NavBar() {
   return (
     <nav className="navbar">
       <div className="nav-inner">
-        <Link className="brand" to="/">TATOLAND • VideoRank</Link>
+        <Link className="brand" to="/">video land • VideoRank</Link>
         <Link to="/rankings">Rankings</Link>
         {hasToken && <Link to="/videos">Mis Videos</Link>}
         <div className="spacer" />

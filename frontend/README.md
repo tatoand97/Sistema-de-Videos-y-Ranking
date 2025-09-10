@@ -1,4 +1,4 @@
-TATOLAND VideoRank – Frontend
+video land VideoRank – Frontend
 ================================
 
 Resumen
@@ -13,6 +13,16 @@ Desarrollo local
 1) Instalar dependencias: `npm install`
 2) Ejecutar dev server: `npm run dev`
 3) App: http://localhost:5173
+
+Cómo levantar el Backend/API
+- El frontend asume la API en `http://localhost:8080` (nginx → api).
+- Desde la raíz del repo, levanta los servicios necesarios:
+
+  1) Infra de soporte: `docker compose up -d postgres redis rabbitmq minio minio-buckets`
+  2) Migraciones (one-off): `docker compose up --build migrate && docker compose rm -f migrate`
+  3) API + Nginx: `docker compose up -d api nginx`
+
+- Verificación: `curl http://localhost:8080/health` → `{ "status": "ok" }`
 
 Build de producción
 1) `npm run build` → genera `frontend/dist`
@@ -36,4 +46,3 @@ Rutas
 Notas
 - El backend define CORS abierto (`*`) en `docker-compose.yml`, por lo que el dev server funciona sin proxy adicional.
 - Para el despliegue, sólo es necesario construir (`dist/`) y dejar que Nginx lo sirva en el puerto 8081.
-

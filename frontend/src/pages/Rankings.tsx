@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '@api/client';
 import Pagination from '@components/Pagination';
-import type { RankingItem } from '@api/types';
+
+type PublicVideo = { video_id: string; title: string; votes?: number; city?: string | null };
 
 export default function Rankings() {
-  const [items, setItems] = useState<RankingItem[]>([]);
+  const [items, setItems] = useState<PublicVideo[]>([]);
   const [city, setCity] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -15,15 +16,20 @@ export default function Rankings() {
   const load = async () => {
     try {
       setLoading(true);
-      const data: any = await endpoints.rankings({ page, pageSize, city: city || undefined });
-      // Accept either array or {items,totalPages}
-      if (Array.isArray(data)) {
-        setItems(data);
-        setTotalPages(1);
-      } else {
-        setItems(data.items || []);
-        setTotalPages(data.totalPages || 1);
-      }
+      const data: any = await endpoints.publicVideos();
+      const list: PublicVideo[] = Array.isArray(data) ? data : [];
+      // Filtro por ciudad (case-insensitive, ignora tildes básicas)
+      const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const filtered = city
+        ? list.filter(v => v.city && norm(v.city) === norm(city))
+        : list;
+      const sorted = filtered.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      // Paginación en cliente
+      const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
+      setTotalPages(pages);
+      const start = (page - 1) * pageSize;
+      const paged = sorted.slice(start, start + pageSize);
+      setItems(paged);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -46,12 +52,12 @@ export default function Rankings() {
       {loading && <div className="muted">Cargando…</div>}
       {error && <div className="card" style={{ borderColor: '#553' }}>{error}</div>}
       <table className="table" style={{ marginTop: 12 }}>
-        <thead><tr><th>Usuario</th><th>Votos</th><th>Ciudad</th></tr></thead>
+        <thead><tr><th>Título</th><th>Votos</th><th>Ciudad</th></tr></thead>
         <tbody>
-          {items.map((it, idx) => (
-            <tr key={`${it.username}-${idx}`}>
-              <td>{it.username}</td>
-              <td>{it.votes}</td>
+          {items.map((it) => (
+            <tr key={it.video_id}>
+              <td>{it.title}</td>
+              <td>{typeof it.votes === 'number' ? it.votes : '-'}</td>
               <td>{it.city || '-'}</td>
             </tr>
           ))}
