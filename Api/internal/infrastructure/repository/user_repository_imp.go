@@ -19,9 +19,34 @@ func NewUserRepository(db *gorm.DB) interfaces.UserRepository {
 }
 
 func (r *userRepository) Create(ctx context.Context, user *entities.User) error {
-	return r.db.WithContext(ctx).
-		Select("FirstName", "LastName", "Email", "PasswordHash", "CityID").
-		Create(user).Error
+	// Create user and assign default 'player' role in a single transaction
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.
+			Select("FirstName", "LastName", "Email", "PasswordHash", "CityID").
+			Create(user).Error; err != nil {
+			return err
+		}
+
+		// Look up the 'player' role_id
+		var roleID int
+		if err := tx.Table("role").
+			Select("role_id").
+			Where("name = ?", "player").
+			Take(&roleID).Error; err != nil {
+			return err
+		}
+
+		// Assign the 'player' role to the newly created user
+		// Use ON CONFLICT DO NOTHING semantics via Create and unique PK to avoid duplicates
+		ur := map[string]any{
+			"user_id": user.UserID,
+			"role_id": roleID,
+		}
+		if err := tx.Table("user_role").Create(&ur).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
