@@ -43,10 +43,6 @@ export default function VideoDetail() {
       {data && (
         <div className="card" style={{ maxWidth: 720 }}>
           <div className="field">
-            <label>ID del Video</label>
-            <input value={data.video_id} readOnly />
-          </div>
-          <div className="field">
             <label>Título</label>
             <input value={data.title} readOnly />
           </div>
