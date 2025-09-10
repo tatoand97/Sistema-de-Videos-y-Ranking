@@ -12,6 +12,7 @@ type MockVideoRepository struct {
 	ListByUserFunc     func(ctx context.Context, userID uint) ([]*entities.Video, error)
 	GetByIDAndUserFunc func(ctx context.Context, id, userID uint) (*entities.Video, error)
 	DeleteFunc         func(ctx context.Context, id uint) error
+	UpdateStatusFunc   func(ctx context.Context, id uint, status entities.VideoStatus) error
 }
 
 func (m *MockVideoRepository) Create(ctx context.Context, video *entities.Video) error {
@@ -52,6 +53,13 @@ func (m *MockVideoRepository) GetByIDAndUser(ctx context.Context, id, userID uin
 func (m *MockVideoRepository) Delete(ctx context.Context, id uint) error {
 	if m.DeleteFunc != nil {
 		return m.DeleteFunc(ctx, id)
+	}
+	return nil
+}
+
+func (m *MockVideoRepository) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error {
+	if m.UpdateStatusFunc != nil {
+		return m.UpdateStatusFunc(ctx, id, status)
 	}
 	return nil
 }

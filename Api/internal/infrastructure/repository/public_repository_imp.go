@@ -24,12 +24,12 @@ func (r *publicRepository) ListPublicVideos(ctx context.Context) ([]responses.Pu
 	var results []responses.PublicVideoResponse
 	q := r.db.WithContext(ctx).
 		Table("video v").
-		Select("v.video_id AS video_id, v.title, CONCAT('http://localhost:8081/processed-videos/', v.processed_file) AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
+		Select("v.video_id AS video_id, v.title, v.processed_file AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes, u.user_id AS owner_user_id").
 		Joins("JOIN users u ON u.user_id = v.user_id").
 		Joins(joinCityOnUser).
 		Joins(leftJoinVoteOnVideo).
-		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
-		Group("v.video_id, v.title, v.processed_file, c.name")
+		Where("v.status = ? AND v.processed_file IS NOT NULL", "PUBLISHED").
+		Group("v.video_id, v.title, v.processed_file, c.name, u.user_id")
 
 	if err := q.Scan(&results).Error; err != nil {
 		return nil, err
@@ -41,12 +41,12 @@ func (r *publicRepository) GetPublicByID(ctx context.Context, id uint) (*respons
 	var result responses.PublicVideoResponse
 	q := r.db.WithContext(ctx).
 		Table("video v").
-		Select("v.video_id AS video_id, v.title, CONCAT('http://localhost:8081/processed-videos/', v.processed_file) AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes").
+		Select("v.video_id AS video_id, v.title, v.processed_file AS processed_url, c.name AS city, COUNT(vt.vote_id) AS votes, u.user_id AS owner_user_id").
 		Joins("JOIN users u ON u.user_id = v.user_id").
 		Joins(joinCityOnUser).
 		Joins(leftJoinVoteOnVideo).
-		Where("v.video_id = ? AND v.status = ? AND v.processed_file IS NOT NULL", id, "PROCESSED").
-		Group("v.video_id, v.title, v.processed_file, c.name")
+		Where("v.video_id = ? AND v.status = ? AND v.processed_file IS NOT NULL", id, "PUBLISHED").
+		Group("v.video_id, v.title, v.processed_file, c.name, u.user_id")
 
 	if err := q.Take(&result).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -74,7 +74,7 @@ func (r *publicRepository) Rankings(ctx context.Context, city *string, page, pag
 		Joins(joinCityOnUser).
 		Joins("JOIN video v ON v.user_id = u.user_id").
 		Joins(leftJoinVoteOnVideo).
-		Where("v.status = ? AND v.processed_file IS NOT NULL", "PROCESSED").
+		Where("v.status = ? AND v.processed_file IS NOT NULL", "PUBLISHED").
 		Group("u.user_id, u.email, c.name").
 		Order("votes DESC, u.user_id ASC"). // desempate interno estable (TBD)
 		Limit(pageSize).
@@ -99,4 +99,30 @@ func (r *publicRepository) Rankings(ctx context.Context, city *string, page, pag
 		})
 	}
 	return items, nil
+}
+
+// GetUsersBasicByIDs retorna username y ciudad para los IDs provistos.
+func (r *publicRepository) GetUsersBasicByIDs(ctx context.Context, ids []uint) ([]responses.UserBasic, error) {
+	if len(ids) == 0 {
+		return []responses.UserBasic{}, nil
+	}
+	type row struct {
+		UserID   uint    `gorm:"column:user_id"`
+		Username string  `gorm:"column:username"`
+		City     *string `gorm:"column:city"`
+	}
+	var rows []row
+	q := r.db.WithContext(ctx).
+		Table("users u").
+		Select("u.user_id, split_part(u.email, '@', 1) AS username, c.name AS city").
+		Joins(joinCityOnUser).
+		Where("u.user_id IN ?", ids)
+	if err := q.Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	out := make([]responses.UserBasic, 0, len(rows))
+	for _, rr := range rows {
+		out = append(out, responses.UserBasic{UserID: rr.UserID, Username: rr.Username, City: rr.City})
+	}
+	return out, nil
 }

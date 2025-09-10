@@ -59,6 +59,10 @@ func (f *fakeVideoRepo) Delete(_ context.Context, id uint) error { // simple beh
 	return domain.ErrNotFound
 }
 
+func (f *fakeVideoRepo) UpdateStatus(_ context.Context, _ uint, _ entities.VideoStatus) error {
+	return nil
+}
+
 type fakeStorage struct{}
 
 func (f *fakeStorage) Save(_ context.Context, _ string, _ io.Reader, _ int64, _ string) (string, error) {

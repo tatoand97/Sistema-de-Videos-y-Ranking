@@ -17,6 +17,7 @@ import (
 
 	"api/internal/application/useCase"
 	"api/internal/domain/interfaces"
+	infraCache "api/internal/infrastructure/cache"
 	infraMessaging "api/internal/infrastructure/messaging"
 	postgresrepo "api/internal/infrastructure/repository"
 	"api/internal/infrastructure/storage"
@@ -86,6 +87,35 @@ func setupRabbitPublisher(rabbitURL, queue string) interfaces.MessagePublisher {
 	return p
 }
 
+// setupRedisCacheFromEnv initializes a Redis-backed cache if REDIS_ADDR is set.
+// It uses the same env var names as Workers/AdminCache for consistency:
+// - REDIS_ADDR (e.g., "redis:6379")
+// - CACHE_PREFIX (default: "videorank:")
+// - CACHE_TTL_SECONDS (default: 120)
+func setupRedisCacheFromEnv() interfaces.Cache {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		return nil
+	}
+	prefix := getEnvOrDefault("CACHE_PREFIX", "videorank:")
+	ttl := atoiOrDefault(os.Getenv("CACHE_TTL_SECONDS"), 120)
+	rdb := infraCache.MustRedisClient(addr)
+	return infraCache.NewRedisCache(rdb, prefix, ttl)
+}
+
+// setupAggregatesFromEnv initializes Redis Aggregates for leaderboards/stats.
+// Uses the same REDIS_ADDR and CACHE_PREFIX. Optional tenant via TENANT_ID.
+func setupAggregatesFromEnv() interfaces.Aggregates {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		return nil
+	}
+	prefix := getEnvOrDefault("CACHE_PREFIX", "videorank:")
+	tenant := os.Getenv("TENANT_ID")
+	rdb := infraCache.MustRedisClient(addr)
+	return infraCache.NewRedisAggregates(rdb, prefix, tenant)
+}
+
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
 	if err := runMigrations(dsn, "file://internal/infrastructure/migrations"); err != nil {
@@ -114,7 +144,6 @@ func main() {
 	locationService := useCase.NewLocationService(locRepo)
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	voteRepo := postgresrepo.NewVoteRepository(db)
-	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
 	audioQueue := getEnvOrDefault("STATES_MACHINE_QUEUE", "states_machine_queue")
 	messagePublisher := setupRabbitPublisher(os.Getenv("RABBITMQ_URL"), audioQueue)
@@ -130,6 +159,13 @@ func main() {
 	r := gin.Default()
 	r.Static("/static", "./static")
 	statusService := useCase.NewStatusService()
+	// Redis cache and idempotency TTL
+	cache := setupRedisCacheFromEnv()
+	idemTTL := atoiOrDefault(os.Getenv("IDEMPOTENCY_TTL_SECONDS"), 3600)
+	// Redis aggregates (leaderboards/stats)
+	aggregates := setupAggregatesFromEnv()
+	publicService := useCase.NewPublicServiceWithAgg(publicRepo, voteRepo, aggregates)
+
 	handlers.NewRouter(r, handlers.RouterConfig{
 		AuthService:     authService,
 		UserService:     userService,
@@ -138,6 +174,9 @@ func main() {
 		PublicService:   publicService,
 		StatusService:   statusService,
 		JWTSecret:       jwtSecret,
+		Cache:           cache,
+		IdemTTLSeconds:  idemTTL,
+		Aggregates:      aggregates,
 	})
 
 	port := getEnvOrDefault("PORT", "8080")
