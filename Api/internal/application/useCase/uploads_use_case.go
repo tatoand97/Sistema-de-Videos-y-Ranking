@@ -17,8 +17,6 @@ import (
 	"api/internal/domain"
 	"api/internal/domain/entities"
 	"api/internal/domain/interfaces"
-	"api/internal/domain/requests"
-	"api/internal/domain/responses"
 
 	"github.com/google/uuid"
 )
@@ -194,21 +192,7 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	}, nil
 }
 
-var sha256HexRe = regexp.MustCompile(`^[A-Fa-f0-9]{64}$`)
-
-// CreatePostPolicy validates input and delegates to storage to build a POST policy.
-func (uc *UploadsUseCase) CreatePostPolicy(ctx context.Context, req requests.CreateUploadRequest) (*responses.CreateUploadResponsePostPolicy, error) {
-	if strings.TrimSpace(req.Filename) == "" || strings.TrimSpace(req.MimeType) == "" {
-		return nil, fmt.Errorf("%w: filename and mimeType are required", domain.ErrInvalid)
-	}
-	if req.SizeBytes < 0 {
-		return nil, fmt.Errorf("%w: sizeBytes must be >= 0", domain.ErrInvalid)
-	}
-	if req.Checksum != "" && !sha256HexRe.MatchString(req.Checksum) {
-		return nil, fmt.Errorf("%w: checksum must be SHA-256 hex", domain.ErrInvalid)
-	}
-	return uc.storage.PresignedPostPolicy(ctx, req)
-}
+// (Removed) CreatePostPolicy: signed URL uploads no longer supported.
 
 // ListUserVideos returns all videos belonging to a user.
 func (uc *UploadsUseCase) ListUserVideos(ctx context.Context, userID uint) ([]*entities.Video, error) {

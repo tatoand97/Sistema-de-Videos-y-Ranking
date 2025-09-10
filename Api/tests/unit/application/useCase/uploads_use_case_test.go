@@ -4,7 +4,6 @@ import (
 	"api/internal/application/useCase"
 	"api/internal/domain"
 	"api/internal/domain/entities"
-	"api/internal/domain/requests"
 	"api/tests/mocks"
 	"api/tests/testdata"
 	"bytes"
@@ -132,79 +131,6 @@ func TestUploadsUseCase_UploadMultipart(t *testing.T) {
 				assert.NotNil(t, result)
 				assert.Equal(t, tt.input.Title, result.Title)
 				assert.NotZero(t, result.VideoID)
-			}
-		})
-	}
-}
-
-func TestUploadsUseCase_CreatePostPolicy(t *testing.T) {
-	tests := []struct {
-		name        string
-		req         requests.CreateUploadRequest
-		mockStorage *mocks.MockVideoStorage
-		wantErr     bool
-	}{
-		{
-			name: "valid request",
-			req: requests.CreateUploadRequest{
-				Filename:  "test.mp4",
-				MimeType:  "video/mp4",
-				SizeBytes: 1024,
-			},
-			mockStorage: &mocks.MockVideoStorage{},
-			wantErr:     false,
-		},
-		{
-			name: "empty filename",
-			req: requests.CreateUploadRequest{
-				Filename:  "",
-				MimeType:  "video/mp4",
-				SizeBytes: 1024,
-			},
-			wantErr: true,
-		},
-		{
-			name: "empty mime type",
-			req: requests.CreateUploadRequest{
-				Filename:  "test.mp4",
-				MimeType:  "",
-				SizeBytes: 1024,
-			},
-			wantErr: true,
-		},
-		{
-			name: "negative size",
-			req: requests.CreateUploadRequest{
-				Filename:  "test.mp4",
-				MimeType:  "video/mp4",
-				SizeBytes: -1,
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid checksum",
-			req: requests.CreateUploadRequest{
-				Filename:  "test.mp4",
-				MimeType:  "video/mp4",
-				SizeBytes: 1024,
-				Checksum:  "invalid",
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			usecase := useCase.NewUploadsUseCase(nil, tt.mockStorage, nil, "")
-
-			result, err := usecase.CreatePostPolicy(context.Background(), tt.req)
-
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
 			}
 		})
 	}
