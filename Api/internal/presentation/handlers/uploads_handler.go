@@ -29,7 +29,7 @@ func NewUploadsHandler(uploadsUC *useCase.UploadsUseCase) *UploadsHandlers {
 func (h *UploadsHandlers) UploadVideo(c *gin.Context) {
 	title := c.PostForm("title")
 	if title == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "title is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "title is required"})
 		return
 	}
 	status := c.PostForm("status")
@@ -46,19 +46,19 @@ func (h *UploadsHandlers) UploadVideo(c *gin.Context) {
 		fh, err = c.FormFile("video_file")
 	}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "video file is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "video file is required"})
 		return
 	}
 
 	// Extract userID from Gin context
 	uidVal, ok := c.Get("userID")
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": invalidTokenExpiredMsg})
 		return
 	}
 	userID, ok := uidVal.(uint)
 	if !ok || userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": invalidTokenExpiredMsg})
 		return
 	}
 
@@ -73,10 +73,10 @@ func (h *UploadsHandlers) UploadVideo(c *gin.Context) {
 	})
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalid) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	}
 

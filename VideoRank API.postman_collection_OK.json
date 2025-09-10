@@ -207,16 +207,15 @@
       "response": []
     },
     {
-      "name": "Videos / Download file (protected)",
+      "name": "Videos / Publish (protected)",
       "request": {
-        "method": "GET",
+        "method": "POST",
         "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
         "url": {
-          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}/file?variant=processed",
+          "raw": "{{host}}:{{port}}/api/videos/{{video_id}}/publish",
           "host": ["{{host}}"],
           "port": "{{port}}",
-          "path": ["api","videos","{{video_id}}","file"],
-          "query": [ { "key": "variant", "value": "processed" } ],
+          "path": ["api","videos","{{video_id}}","publish"],
           "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
         }
       },
@@ -265,6 +264,61 @@
             { "key": "city", "value": "" },
             { "key": "page", "value": "1" },
             { "key": "pageSize", "value": "20" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ranking / Leaderboard by poll_id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/public/leaderboard/{{poll_id}}?city=&start=0&stop=9",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","public","leaderboard","{{poll_id}}"],
+          "query": [
+            { "key": "city", "value": "" },
+            { "key": "start", "value": "0" },
+            { "key": "stop", "value": "9" }
+          ],
+          "variable": [ { "key": "poll_id", "value": "default_poll" } ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ranking / Stats by poll_id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/public/stats/{{poll_id}}?city=",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","public","stats","{{poll_id}}"],
+          "query": [ { "key": "city", "value": "" } ],
+          "variable": [ { "key": "poll_id", "value": "default_poll" } ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ranking / Count by poll_id/member",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}:{{port}}/api/public/count/{{poll_id}}/{{member}}?city=",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["api","public","count","{{poll_id}}","{{member}}"],
+          "query": [ { "key": "city", "value": "" } ],
+          "variable": [
+            { "key": "poll_id", "value": "default_poll" },
+            { "key": "member", "value": "some_user" }
           ]
         }
       },

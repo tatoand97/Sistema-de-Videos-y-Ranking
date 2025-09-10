@@ -20,12 +20,12 @@ func NewAuthHandlers(service *useCase.AuthService) *AuthHandlers {
 func (handler *AuthHandlers) Login(context *gin.Context) {
 	var request requests.LoginRequest
 	if err := context.ShouldBindJSON(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 		return
 	}
 	token, expiresIn, err := handler.service.Login(context.Request.Context(), request.Email, request.Password)
 	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": err.Error()})
 		return
 	}
 	context.JSON(http.StatusOK, gin.H{
@@ -39,16 +39,16 @@ func (handler *AuthHandlers) Logout(context *gin.Context) {
 	header := context.GetHeader("Authorization")
 	const prefix = "Bearer "
 	if header == "" || !strings.HasPrefix(header, prefix) {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header"})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "invalid authorization header"})
 		return
 	}
 	token := strings.TrimSpace(header[len(prefix):])
 	if token == "" {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "invalid token"})
 		return
 	}
 	if err := handler.service.Logout(token); err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})
 		return
 	}
 	context.Status(http.StatusNoContent)

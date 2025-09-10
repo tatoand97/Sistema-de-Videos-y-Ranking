@@ -18,6 +18,22 @@ tags:
 security:
   - bearerAuth: []
 paths:
+  /health:
+    get:
+      summary: Estado del servicio
+      description: Devuelve un estado simple para supervisión.
+      tags: [Público]
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+              example: { status: "ok" }
   /api/auth/signup:
     post:
       summary: Registro de nuevos jugadores
@@ -324,37 +340,7 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
-  /api/videos/{video_id}/file:
-    get:
-      summary: Descargar/servir archivo del video (privado)
-      description: Devuelve binario del **original** o **procesado** del dueño del video.
-      tags: [Videos]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: string }
-        - name: variant
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [original, processed]
-            default: processed
-          description: Variante a servir.
-      responses:
-        "200":
-          description: Binario del video.
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
+  
 
   /api/public/videos:
     get:
@@ -417,10 +403,6 @@ paths:
       responses:
         "200":
           description: Ranking actual.
-          headers:
-            X-Total-Count:
-              description: Total de elementos (si se pagina).
-              schema: { type: integer }
           content:
             application/json:
               schema:
@@ -437,6 +419,135 @@ paths:
                   city: Bogotá
                   votes: 1495
         "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/public/leaderboard/{poll_id}:
+    get:
+      summary: Leaderboard por encuesta (Redis)
+      description: Devuelve miembros y puntajes para un `poll_id`.
+      tags: [Ranking]
+      security: []
+      parameters:
+        - name: poll_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          required: false
+          schema: { type: string }
+          description: Filtrar por ciudad; forma parte de la clave.
+        - name: start
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: stop
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 9 }
+      responses:
+        "200":
+          description: Rango del leaderboard.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    member: { type: string }
+                    score: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "503":
+          description: Agregados no configurados.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: "Service Unavailable", message: "Aggregates not configured" }
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/public/stats/{poll_id}:
+    get:
+      summary: Estadísticas agregadas (Redis)
+      tags: [Ranking]
+      security: []
+      parameters:
+        - name: poll_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Estadísticas actuales.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  last_ts: { type: integer }
+                  version: { type: integer }
+                  uniques: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "503":
+          description: Agregados no configurados.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: "Service Unavailable", message: "Aggregates not configured" }
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/public/count/{poll_id}/{member}:
+    get:
+      summary: Puntaje de un miembro (Redis)
+      tags: [Ranking]
+      security: []
+      parameters:
+        - name: poll_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: member
+          in: path
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Puntaje actual del miembro.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member: { type: string }
+                  score: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "503":
+          description: Agregados no configurados.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: "Service Unavailable", message: "Aggregates not configured" }
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   
 
@@ -461,9 +572,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  city_id: { type: integer }
+                $ref: "#/components/schemas/CityIDResponse"
               example: { city_id: 123 }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -511,6 +620,10 @@ components:
       properties:
         error: { type: string }
         message: { type: string }
+    CityIDResponse:
+      type: object
+      properties:
+        city_id: { type: integer }
     SignupRequest:
       type: object
       required: [first_name, last_name, email, password1, password2, city, country]
@@ -573,11 +686,3 @@ components:
         username: { type: string }
         city: { type: string, nullable: true }
         votes: { type: integer, minimum: 0 }
-      required:
-        - key
-        - policy
-        - x-amz-algorithm
-        - x-amz-credential
-        - x-amz-date
-        - x-amz-signature
-        - Content-Type
