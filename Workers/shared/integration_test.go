@@ -1,8 +1,10 @@
 package shared
 
 import (
-	"os"
+	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	
@@ -273,9 +275,3 @@ func TestErrorHandling_Integration(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// Helper imports for the test
-import (
-	"fmt"
-	"strings"
-	"time"
-)
