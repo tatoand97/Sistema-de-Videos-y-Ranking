@@ -51,6 +51,16 @@ export default function MyVideos() {
           const actions = (
             <div className="row">
               <button className="btn danger" onClick={() => remove(v.video_id)}>Eliminar</button>
+              <button
+                className="btn secondary"
+                disabled={!processed}
+                onClick={() => {
+                  if (!processed) return;
+                  alert('¡Listo para publicar! Tu video ya está disponible en la sección pública cuando el procesamiento ha finalizado.');
+                }}
+              >
+                Listo para publicar
+              </button>
               <a className={`btn secondary${processed ? '' : ' disabled'}`} href={processed ? (v as any).processed_url || '#' : '#'} target="_blank" rel="noreferrer" onClick={e => { if (!processed) e.preventDefault(); }}>Resultado</a>
             </div>
           );
