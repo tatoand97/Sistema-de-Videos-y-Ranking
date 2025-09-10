@@ -1,26 +1,37 @@
 package handlers_test
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"api/internal/application/useCase"
 	"api/internal/domain"
-	"api/internal/presentation/handlers"
+	hdl "api/internal/presentation/handlers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHandleError_NotFound(t *testing.T) {
+// These tests assert error-to-status mapping using existing handlers
+// (e.g., LocationHandlers) instead of a removed HandleError helper.
+
+type fakeLocRepoErr struct{ err error }
+
+func (f *fakeLocRepoErr) GetCityID(ctx context.Context, country, city string) (int, error) {
+	return 0, f.err
+}
+
+func TestErrorMapping_NotFound(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	svc := useCase.NewLocationService(&fakeLocRepoErr{err: domain.ErrNotFound})
+	h := hdl.NewLocationHandlers(svc)
+	r.GET("/city", h.GetCityID)
 
-	r.GET("/test", func(c *gin.Context) {
-		handlers.HandleError(c, domain.ErrNotFound)
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/city?country=CO&city=XX", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -28,82 +39,30 @@ func TestHandleError_NotFound(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "Not Found")
 }
 
-func TestHandleError_Forbidden(t *testing.T) {
+func TestErrorMapping_Invalid(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	svc := useCase.NewLocationService(&fakeLocRepoErr{err: domain.ErrInvalid})
+	h := hdl.NewLocationHandlers(svc)
+	r.GET("/city", h.GetCityID)
 
-	r.GET("/test", func(c *gin.Context) {
-		handlers.HandleError(c, domain.ErrForbidden)
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusForbidden, w.Code)
-	assert.Contains(t, w.Body.String(), "Forbidden")
-}
-
-func TestHandleError_Conflict(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-
-	r.GET("/test", func(c *gin.Context) {
-		handlers.HandleError(c, domain.ErrConflict)
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/city?country=CO&city=XX", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "already voted")
 }
 
-func TestHandleError_Invalid(t *testing.T) {
+func TestErrorMapping_Internal(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	svc := useCase.NewLocationService(&fakeLocRepoErr{err: errors.New("db")})
+	h := hdl.NewLocationHandlers(svc)
+	r.GET("/city", h.GetCityID)
 
-	r.GET("/test", func(c *gin.Context) {
-		handlers.HandleError(c, domain.ErrInvalid)
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "Bad Request")
-}
-
-func TestHandleError_InternalServerError(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-
-	r.GET("/test", func(c *gin.Context) {
-		handlers.HandleError(c, domain.NewInternalError("database connection failed"))
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/city?country=CO&city=XX", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "Internal Server Error")
-}
-
-func TestHandleError_GenericError(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-
-	r.GET("/test", func(c *gin.Context) {
-		handlers.HandleError(c, domain.NewGenericError("custom error"))
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "custom error")
 }

@@ -13,6 +13,7 @@ import (
 	hdl "api/internal/presentation/handlers"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type fakeUserRepoAuth struct {
@@ -29,6 +30,9 @@ func (f *fakeUserRepoAuth) GetByEmail(ctx context.Context, email string) (*entit
 }
 func (f *fakeUserRepoAuth) EmailExists(ctx context.Context, email string) (bool, error) {
 	return false, nil
+}
+func (f *fakeUserRepoAuth) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	return []string{"read"}, nil
 }
 
 type fakeCacheAuth struct {
@@ -58,10 +62,12 @@ func setupAuthRouter(userRepo *fakeUserRepoAuth, cache *fakeCacheAuth) *gin.Engi
 }
 
 func TestLogin_Success(t *testing.T) {
+	// Generate a valid bcrypt hash for the test password
+	pwHash, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 	user := &entities.User{
 		UserID:       1,
 		Email:        "test@example.com",
-		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
+		PasswordHash: string(pwHash),
 		FirstName:    "Test",
 		LastName:     "User",
 	}
@@ -69,7 +75,7 @@ func TestLogin_Success(t *testing.T) {
 	cache := &fakeCacheAuth{}
 	r := setupAuthRouter(userRepo, cache)
 
-	body := `{"email":"test@example.com","password":"secret"}`
+	body := `{"email":"test@example.com","password":"password"}`
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
