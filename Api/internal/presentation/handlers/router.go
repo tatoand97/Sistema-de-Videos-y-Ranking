@@ -29,7 +29,6 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	locationHandlers := NewLocationHandlers(cfg.LocationService)
 	// Constructor con cache para idempotencia; sin agregados Redis
 	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds)
-	statusHandlers := NewStatusHandlers(cfg.StatusService)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -41,9 +40,6 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	// Se eliminaron endpoints basados en poll_id (leaderboard/stats/count)
 	router.POST("/api/auth/signup", userHandlers.Register)
 	router.POST("/api/auth/login", authHandlers.Login)
-
-	// Public: list video statuses
-	router.GET("/api/videos/statuses", statusHandlers.ListVideoStatuses)
 
 	authGroup := router.Group("/")
 	authGroup.Use(middlewares.JWTMiddleware(cfg.AuthService, cfg.JWTSecret))

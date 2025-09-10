@@ -27,12 +27,9 @@ INSERT INTO city (country_id, name) VALUES
                                         ((SELECT country_id FROM country WHERE iso_code='PER'),'Lima')
     ON CONFLICT (country_id, name) DO NOTHING;
 
--- Roles
+-- Roles (un solo rol con todos los permisos)
 INSERT INTO role (name, description) VALUES
-                                         ('admin','Administrador del sistema con acceso completo'),
-                                         ('moderator','Moderador con permisos de gestión de contenido'),
-                                         ('player','Jugador estándar con permisos básicos'),
-                                         ('viewer','Visualizador con permisos de solo lectura')
+                                         ('user','Rol único con acceso a todos los permisos')
     ON CONFLICT (name) DO NOTHING;
 
 -- Privilegios
@@ -51,27 +48,13 @@ INSERT INTO privilege (name, description) VALUES
                                               ('manage_system','Gestionar configuración del sistema')
     ON CONFLICT (name) DO NOTHING;
 
--- Rol-Privilegio
+-- Asignar TODOS los privilegios al único rol
 INSERT INTO role_privilege (role_id, privilege_id)
 SELECT r.role_id, p.privilege_id
-FROM (VALUES
-          ('admin','create_user'),('admin','edit_user'),('admin','delete_user'),
-          ('admin','view_users'),('admin','upload_video'),('admin','edit_video'),
-          ('admin','delete_video'),('admin','view_videos'),('admin','moderate_content'),
-          ('admin','vote'),('admin','view_rankings'),('admin','manage_system'),
-
-          ('moderator','view_users'),('moderator','edit_video'),('moderator','delete_video'),
-          ('moderator','view_videos'),('moderator','moderate_content'),
-          ('moderator','vote'),('moderator','view_rankings'),
-
-          ('player','upload_video'),('player','view_videos'),
-          ('player','vote'),('player','view_rankings'),
-
-          ('viewer','view_videos'),('viewer','view_rankings')
-     ) AS x(role_name, priv_name)
-         JOIN role r ON r.name = x.role_name
-         JOIN privilege p ON p.name = x.priv_name
-    ON CONFLICT (role_id, privilege_id) DO NOTHING;
+FROM role r
+CROSS JOIN privilege p
+WHERE r.name = 'user'
+ON CONFLICT (role_id, privilege_id) DO NOTHING;
 
 -- Users (incluye city_id). Password bcrypt "Password123!"
 INSERT INTO users (first_name, last_name, email, password_hash, city_id) VALUES
@@ -97,24 +80,13 @@ INSERT INTO users (first_name, last_name, email, password_hash, city_id) VALUES
                                                                               (SELECT city_id FROM city WHERE name='Bogotá'))
     ON CONFLICT (email) DO NOTHING;
 
--- User-Role
+-- Asignar el único rol a TODOS los usuarios seed (idempotente)
 INSERT INTO user_role (user_id, role_id)
 SELECT u.user_id, r.role_id
-FROM (VALUES
-          ('admin@videorank.com','admin'),
-          ('moderador@videorank.com','moderator'),
-          ('juan.perez@email.com','player'),
-          ('maria.garcia@email.com','player'),
-          ('pedro.lopez@email.com','player'),
-          ('ana.martinez@email.com','player'),
-          ('luis.rodriguez@email.com','player'),
-          ('carmen.fernandez@email.com','player'),
-          ('diego.gonzalez@email.com','player'),
-          ('viewer@videorank.com','viewer')
-     ) AS x(email, role_name)
-         JOIN users u ON u.email = x.email
-         JOIN role  r ON r.name  = x.role_name
-    ON CONFLICT (user_id, role_id) DO NOTHING;
+FROM users u
+CROSS JOIN role r
+WHERE r.name = 'user'
+ON CONFLICT (user_id, role_id) DO NOTHING;
 
 -- Videos (usar ENUM 'status'; FK por email)
 INSERT INTO video (user_id, title, original_file, processed_file, status, processed_at) VALUES

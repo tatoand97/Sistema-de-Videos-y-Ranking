@@ -32,7 +32,7 @@ func CheckMP4(b []byte) (int, int, error) {
 	}
 
 	if w < 1920 || h < 1080 {
-		return w, h, fmt.Errorf("resoluci�n insuficiente: %dx%d (<1920x1080)", w, h)
+		return w, h, fmt.Errorf("resolución insuficiente: %dx%d (<1920x1080)", w, h)
 	}
 
 	return w, h, nil
@@ -42,7 +42,7 @@ func mp4VideoDimsAndBrands(b []byte) (int, int, string, []string, error) {
 	r := bytes.NewReader(b)
 	f, err := mp4.DecodeFile(r)
 	if err != nil {
-		return 0, 0, "", nil, fmt.Errorf("no es MP4 v�lido: %w", err)
+		return 0, 0, "", nil, fmt.Errorf("no es MP4 válido: %w", err)
 	}
 	if f.Moov == nil || len(f.Moov.Traks) == 0 {
 		return 0, 0, "", nil, errors.New("MP4 sin 'moov' o sin 'trak'")
@@ -59,7 +59,7 @@ func mp4VideoDimsAndBrands(b []byte) (int, int, string, []string, error) {
 			return w, h, major, compat, nil
 		}
 	}
-	return 0, 0, major, compat, errors.New("no se encontr� track de video")
+	return 0, 0, major, compat, errors.New("no se encontró track de video")
 }
 
 // videoDimsFromTrack intenta extraer dimensiones de un trak de video.

@@ -33,39 +33,6 @@ func NewPublicHandlersWithCache(service *useCase.PublicService, cache interfaces
 	return &PublicHandlers{service: service, cache: cache, idemTTLSeconds: idemTTLSeconds}
 }
 
-// NewPublicHandlersFull fue removido junto con soporte de agregados Redis.
-
-// normalizeCityKey crea una clave segura (slug ASCII) para usar en Redis a partir del nombre de ciudad.
-// - minúsculas
-// - sin tildes/ñ
-// - espacios a '-'
-// - solo [a-z0-9_-]
-func normalizeCityKey(s string) string {
-	s = strings.TrimSpace(strings.ToLower(s))
-	if s == "" {
-		return s
-	}
-	r := strings.NewReplacer(
-		"á", "a", "à", "a", "ä", "a", "â", "a", "ã", "a",
-		"é", "e", "è", "e", "ë", "e", "ê", "e",
-		"í", "i", "ì", "i", "ï", "i", "î", "i",
-		"ó", "o", "ò", "o", "ö", "o", "ô", "o", "õ", "o",
-		"ú", "u", "ù", "u", "ü", "u", "û", "u",
-		"ñ", "n",
-	)
-	s = r.Replace(s)
-	// Reemplazar espacios por '-'
-	s = strings.ReplaceAll(s, " ", "-")
-	// Filtrar caracteres no deseados
-	b := make([]rune, 0, len(s))
-	for _, ch := range s {
-		if (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-' || ch == '_' {
-			b = append(b, ch)
-		}
-	}
-	return string(b)
-}
-
 // ListPublicVideos maneja GET /api/public/videos
 func (h *PublicHandlers) ListPublicVideos(c *gin.Context) {
 	results, err := h.service.ListPublicVideos(c.Request.Context())
