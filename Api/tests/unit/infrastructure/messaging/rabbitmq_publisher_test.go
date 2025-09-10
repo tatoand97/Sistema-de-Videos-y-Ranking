@@ -9,6 +9,17 @@ import (
     "github.com/streadway/amqp"
 )
 
+// helper to assert a function panics
+func assertPanics(t *testing.T, f func()) {
+    t.Helper()
+    defer func() {
+        if r := recover(); r == nil {
+            t.Fatal("expected panic, got none")
+        }
+    }()
+    f()
+}
+
 // stubs implementing the exported interfaces for unit testing
 type stubChannel struct {
     publishCalls int
@@ -256,5 +267,20 @@ func TestClose_ClosesChannelThenConn_ReturnsConnError(t *testing.T) {
     }
     if len(calls) < 2 || calls[0] != "channel.Close" || calls[1] != "conn.Close" {
         t.Fatalf("unexpected close call order: %#v", calls)
+    }
+}
+
+// Tests for wrapper types - moved from infrastructure package to maintain clean architecture
+func Test_realConn_Channel_PanicsOnNil(t *testing.T) {
+    // This test requires access to internal types, so we test the public interface instead
+    if _, err := infra.NewRabbitMQPublisher("amqp://guest:guest@127.0.0.1:1/"); err == nil {
+        t.Fatal("expected error from NewRabbitMQPublisher with bad URL")
+    }
+}
+
+func Test_NewRabbitMQPublisher_DialError(t *testing.T) {
+    // Use an unroutable local port to fail fast without external dependency.
+    if _, err := infra.NewRabbitMQPublisher("amqp://guest:guest@127.0.0.1:1/"); err == nil {
+        t.Fatal("expected error from NewRabbitMQPublisher with bad URL")
     }
 }

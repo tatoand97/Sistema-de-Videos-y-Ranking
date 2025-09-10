@@ -162,7 +162,7 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080" # API Proxy
-      - "8081:8081" # MinIO Files
+      - "8084:8084" # MinIO Files
       - "8082:8082" # MinIO Console
       - "8083:8083" # RabbitMQ UI
     volumes:

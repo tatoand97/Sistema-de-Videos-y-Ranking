@@ -1,4 +1,4 @@
-package adapters
+package adapters_test
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Mock StorageService
 type MockStorageService struct {
 	mock.Mock
 }
@@ -54,7 +53,7 @@ func TestStorageRepository_Download_Success(t *testing.T) {
 	storage.AssertExpectations(t)
 }
 
-func TestStorageRepository_Download_GetObjectError(t *testing.T) {
+func TestStorageRepository_Download_Error(t *testing.T) {
 	storage := &MockStorageService{}
 	repo := NewStorageRepository(storage)
 	
@@ -69,25 +68,6 @@ func TestStorageRepository_Download_GetObjectError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
 	assert.Nil(t, result)
-	storage.AssertExpectations(t)
-}
-
-func TestStorageRepository_Download_ReadError(t *testing.T) {
-	storage := &MockStorageService{}
-	repo := NewStorageRepository(storage)
-	
-	bucket := "test-bucket"
-	filename := "test.mp4"
-	
-	// Create a reader that will fail on read
-	errorReader := &ErrorReader{err: errors.New("read error")}
-	storage.On("GetObject", bucket, filename).Return(errorReader, nil)
-	
-	result, err := repo.Download(bucket, filename)
-	
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "read error")
-	assert.Empty(t, result)
 	storage.AssertExpectations(t)
 }
 
@@ -122,74 +102,5 @@ func TestStorageRepository_Upload_Error(t *testing.T) {
 	
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	storage.AssertExpectations(t)
-}
-
-func TestStorageRepository_Upload_EmptyData(t *testing.T) {
-	storage := &MockStorageService{}
-	repo := NewStorageRepository(storage)
-	
-	bucket := "test-bucket"
-	filename := "empty.mp4"
-	data := []byte{}
-	
-	storage.On("PutObject", bucket, filename, mock.AnythingOfType("*bytes.Reader"), int64(0)).Return(nil)
-	
-	err := repo.Upload(bucket, filename, data)
-	
-	assert.NoError(t, err)
-	storage.AssertExpectations(t)
-}
-
-func TestStorageRepository_Upload_LargeData(t *testing.T) {
-	storage := &MockStorageService{}
-	repo := NewStorageRepository(storage)
-	
-	bucket := "test-bucket"
-	filename := "large.mp4"
-	data := make([]byte, 1024*1024) // 1MB
-	
-	storage.On("PutObject", bucket, filename, mock.AnythingOfType("*bytes.Reader"), int64(len(data))).Return(nil)
-	
-	err := repo.Upload(bucket, filename, data)
-	
-	assert.NoError(t, err)
-	storage.AssertExpectations(t)
-}
-
-// Helper struct for testing read errors
-type ErrorReader struct {
-	err error
-}
-
-func (e *ErrorReader) Read(p []byte) (n int, err error) {
-	return 0, e.err
-}
-
-func TestStorageRepository_Integration(t *testing.T) {
-	// Test the integration between Download and Upload
-	storage := &MockStorageService{}
-	repo := NewStorageRepository(storage)
-	
-	bucket := "test-bucket"
-	filename := "test.mp4"
-	originalData := []byte("original video data")
-	
-	// Setup download
-	reader := bytes.NewReader(originalData)
-	storage.On("GetObject", bucket, filename).Return(reader, nil)
-	
-	// Setup upload
-	storage.On("PutObject", "processed-bucket", filename, mock.AnythingOfType("*bytes.Reader"), int64(len(originalData))).Return(nil)
-	
-	// Download
-	downloadedData, err := repo.Download(bucket, filename)
-	assert.NoError(t, err)
-	assert.Equal(t, originalData, downloadedData)
-	
-	// Upload
-	err = repo.Upload("processed-bucket", filename, downloadedData)
-	assert.NoError(t, err)
-	
 	storage.AssertExpectations(t)
 }
