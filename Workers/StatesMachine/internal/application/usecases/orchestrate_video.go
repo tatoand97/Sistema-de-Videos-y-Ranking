@@ -290,14 +290,16 @@ func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filen
 		}).Error("StatesMachine: Invalid video ID format in gossip completion")
 		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
-	if err := uc.videoRepo.UpdateStatusAndProcessedFile(id, domain.StatusProcessed, filename); err != nil {
+	// Generate the full URL for the processed file
+	processedURL := fmt.Sprintf("http://localhost:8084/processed-videos/%s", filename)
+	if err := uc.videoRepo.UpdateStatusAndProcessedFile(id, domain.StatusProcessed, processedURL); err != nil {
 		return fmt.Errorf("update final status and processed file: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"video_id":      videoID,
 		"filename":      filename,
-		"processed_file": filename,
+		"processed_file": processedURL,
 		"timestamp":     time.Now().UTC(),
 		"stage":         "gossip_open_close_completed",
 		"result":        "success",
