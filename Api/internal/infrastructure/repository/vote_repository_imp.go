@@ -29,18 +29,29 @@ func (r *voteRepository) HasUserVoted(ctx context.Context, videoID, userID uint)
 }
 
 func (r *voteRepository) Create(ctx context.Context, videoID, userID uint) error {
-	// Insert directo con tabla "vote" para simplicidad.
+	return r.CreateWithEvent(ctx, videoID, userID, nil)
+}
+
+func (r *voteRepository) CreateWithEvent(ctx context.Context, videoID, userID uint, eventID *string) error {
 	type voteRow struct {
-		VoteID  uint `gorm:"column:vote_id"`
-		UserID  uint `gorm:"column:user_id"`
-		VideoID uint `gorm:"column:video_id"`
+		VoteID  uint    `gorm:"column:vote_id"`
+		UserID  uint    `gorm:"column:user_id"`
+		VideoID uint    `gorm:"column:video_id"`
+		EventID *string `gorm:"column:event_id"`
 	}
-	v := voteRow{UserID: userID, VideoID: videoID}
+	v := voteRow{UserID: userID, VideoID: videoID, EventID: eventID}
 	if err := r.db.WithContext(ctx).Table("vote").Create(&v).Error; err != nil {
-		// Traducir unique violation de Postgres a error de dominio (conflicto)
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return domain.ErrConflict
+			switch pgErr.ConstraintName {
+			case "unique_vote_user_video":
+				return domain.ErrConflict
+			case "ux_vote_event":
+				return domain.ErrIdempotent
+			default:
+				// Fallback conservative: treat as conflict
+				return domain.ErrConflict
+			}
 		}
 		return err
 	}

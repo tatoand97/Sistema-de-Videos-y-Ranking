@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"statesmachine/internal/application/usecases"
+	"statesmachine/internal/domain"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -58,10 +58,10 @@ type VideoProcessedMessage struct {
 }
 
 type MessageHandler struct {
-	orchestrateUC *usecases.OrchestrateVideoUseCase
+	orchestrateUC domain.OrchestrateVideoUseCaseInterface
 }
 
-func NewMessageHandler(uc *usecases.OrchestrateVideoUseCase) *MessageHandler {
+func NewMessageHandler(uc domain.OrchestrateVideoUseCaseInterface) *MessageHandler {
 	return &MessageHandler{orchestrateUC: uc}
 }
 

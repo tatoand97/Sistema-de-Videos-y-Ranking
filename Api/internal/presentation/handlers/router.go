@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"api/internal/application/useCase"
+	"api/internal/domain/interfaces"
 	"api/internal/presentation/middlewares"
 	"net/http"
 
@@ -17,6 +18,9 @@ type RouterConfig struct {
 	PublicService   *useCase.PublicService
 	StatusService   *useCase.StatusService
 	JWTSecret       string
+	Cache           interfaces.Cache
+	IdemTTLSeconds  int
+	Aggregates      interfaces.Aggregates
 }
 
 func NewRouter(router *gin.Engine, cfg RouterConfig) {
@@ -24,7 +28,8 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	userHandlers := NewUserHandlers(cfg.UserService)
 	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
 	locationHandlers := NewLocationHandlers(cfg.LocationService)
-	publicHandlers := NewPublicHandlers(cfg.PublicService)
+	// Prefer constructor with cache & aggregates; keep simple one available for tests
+	publicHandlers := NewPublicHandlersFull(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds, cfg.Aggregates)
 	statusHandlers := NewStatusHandlers(cfg.StatusService)
 	uploadsHandlers := NewUploadsHandlers(cfg.UploadsUC)
 
@@ -35,6 +40,10 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	router.GET("/api/location/city-id", locationHandlers.GetCityID)
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
 	router.GET("/api/public/rankings", publicHandlers.ListRankings)
+	// Leaderboards/Stats via Redis aggregates
+	router.GET("/api/public/leaderboard/:poll_id", publicHandlers.GetLeaderboard)
+	router.GET("/api/public/stats/:poll_id", publicHandlers.GetStats)
+	router.GET("/api/public/count/:poll_id/:member", publicHandlers.GetCount)
 	router.POST("/api/auth/signup", userHandlers.Register)
 	router.POST("/api/auth/login", authHandlers.Login)
 
