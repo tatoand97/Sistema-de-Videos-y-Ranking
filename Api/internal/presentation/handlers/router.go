@@ -33,7 +33,7 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	// Público: ubicación
+	// Publico: ubicacion
 	router.GET("/api/location/city-id", locationHandlers.GetCityID)
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
 	router.GET("/api/public/rankings", publicHandlers.ListRankings)
@@ -45,7 +45,6 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	authGroup.Use(middlewares.JWTMiddleware(cfg.AuthService, cfg.JWTSecret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
 	authGroup.GET("/api/me", authHandlers.Me)
-
 	videoGroup := authGroup.Group("/api/videos")
 	videoGroup.GET("", videoHandlers.ListVideos)
 	videoGroup.POST("/upload", videoHandlers.Upload)
@@ -53,7 +52,7 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	videoGroup.DELETE("/:video_id", videoHandlers.DeleteVideo)
 	videoGroup.POST("/:video_id/publish", videoHandlers.PublishVideo)
 
-	// Ruta protegida para votar por un video público
+	// Ruta protegida para votar por un video publico
 	authGroup.POST("/api/public/videos/:video_id/vote", publicHandlers.VotePublicVideo)
 
 }

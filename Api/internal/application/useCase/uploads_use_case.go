@@ -192,8 +192,6 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	}, nil
 }
 
-// (Removed) CreatePostPolicy: signed URL uploads no longer supported.
-
 // ListUserVideos returns all videos belonging to a user.
 func (uc *UploadsUseCase) ListUserVideos(ctx context.Context, userID uint) ([]*entities.Video, error) {
 	return uc.videoRepo.ListByUser(ctx, userID)
@@ -213,7 +211,7 @@ func (uc *UploadsUseCase) DeleteUserVideoIfEligible(ctx context.Context, userID,
 		return err
 	}
 	// Eligibility: not allowed if processed or published (published for voting)
-	if v.Status == string(entities.StatusProcessed) || v.Status == string(entities.StatusPublished) {
+	if v.Status == string(entities.StatusPublished) || v.Status == string(entities.StatusProcessed) {
 		return domain.ErrInvalid
 	}
 	// Proceed to delete
