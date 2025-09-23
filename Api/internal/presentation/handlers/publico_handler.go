@@ -287,8 +287,7 @@ func cloneStringValue(v string) *string {
 }
 
 const (
-	cacheScopeGlobal = "global"
-	cacheScopeCity   = "city"
+	cacheScopeCity = "city"
 )
 
 type rankingCacheItem struct {

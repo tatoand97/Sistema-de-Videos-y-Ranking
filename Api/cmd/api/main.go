@@ -129,7 +129,6 @@ func main() {
 
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
-	locationService := useCase.NewLocationService(locRepo)
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	voteRepo := postgresrepo.NewVoteRepository(db)
 
@@ -189,7 +188,6 @@ func main() {
 	handlers.NewRouter(r, handlers.RouterConfig{
 		AuthService:        authService,
 		UserService:        userService,
-		LocationService:    locationService,
 		UploadsUC:          uploadsUC,
 		PublicService:      publicService,
 		StatusService:      statusService,

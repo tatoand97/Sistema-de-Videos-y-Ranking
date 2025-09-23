@@ -13,7 +13,6 @@ import (
 type RouterConfig struct {
 	AuthService        *useCase.AuthService
 	UserService        *useCase.UserService
-	LocationService    *useCase.LocationService
 	UploadsUC          *useCase.UploadsUseCase
 	PublicService      *useCase.PublicService
 	StatusService      *useCase.StatusService
@@ -26,15 +25,12 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	authHandlers := NewAuthHandlers(cfg.AuthService)
 	userHandlers := NewUserHandlers(cfg.UserService)
 	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
-	locationHandlers := NewLocationHandlers(cfg.LocationService)
 	// Constructor con cache de solo lectura
 	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.CacheSchemaVersion)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	// Publico: ubicacion
-	router.GET("/api/location/city-id", locationHandlers.GetCityID)
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
 	router.GET("/api/public/rankings", publicHandlers.ListRankings)
 	// Se eliminaron endpoints basados en poll_id (leaderboard/stats/count)
