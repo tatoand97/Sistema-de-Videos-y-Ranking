@@ -96,3 +96,11 @@ func (s *PublicService) Rankings(ctx context.Context, city *string, page, pageSi
 // normalizeCityKey replica la normalización usada en handlers para claves por ciudad.
 // GetUsersBasicByIDs expone informacion basica de usuarios para enriquecer rankings desde Redis.
 // GetUsersBasicByIDs removido; se usaba solo para enriquecer rankings desde Redis.
+
+// UserBasicsByIDs devuelve informacion basica de usuarios para completar rankings cacheados.
+func (s *PublicService) UserBasicsByIDs(ctx context.Context, ids []uint) ([]responses.UserBasic, error) {
+	if s.repo == nil {
+		return nil, errors.New("public repository not configured")
+	}
+	return s.repo.GetUsersBasicByIDs(ctx, ids)
+}

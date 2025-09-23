@@ -11,14 +11,15 @@ import (
 
 // RouterConfig groups router dependencies to reduce parameters.
 type RouterConfig struct {
-	AuthService     *useCase.AuthService
-	UserService     *useCase.UserService
-	LocationService *useCase.LocationService
-	UploadsUC       *useCase.UploadsUseCase
-	PublicService   *useCase.PublicService
-	StatusService   *useCase.StatusService
-	JWTSecret       string
-	Cache           interfaces.Cache
+	AuthService        *useCase.AuthService
+	UserService        *useCase.UserService
+	LocationService    *useCase.LocationService
+	UploadsUC          *useCase.UploadsUseCase
+	PublicService      *useCase.PublicService
+	StatusService      *useCase.StatusService
+	JWTSecret          string
+	Cache              interfaces.Cache
+	CacheSchemaVersion string
 }
 
 func NewRouter(router *gin.Engine, cfg RouterConfig) {
@@ -27,7 +28,7 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
 	locationHandlers := NewLocationHandlers(cfg.LocationService)
 	// Constructor con cache de solo lectura
-	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache)
+	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.CacheSchemaVersion)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})

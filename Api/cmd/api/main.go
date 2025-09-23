@@ -187,14 +187,15 @@ func main() {
 	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
 	handlers.NewRouter(r, handlers.RouterConfig{
-		AuthService:     authService,
-		UserService:     userService,
-		LocationService: locationService,
-		UploadsUC:       uploadsUC,
-		PublicService:   publicService,
-		StatusService:   statusService,
-		JWTSecret:       jwtSecret,
-		Cache:           cache,
+		AuthService:        authService,
+		UserService:        userService,
+		LocationService:    locationService,
+		UploadsUC:          uploadsUC,
+		PublicService:      publicService,
+		StatusService:      statusService,
+		JWTSecret:          jwtSecret,
+		Cache:              cache,
+		CacheSchemaVersion: getEnvOrDefault("SCHEMA_VERSION", "v2"),
 	})
 
 	port := getEnvOrDefault("PORT", "8080")
