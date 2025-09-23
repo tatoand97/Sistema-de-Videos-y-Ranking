@@ -19,7 +19,6 @@ type RouterConfig struct {
 	StatusService   *useCase.StatusService
 	JWTSecret       string
 	Cache           interfaces.Cache
-	IdemTTLSeconds  int
 }
 
 func NewRouter(router *gin.Engine, cfg RouterConfig) {
@@ -27,8 +26,8 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	userHandlers := NewUserHandlers(cfg.UserService)
 	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
 	locationHandlers := NewLocationHandlers(cfg.LocationService)
-	// Constructor con cache para idempotencia; sin agregados Redis
-	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds)
+	// Constructor con cache de solo lectura
+	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})

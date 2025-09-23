@@ -2,11 +2,9 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"api/internal/application/useCase"
 	"api/internal/domain"
@@ -18,19 +16,18 @@ import (
 
 // PublicHandlers maneja endpoints publicos relacionados a videos.
 type PublicHandlers struct {
-	service        *useCase.PublicService
-	cache          interfaces.Cache
-	idemTTLSeconds int
+	service *useCase.PublicService
+	cache   interfaces.Cache
 }
 
-// NewPublicHandlers mantiene compatibilidad para tests y uso sin cache/idempotencia.
+// NewPublicHandlers mantiene compatibilidad para tests y uso sin cache.
 func NewPublicHandlers(service *useCase.PublicService) *PublicHandlers {
 	return &PublicHandlers{service: service}
 }
 
-// NewPublicHandlersWithCache permite inyectar cache y TTL de idempotencia.
-func NewPublicHandlersWithCache(service *useCase.PublicService, cache interfaces.Cache, idemTTLSeconds int) *PublicHandlers {
-	return &PublicHandlers{service: service, cache: cache, idemTTLSeconds: idemTTLSeconds}
+// NewPublicHandlersWithCache permite inyectar un cache solo-lectura.
+func NewPublicHandlersWithCache(service *useCase.PublicService, cache interfaces.Cache) *PublicHandlers {
+	return &PublicHandlers{service: service, cache: cache}
 }
 
 // ListPublicVideos maneja GET /api/public/videos
@@ -72,34 +69,14 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 	} else if evtq := strings.TrimSpace(c.Query("eventId")); evtq != "" {
 		eventIDPtr = &[]string{evtq}[0]
 	}
-	// Idempotencia rapida con Redis: degradar si falla y liberar clave si BD falla
-	var seenKey string
-	nxSet := false
-	if eventIDPtr != nil && h.cache != nil && h.idemTTLSeconds > 0 {
-		seenKey = fmt.Sprintf("seen:{events:%s}", *eventIDPtr)
-		ok, derr := h.cache.SetNX(c.Request.Context(), seenKey, []byte("1"), time.Duration(h.idemTTLSeconds)*time.Second)
-		if derr == nil && !ok {
-			// Evento ya procesado recientemente: exito idempotente
-			c.JSON(http.StatusOK, gin.H{"message": "Voto registrado exitosamente."})
-			return
-		}
-		if derr == nil && ok {
-			nxSet = true
-		}
-		// Si derr != nil, seguimos y confiamos en la BD
-	}
 
-	// 4-6) Logica de voto via servicio (incluye verificacion de existencia y unicidad)
+	// 4) Logica de voto via servicio (incluye verificacion de existencia y unicidad)
 	if eventIDPtr != nil {
 		err = h.service.VotePublicVideoWithEvent(c.Request.Context(), videoID, userID, eventIDPtr)
 	} else {
 		err = h.service.VotePublicVideo(c.Request.Context(), videoID, userID)
 	}
 	if err != nil {
-		// Si fallo BD y marcamos NX, liberar para permitir reintentos
-		if nxSet && h.cache != nil && seenKey != "" {
-			_ = h.cache.DeleteWildcard(c.Request.Context(), seenKey)
-		}
 		// Mapear errores comunes
 		if errors.Is(err, domain.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found", "message": "Video no encontrado."})
@@ -117,9 +94,6 @@ func (h *PublicHandlers) VotePublicVideo(c *gin.Context) {
 		return
 	}
 
-	// 5) Agregados Redis removidos; BD es fuente de verdad.
-
-	// 6) OK
 	c.JSON(http.StatusOK, gin.H{"message": "Voto registrado exitosamente."})
 }
 
@@ -154,7 +128,6 @@ func (h *PublicHandlers) ListRankings(c *gin.Context) {
 		pageSize = v
 	}
 
-	// Orquestación en el caso de uso (Redis -> fallback BD)
 	items, err := h.service.Rankings(c.Request.Context(), city, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": err.Error()})

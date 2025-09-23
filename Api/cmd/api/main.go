@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
-    "strings"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -92,16 +92,14 @@ func setupRabbitPublisher(rabbitURL, queue string) interfaces.MessagePublisher {
 // It uses the same env var names as Workers/AdminCache for consistency:
 // - REDIS_ADDR (e.g., "redis:6379")
 // - CACHE_PREFIX (default: "videorank:")
-// - CACHE_TTL_SECONDS (default: 120)
 func setupRedisCacheFromEnv() interfaces.Cache {
 	addr := os.Getenv("REDIS_ADDR")
 	if addr == "" {
 		return nil
 	}
 	prefix := getEnvOrDefault("CACHE_PREFIX", "videorank:")
-	ttl := atoiOrDefault(os.Getenv("CACHE_TTL_SECONDS"), 120)
 	rdb := infraCache.MustRedisClient(addr)
-	return infraCache.NewRedisCache(rdb, prefix, ttl)
+	return infraCache.NewRedisCache(rdb, prefix)
 }
 
 // Redis Aggregates removed; rankings served from DB.
@@ -183,9 +181,8 @@ func main() {
 	})
 	r.Static("/static", "./static")
 	statusService := useCase.NewStatusService()
-	// Redis cache and idempotency TTL
+	// Redis cache solo lectura
 	cache := setupRedisCacheFromEnv()
-	idemTTL := atoiOrDefault(os.Getenv("IDEMPOTENCY_TTL_SECONDS"), 3600)
 	// Public service without Redis aggregates
 	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
@@ -198,7 +195,6 @@ func main() {
 		StatusService:   statusService,
 		JWTSecret:       jwtSecret,
 		Cache:           cache,
-		IdemTTLSeconds:  idemTTL,
 	})
 
 	port := getEnvOrDefault("PORT", "8080")
