@@ -2,72 +2,77 @@ openapi: 3.1.0
 jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
 info:
   title: ANB Rising Stars Showcase API
-  version: "1.0.0"
-  description: >
-    API para registro/login, carga de videos del usuario, consulta/borrado, endpoints públicos
-    (listado, voto, ranking) y endpoints de serving/descarga de video. El procesamiento asíncrono
-    NO expone endpoints (fuera de alcance).
+  version: 1.0.0
+  description: 'API para registro/login, carga de videos del usuario, consulta/borrado,
+    endpoints públicos (listado, voto, ranking) y endpoints de serving/descarga de
+    video. El procesamiento asíncrono NO expone endpoints (fuera de alcance).
+
+    '
 servers:
-  - url: https://api.example.com
+- url: https://api.example.com
 tags:
-  - name: Autenticación
-  - name: Videos
-  - name: Público
-  - name: Ranking
-  - name: Ubicación
+- name: Autenticación
+- name: Videos
+- name: Público
+- name: Ranking
+- name: Ubicación
 security:
-  - bearerAuth: []
+- bearerAuth: []
 paths:
   /health:
     get:
       summary: Estado del servicio
       description: Devuelve un estado simple para supervisión.
-      tags: [Público]
+      tags:
+      - Público
       security: []
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status: { type: string }
-              example: { status: "ok" }
+                  status:
+                    type: string
+              example:
+                status: ok
   /api/auth/signup:
     post:
       summary: Registro de nuevos jugadores
       description: Crea un usuario. Valida email único y confirmación de contraseña.
-      tags: [Autenticación]
+      tags:
+      - Autenticación
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignupRequest"
+              $ref: '#/components/schemas/SignupRequest'
             example:
-              first_name: "John"
-              last_name: "Doe"
-              email: "john@example.com"
-              password1: "StrongPass123"
-              password2: "StrongPass123"
-              city: "Bogotá"
-              country: "Colombia"
+              first_name: John
+              last_name: Doe
+              email: john@example.com
+              password1: StrongPass123
+              password2: StrongPass123
+              city: Bogotá
+              country: Colombia
       responses:
-        "201":
+        '201':
           description: Usuario creado exitosamente.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SignupResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/SignupResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/auth/login:
     post:
       summary: Inicio de sesión (JWT)
-      tags: [Autenticación]
+      tags:
+      - Autenticación
       security: []
       requestBody:
         required: true
@@ -76,82 +81,96 @@ paths:
             schema:
               $ref: '#/components/schemas/LoginRequest'
             example:
-              email: "john@example.com"
-              password: "StrongPass123"
+              email: john@example.com
+              password: StrongPass123
       responses:
-        "200":
+        '200':
           description: Autenticación exitosa.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthToken"
+                $ref: '#/components/schemas/AuthToken'
               example:
                 access_token: eyJ0eXAiOiJKV1QiLCJhbGci...
-                token_type: "Bearer"
+                token_type: Bearer
                 expires_in: 3600
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/auth/logout:
     post:
       summary: Cerrar sesión
-      tags: [Autenticación]
+      tags:
+      - Autenticación
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
-        "204":
+        '204':
           description: No Content
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "500":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
           description: Error interno
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/me:
     get:
       summary: Verificar sesión del usuario
       description: Retorna un estado simple para confirmar autenticación.
-      tags: [Autenticación]
+      tags:
+      - Autenticación
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status: { type: string }
-                  user_id: { type: integer }
+                  status:
+                    type: string
+                  user_id:
+                    type: integer
                   permissions:
                     type: array
-                    items: { type: string }
-                  first_name: { type: string }
-                  last_name: { type: string }
-                  email: { type: string, format: email }
+                    items:
+                      type: string
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
+                  email:
+                    type: string
+                    format: email
               example:
-                status: "ok"
+                status: ok
                 user_id: 123
-                permissions: ["videos:upload", "videos:read"]
-                first_name: "John"
-                last_name: "Doe"
-                email: "john@example.com"
-        "401": { $ref: "#/components/responses/Unauthorized" }
-
+                permissions:
+                - videos:upload
+                - videos:read
+                first_name: John
+                last_name: Doe
+                email: john@example.com
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/videos/upload:
     post:
       summary: Subir video del usuario (máx 100MB)
-      description: |
-        Sube archivo MP4 con título. El video queda en estado "uploaded".
-        **Nota:** El documento ejemplo menciona `task_id`, pero no se expone control de jobs.
-      tags: [Videos]
+      description: 'Sube archivo MP4 con título. El video queda en estado "uploaded".
+
+        **Nota:** El documento ejemplo menciona `task_id`, pero no se expone control
+        de jobs.
+
+        '
+      tags:
+      - Videos
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -174,261 +193,278 @@ paths:
                 mimeType:
                   type: string
                   default: video/mp4
-              required: [video_file, title]
+              required:
+              - video_file
+              - title
       responses:
-        "201":
+        '201':
           description: Video subido correctamente. Procesamiento en curso.
           content:
             application/json:
               schema:
                 type: object
-                required: [message, task_id]
+                required:
+                - message
+                - task_id
                 properties:
-                  message: { type: string, enum: ["Video subido correctamente. Procesamiento en curso."] }
-                  task_id: { type: string }
+                  message:
+                    type: string
+                    enum:
+                    - Video subido correctamente. Procesamiento en curso.
+                  task_id:
+                    type: string
               example:
-                message: "Video subido correctamente. Procesamiento en curso."
-                task_id: "123456"
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        # Opcional (extensión no normada por el documento):
-        # "413": { $ref: "#/components/responses/PayloadTooLarge" }
-
+                message: Video subido correctamente. Procesamiento en curso.
+                task_id: '123456'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/videos:
     get:
       summary: Listar mis videos
-      tags: [Videos]
+      tags:
+      - Videos
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
-        "200":
+        '200':
           description: Lista de videos del usuario autenticado.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Video"
+                  $ref: '#/components/schemas/Video'
               example:
-                - video_id: "123456"
-                  title: "Mi mejor tiro de 3"
-                  status: "processed"
-                  uploaded_at: "2025-03-10T14:30:00Z"
-                  processed_at: "2025-03-10T14:35:00Z"
-                  processed_url: "https://anb.com/videos/processed/123456.mp4"
-                - video_id: "654321"
-                  title: "Habilidades de dribleo"
-                  status: "uploaded"
-                  uploaded_at: "2025-03-11T10:15:00Z"
-        "401": { $ref: "#/components/responses/Unauthorized" }
-
-
+              - video_id: '123456'
+                title: Mi mejor tiro de 3
+                status: processed
+                uploaded_at: '2025-03-10T14:30:00Z'
+                processed_at: '2025-03-10T14:35:00Z'
+                processed_url: https://anb.com/videos/processed/123456.mp4
+              - video_id: '654321'
+                title: Habilidades de dribleo
+                status: uploaded
+                uploaded_at: '2025-03-11T10:15:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/videos/{video_id}:
     get:
       summary: Obtener detalle de un video propio
-      tags: [Videos]
+      tags:
+      - Videos
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: integer, format: int64 }
+      - name: video_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
-        "200":
+        '200':
           description: Detalle del video.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Video"
+                $ref: '#/components/schemas/Video'
               example:
-                video_id: "a1b2c3d4"
-                title: "Tiros de tres en movimiento"
-                status: "processed"
-                uploaded_at: "2025-03-15T14:22:00Z"
-                processed_at: "2025-03-15T15:10:00Z"
-                original_url: "https://anb.com/uploads/a1b2c3d4.mp4"
-                processed_url: "https://anb.com/processed/a1b2c3d4.mp4"
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
+                video_id: a1b2c3d4
+                title: Tiros de tres en movimiento
+                status: processed
+                uploaded_at: '2025-03-15T14:22:00Z'
+                processed_at: '2025-03-15T15:10:00Z'
+                original_url: https://anb.com/uploads/a1b2c3d4.mp4
+                processed_url: https://anb.com/processed/a1b2c3d4.mp4
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       summary: Eliminar video propio (si permitido)
-      tags: [Videos]
+      tags:
+      - Videos
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: integer, format: int64 }
+      - name: video_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
-        "200":
+        '200':
           description: Eliminado.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  video_id: { type: string }
+                  message:
+                    type: string
+                  video_id:
+                    type: string
               example:
-                message: "El video ha sido eliminado exitosamente."
-                video_id: "a1b2c3d4"
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
+                message: El video ha sido eliminado exitosamente.
+                video_id: a1b2c3d4
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/videos/{video_id}/publish:
     post:
       summary: Publicar video procesado
-      description: Cambia el estado de un video de PROCESSED a PUBLISHED. Requiere permisos de moderación.
-      tags: [Videos]
+      description: Cambia el estado de un video de PROCESSED a PUBLISHED. Requiere
+        permisos de moderación.
+      tags:
+      - Videos
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: integer, format: int64 }
+      - name: video_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
-        "200":
+        '200':
           description: Publicado.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  video_id: { type: string }
+                  message:
+                    type: string
+                  video_id:
+                    type: string
               example:
-                message: "Video publicado exitosamente."
-                video_id: "a1b2c3d4"
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
-  
-
+                message: Video publicado exitosamente.
+                video_id: a1b2c3d4
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/public/videos:
     get:
       summary: Listar videos públicos disponibles para votación
-      tags: [Público]
+      tags:
+      - Público
       security: []
       responses:
-        "200":
+        '200':
           description: Lista de videos públicos.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PublicVideo"
-
+                  $ref: '#/components/schemas/PublicVideo'
   /api/public/videos/{video_id}/vote:
     post:
       summary: Emitir voto por un video público
-      tags: [Público]
+      tags:
+      - Público
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: video_id
-          in: path
-          required: true
-          schema: { type: integer, format: int64 }
-        - name: X-Event-Id
-          in: header
-          required: false
-          schema: { type: string }
-          description: Identificador idempotente opcional; si se repite se evita duplicar el voto.
-        - name: eventId
-          in: query
-          required: false
-          schema: { type: string }
-          description: Variante para clientes que no pueden enviar cabeceras.
+      - name: video_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Event-Id
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Identificador idempotente opcional; si se repite se evita duplicar
+          el voto.
+      - name: eventId
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Variante para clientes que no pueden enviar cabeceras.
       responses:
-        "200":
+        '200':
           description: Voto registrado.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VoteResponse"
+                $ref: '#/components/schemas/VoteResponse'
               example:
-                message: "Voto registrado exitosamente."
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
+                message: Voto registrado exitosamente.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/public/rankings:
     get:
       summary: Ranking de jugadores por votos acumulados
-      tags: [Ranking]
+      tags:
+      - Ranking
       security: []
       parameters:
-        - name: city
-          in: query
-          required: false
-          schema: { type: string }
-        - name: page
-          in: query
-          required: false
-          schema: { type: integer, minimum: 1, default: 1 }
-        - name: pageSize
-          in: query
-          required: false
-          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      - name: city
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
       responses:
-        "200":
+        '200':
           description: Ranking actual.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RankingEntry"
+                  $ref: '#/components/schemas/RankingEntry'
               example:
-                - position: 1
-                  username: superplayer
-                  city: Bogotá
-                  votes: 1530
-                - position: 2
-                  username: nextstar
-                  city: Bogotá
-                  votes: 1495
-        "400": { $ref: "#/components/responses/BadRequest" }
-
-
-  
-
-  /api/location/city-id:
-    get:
-      summary: Obtener city_id por país y ciudad
-      description: Devuelve el identificador de ciudad a partir de nombres de país y ciudad (comparación case-insensitive).
-      tags: [Ubicación]
-      security: []
-      parameters:
-        - name: country
-          in: query
-          required: true
-          schema: { type: string }
-        - name: city
-          in: query
-          required: true
-          schema: { type: string }
-      responses:
-        "200":
-          description: Identificador de la ciudad.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CityIDResponse"
-              example: { city_id: 123 }
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
+              - position: 1
+                username: superplayer
+                city: Bogotá
+                votes: 1530
+              - position: 2
+                username: nextstar
+                city: Bogotá
+                votes: 1495
+        '400':
+          $ref: '#/components/responses/BadRequest'
 components:
   securitySchemes:
     bearerAuth:
@@ -440,100 +476,193 @@ components:
       description: Parámetros inválidos.
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Bad Request", message: "Parámetro inválido." }
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Bad Request
+            message: Parámetro inválido.
     Unauthorized:
       description: Falta de autenticación o token inválido.
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Unauthorized", message: "Token inválido o expirado." }
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Unauthorized
+            message: Token inválido o expirado.
     Forbidden:
       description: Acceso denegado.
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Forbidden", message: "Acceso denegado." }
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Forbidden
+            message: Acceso denegado.
     NotFound:
       description: Recurso no encontrado.
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Not Found", message: "Recurso no encontrado." }
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
+            message: Recurso no encontrado.
     PayloadTooLarge:
       description: Tamaño de carga excedido (p. ej., >100MB).
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Payload Too Large", message: "Tamaño de carga excedido." }
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Payload Too Large
+            message: Tamaño de carga excedido.
   schemas:
     Error:
       type: object
       properties:
-        error: { type: string }
-        message: { type: string }
-    CityIDResponse:
-      type: object
-      properties:
-        city_id: { type: integer }
+        error:
+          type: string
+        message:
+          type: string
     SignupRequest:
       type: object
-      required: [first_name, last_name, email, password1, password2, city, country]
+      required:
+      - first_name
+      - last_name
+      - email
+      - password1
+      - password2
+      - city
+      - country
       properties:
-        first_name: { type: string }
-        last_name: { type: string }
-        email: { type: string, format: email }
-        password1: { type: string, format: password }
-        password2: { type: string, format: password }
-        city: { type: string }
-        country: { type: string }
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        password1:
+          type: string
+          format: password
+        password2:
+          type: string
+          format: password
+        city:
+          type: string
+        country:
+          type: string
     SignupResponse:
       type: object
       properties:
-        message: { type: string }
-      example: { message: "Usuario creado exitosamente." }
+        message:
+          type: string
+      example:
+        message: Usuario creado exitosamente.
     LoginRequest:
       type: object
-      required: [email, password]
+      required:
+      - email
+      - password
       properties:
-        email: { type: string, format: email }
-        password: { type: string, format: password }
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
     AuthToken:
       type: object
-      required: [access_token, token_type, expires_in]
+      required:
+      - access_token
+      - token_type
+      - expires_in
       properties:
-        access_token: { type: string }
-        token_type: { type: string, enum: ["Bearer"] }
-        expires_in: { type: integer, format: int64 }
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum:
+          - Bearer
+        expires_in:
+          type: integer
+          format: int64
     Video:
       type: object
-      required: [video_id, title, status, uploaded_at]
+      required:
+      - video_id
+      - title
+      - status
+      - uploaded_at
       properties:
-        video_id: { type: string }
-        title: { type: string }
-        status: { type: string, enum: [uploaded, processed, published] }
-        uploaded_at: { type: string, format: date-time }
-        processed_at: { type: string, format: date-time, nullable: true }
-        original_url: { type: string, format: uri, nullable: true }
-        processed_url: { type: string, format: uri, nullable: true }
+        video_id:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+          - uploaded
+          - processed
+          - published
+        uploaded_at:
+          type: string
+          format: date-time
+        processed_at:
+          type: string
+          format: date-time
+          nullable: true
+        original_url:
+          type: string
+          format: uri
+          nullable: true
+        processed_url:
+          type: string
+          format: uri
+          nullable: true
     PublicVideo:
       type: object
-      required: [video_id, title, votes]
+      required:
+      - video_id
+      - title
+      - votes
       properties:
-        video_id: { type: integer, format: int64 }
-        title: { type: string }
-        processed_url: { type: string, format: uri, nullable: true }
-        city: { type: string, nullable: true }
-        votes: { type: integer, minimum: 0 }
+        video_id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        processed_url:
+          type: string
+          format: uri
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        votes:
+          type: integer
+          minimum: 0
     VoteResponse:
       type: object
       properties:
-        message: { type: string }
+        message:
+          type: string
     RankingEntry:
       type: object
-      required: [position, username, votes]
+      required:
+      - position
+      - username
+      - votes
       properties:
-        position: { type: integer, minimum: 1 }
-        username: { type: string }
-        city: { type: string, nullable: true }
-        votes: { type: integer, minimum: 0 }
+        position:
+          type: integer
+          minimum: 1
+        username:
+          type: string
+        city:
+          type: string
+          nullable: true
+        votes:
+          type: integer
+          minimum: 0

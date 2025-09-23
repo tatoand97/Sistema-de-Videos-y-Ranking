@@ -455,36 +455,6 @@
         }
       },
       "response": []
-    },
-    {
-      "name": "Location / City ID",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}:{{port}}/api/location/city-id?country=&city=",
-          "host": [
-            "{{host}}"
-          ],
-          "port": "{{port}}",
-          "path": [
-            "api",
-            "location",
-            "city-id"
-          ],
-          "query": [
-            {
-              "key": "country",
-              "value": ""
-            },
-            {
-              "key": "city",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
     }
   ]
 }
