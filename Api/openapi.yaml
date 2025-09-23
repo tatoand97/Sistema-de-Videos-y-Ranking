@@ -222,35 +222,6 @@ paths:
                   uploaded_at: "2025-03-11T10:15:00Z"
         "401": { $ref: "#/components/responses/Unauthorized" }
 
-  /api/videos/statuses:
-    get:
-      summary: Listar estados de procesamiento de video
-      description: Devuelve el listado de estados posibles para un video.
-      tags: [Videos]
-      security: []
-      responses:
-        "200":
-          description: Lista de estados disponibles.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  statuses:
-                    type: array
-                    items:
-                      type: string
-              example:
-                statuses:
-                  - "UPLOADED"
-                  - "TRIMMING"
-                  - "ADJUSTING_RESOLUTION"
-                  - "ADDING_WATERMARK"
-                  - "REMOVING_AUDIO"
-                  - "ADDING_INTRO_OUTRO"
-                  - "PROCESSED"
-                  - "PUBLISHED"
-                  - "FAILED"
 
   /api/videos/{video_id}:
     get:
@@ -262,7 +233,7 @@ paths:
         - name: video_id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       responses:
         "200":
           description: Detalle del video.
@@ -278,7 +249,7 @@ paths:
                 processed_at: "2025-03-15T15:10:00Z"
                 original_url: "https://anb.com/uploads/a1b2c3d4.mp4"
                 processed_url: "https://anb.com/processed/a1b2c3d4.mp4"
-                votes: 125
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -291,7 +262,7 @@ paths:
         - name: video_id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       responses:
         "200":
           description: Eliminado.
@@ -321,7 +292,7 @@ paths:
         - name: video_id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       responses:
         "200":
           description: Publicado.
@@ -356,7 +327,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PublicVideo"
-        "400": { $ref: "#/components/responses/BadRequest" }
 
   /api/public/videos/{video_id}/vote:
     post:
@@ -368,7 +338,17 @@ paths:
         - name: video_id
           in: path
           required: true
+          schema: { type: integer, format: int64 }
+        - name: X-Event-Id
+          in: header
+          required: false
           schema: { type: string }
+          description: Identificador idempotente opcional; si se repite se evita duplicar el voto.
+        - name: eventId
+          in: query
+          required: false
+          schema: { type: string }
+          description: Variante para clientes que no pueden enviar cabeceras.
       responses:
         "200":
           description: Voto registrado.
@@ -536,16 +516,15 @@ components:
         processed_at: { type: string, format: date-time, nullable: true }
         original_url: { type: string, format: uri, nullable: true }
         processed_url: { type: string, format: uri, nullable: true }
-        votes: { type: integer, minimum: 0, nullable: true }
     PublicVideo:
       type: object
-      required: [video_id, title]
+      required: [video_id, title, votes]
       properties:
-        video_id: { type: string }
+        video_id: { type: integer, format: int64 }
         title: { type: string }
         processed_url: { type: string, format: uri, nullable: true }
         city: { type: string, nullable: true }
-        votes: { type: integer, minimum: 0, nullable: true }
+        votes: { type: integer, minimum: 0 }
     VoteResponse:
       type: object
       properties:

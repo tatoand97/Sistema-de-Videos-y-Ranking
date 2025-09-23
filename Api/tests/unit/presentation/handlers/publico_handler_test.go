@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestPublicHandlers_VotePublicVideo_MissingUserID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -48,13 +47,12 @@ func TestPublicHandlers_ListRankings_InvalidParams(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-
 func TestPublicHandlers_ListRankings_UsesCache(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := &cacheRepo{
 		users: map[uint]responses.UserBasic{
-			1: {UserID: 1, Username: "alice", City: strPtr("Bogot·")},
-			2: {UserID: 2, Username: "bob", City: strPtr("MedellÌn")},
+			1: {UserID: 1, Username: "alice", City: strPtr("Bogot√°")},
+			2: {UserID: 2, Username: "bob", City: strPtr("Medell√≠n")},
 		},
 	}
 	svc := useCase.NewPublicService(repo, nil)
@@ -63,7 +61,7 @@ func TestPublicHandlers_ListRankings_UsesCache(t *testing.T) {
 	now := time.Now().UTC()
 	entry := map[string]any{
 		"schema_version": "v2",
-		"scope":         "global",
+		"scope":          "global",
 		"as_of":          now.Format(time.RFC3339),
 		"fresh_until":    now.Add(2 * time.Minute).Format(time.RFC3339),
 		"stale_until":    now.Add(10 * time.Minute).Format(time.RFC3339),
@@ -97,7 +95,7 @@ func TestPublicHandlers_ListRankings_UsesCache(t *testing.T) {
 	if assert.Len(t, got, 2) {
 		assert.Equal(t, "alice", got[0].Username)
 		if assert.NotNil(t, got[0].City) {
-			assert.Equal(t, "Bogot·", *got[0].City)
+			assert.Equal(t, "Bogot√°", *got[0].City)
 		}
 		assert.Equal(t, 0, repo.rankingsCalls)
 	}
@@ -107,7 +105,7 @@ func TestPublicHandlers_ListRankings_CacheCityScope(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := &cacheRepo{
 		users: map[uint]responses.UserBasic{
-			9: {UserID: 9, Username: "caro", City: strPtr("Bogot·")},
+			9: {UserID: 9, Username: "caro", City: strPtr("Bogot√°")},
 		},
 	}
 	svc := useCase.NewPublicService(repo, nil)
@@ -116,9 +114,9 @@ func TestPublicHandlers_ListRankings_CacheCityScope(t *testing.T) {
 	now := time.Now().UTC()
 	entry := map[string]any{
 		"schema_version": "v2",
-		"scope":         "city",
-		"city":          "Bogot·",
-		"city_slug":     "bogota",
+		"scope":          "city",
+		"city":           "Bogot√°",
+		"city_slug":      "bogota",
 		"as_of":          now.Format(time.RFC3339),
 		"fresh_until":    now.Add(2 * time.Minute).Format(time.RFC3339),
 		"stale_until":    now.Add(10 * time.Minute).Format(time.RFC3339),
@@ -137,7 +135,7 @@ func TestPublicHandlers_ListRankings_CacheCityScope(t *testing.T) {
 	r.GET("/api/public/rankings", h.ListRankings)
 
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/public/rankings?city=Bogot·", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/public/rankings?city=Bogot√°", nil)
 	r.ServeHTTP(w, req)
 
 	if !assert.Equal(t, http.StatusOK, w.Code) {
@@ -151,7 +149,7 @@ func TestPublicHandlers_ListRankings_CacheCityScope(t *testing.T) {
 	if assert.Len(t, got, 1) {
 		assert.Equal(t, "caro", got[0].Username)
 		if assert.NotNil(t, got[0].City) {
-			assert.Equal(t, "Bogot·", *got[0].City)
+			assert.Equal(t, "Bogot√°", *got[0].City)
 		}
 		assert.Equal(t, 0, repo.rankingsCalls)
 	}
@@ -160,7 +158,7 @@ func TestPublicHandlers_ListRankings_CacheCityScope(t *testing.T) {
 func TestPublicHandlers_ListRankings_CacheStaleFallback(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := &cacheRepo{
-		users: map[uint]responses.UserBasic{},
+		users:           map[uint]responses.UserBasic{},
 		rankingResponse: []responses.RankingItem{{Username: "db", Votes: 3}},
 	}
 	svc := useCase.NewPublicService(repo, nil)
@@ -169,7 +167,7 @@ func TestPublicHandlers_ListRankings_CacheStaleFallback(t *testing.T) {
 	now := time.Now().UTC()
 	entry := map[string]any{
 		"schema_version": "v2",
-		"scope":         "global",
+		"scope":          "global",
 		"as_of":          now.Add(-10 * time.Minute).Format(time.RFC3339),
 		"fresh_until":    now.Add(-5 * time.Minute).Format(time.RFC3339),
 		"stale_until":    now.Add(-1 * time.Minute).Format(time.RFC3339),

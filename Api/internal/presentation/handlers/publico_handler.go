@@ -292,21 +292,21 @@ const (
 )
 
 type rankingCacheItem struct {
-	Rank     int    json:"rank"
-	UserID   int64  json:"user_id"
-	Username string json:"username"
-	Score    int64  json:"score"
+	Rank     int    `json:"rank"`
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Score    int64  `json:"score"`
 }
 
 type rankingCacheEntry struct {
-	SchemaVersion string             json:"schema_version"
-	Scope         string             json:"scope"
-	City          string             json:"city,omitempty"
-	CitySlug      string             json:"city_slug,omitempty"
-	AsOf          time.Time          json:"as_of"
-	FreshUntil    time.Time          json:"fresh_until"
-	StaleUntil    time.Time          json:"stale_until"
-	Items         []rankingCacheItem json:"items"
+	SchemaVersion string             `json:"schema_version"`
+	Scope         string             `json:"scope"`
+	City          string             `json:"city,omitempty"`
+	CitySlug      string             `json:"city_slug,omitempty"`
+	AsOf          time.Time          `json:"as_of"`
+	FreshUntil    time.Time          `json:"fresh_until"`
+	StaleUntil    time.Time          `json:"stale_until"`
+	Items         []rankingCacheItem `json:"items"`
 }
 
 func slugCity(city string) string {
@@ -339,21 +339,21 @@ func slugCity(city string) string {
 
 func normalizeRune(r rune) rune {
 	switch r {
-	case 'á', 'à', 'ä', 'â', 'ã', 'å':
+	case '\u00e1', '\u00e0', '\u00e4', '\u00e2', '\u00e3', '\u00e5':
 		return 'a'
-	case 'é', 'è', 'ë', 'ê':
+	case '\u00e9', '\u00e8', '\u00eb', '\u00ea':
 		return 'e'
-	case 'í', 'ì', 'ï', 'î':
+	case '\u00ed', '\u00ec', '\u00ef', '\u00ee':
 		return 'i'
-	case 'ó', 'ò', 'ö', 'ô', 'õ':
+	case '\u00f3', '\u00f2', '\u00f6', '\u00f4', '\u00f5':
 		return 'o'
-	case 'ú', 'ù', 'ü', 'û':
+	case '\u00fa', '\u00f9', '\u00fc', '\u00fb':
 		return 'u'
-	case 'ñ':
+	case '\u00f1':
 		return 'n'
-	case 'ç':
+	case '\u00e7':
 		return 'c'
-	case 'ß':
+	case '\u00df':
 		return 's'
 	default:
 		return r
