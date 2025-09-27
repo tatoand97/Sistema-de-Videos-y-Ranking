@@ -66,6 +66,47 @@ services:
       && /usr/local/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
     restart: "no"
 
+  minio:
+    image: minio/minio:latest
+    command: ["server","/data","--console-address",":9001"]
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    ports: ["9000:9000","9001:9001"]
+    volumes: [minio-data:/data]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  minio-buckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
+        echo 'Waiting for MinIO to be ready...'
+        sleep 2
+      done;
+      /usr/bin/mc mb myminio/raw-videos --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos-trim --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos-edit --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos-audio-removal --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos-watermarking --ignore-existing;
+      /usr/bin/mc mb myminio/processed-videos --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/processed-videos;
+      echo 'Buckets created successfully';
+      exit 0;
+      "
+    restart: "no"
+
   api:
     build:
       context: ./Api
@@ -109,47 +150,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  minio:
-    image: minio/minio:latest
-    command: ["server","/data","--console-address",":9001"]
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio12345
-    ports: ["9000:9000","9001:9001"]
-    volumes: [minio-data:/data]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  minio-buckets:
-    image: minio/mc
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio12345
-    entrypoint: >
-      /bin/sh -c "
-      until /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
-        echo 'Waiting for MinIO to be ready...'
-        sleep 2
-      done;
-      /usr/bin/mc mb myminio/raw-videos --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-trim --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-edit --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-audio-removal --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-watermarking --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/processed-videos;
-      echo 'Buckets created successfully';
-      exit 0;
-      "
-    restart: "no"
 
   nginx:
     image: nginx:1.27-alpine
@@ -200,6 +200,11 @@ services:
       MAX_SECONDS: "30"
       MAX_RETRIES: "3"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "trim"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # EditVideo Worker (2º - processed-videos-trim → processed-videos-edit)
   edit-video:
@@ -225,6 +230,11 @@ services:
       MAX_SECONDS: "30"
       MAX_RETRIES: "3"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "edit"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # AudioRemoval Worker (3º - processed-videos-edit → processed-videos-audio-removal)
   audio-removal:
@@ -249,6 +259,11 @@ services:
       STATE_MACHINE_QUEUE: states_machine_queue
       MAX_RETRIES: "3"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "audio"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Watermarking Worker (4º - processed-videos-audio-removal → processed-videos-watermarking)
   watermarking:
@@ -274,6 +289,11 @@ services:
       MAX_SECONDS: "30"
       MAX_RETRIES: "3"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "watermark"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # StatesMachine Worker (Orchestrator)
   states-machine:
@@ -284,6 +304,18 @@ services:
       rabbitmq:
         condition: service_healthy
       postgres:
+        condition: service_healthy
+      trim-video:
+        condition: service_healthy
+      edit-video:
+        condition: service_healthy
+      audio-removal:
+        condition: service_healthy
+      watermarking:
+        condition: service_healthy
+      gossip-open-close:
+        condition: service_healthy
+      admin-cache:
         condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
@@ -296,7 +328,7 @@ services:
       RETRY_DELAY_MINUTES: "5"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pgrep", "-f", "statesmachine"]
+      test: ["CMD", "pgrep", "-f", "states"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -331,6 +363,11 @@ services:
       LOGO_PATH: ./assets/nba-logo-removebg-preview.png
       MAX_RETRIES: "3"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "gossip"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   admin-cache:
     build:
@@ -348,6 +385,11 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
       REDIS_URL: redis://redis:6379
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "admin"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   redis-data:
