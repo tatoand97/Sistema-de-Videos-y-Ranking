@@ -144,6 +144,10 @@ services:
       STATES_MACHINE_QUEUE: states_machine_queue
       # Optional: limit queue length (used by publisher EnsureQueue)
       RABBITMQ_QUEUE_MAXLEN: "1000"
+      
+      # Processed video URL configuration
+      PROCESSED_VIDEO_HOST: nginx
+      PROCESSED_VIDEO_PORT: "8084"
     restart: unless-stopped
     healthcheck:
       test: [ "CMD","wget","--no-verbose","--tries=1","--spider","http://localhost:8080/health" ]
@@ -326,6 +330,10 @@ services:
       DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
       MAX_RETRIES: "3"
       RETRY_DELAY_MINUTES: "5"
+      
+      # Processed video URL configuration
+      PROCESSED_VIDEO_HOST: nginx
+      PROCESSED_VIDEO_PORT: "8084"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pgrep", "-f", "states"]

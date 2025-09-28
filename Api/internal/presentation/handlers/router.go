@@ -19,12 +19,13 @@ type RouterConfig struct {
 	JWTSecret          string
 	Cache              interfaces.Cache
 	CacheSchemaVersion string
+	ProcessedVideoURL  string
 }
 
 func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	authHandlers := NewAuthHandlers(cfg.AuthService)
 	userHandlers := NewUserHandlers(cfg.UserService)
-	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
+	videoHandlers := NewVideoHandlers(cfg.UploadsUC, cfg.ProcessedVideoURL)
 	// Constructor con cache de solo lectura
 	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.CacheSchemaVersion)
 
