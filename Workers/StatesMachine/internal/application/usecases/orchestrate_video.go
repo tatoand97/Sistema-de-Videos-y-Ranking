@@ -24,6 +24,7 @@ type OrchestrateVideoUseCase struct {
 	watermarkingQueue string
 	maxRetries        int
 	retryDelayMinutes int
+	processedVideoURL string
 }
 
 func NewOrchestrateVideoUseCase(
@@ -31,6 +32,7 @@ func NewOrchestrateVideoUseCase(
 	publisher domain.MessagePublisher,
 	editVideoQueue, audioRemovalQueue, watermarkingQueue string,
 	maxRetries, retryDelayMinutes int,
+	processedVideoURL string,
 ) *OrchestrateVideoUseCase {
 	return &OrchestrateVideoUseCase{
 		videoRepo:         videoRepo,
@@ -40,6 +42,7 @@ func NewOrchestrateVideoUseCase(
 		watermarkingQueue: watermarkingQueue,
 		maxRetries:        maxRetries,
 		retryDelayMinutes: retryDelayMinutes,
+		processedVideoURL: processedVideoURL,
 	}
 }
 
@@ -291,7 +294,7 @@ func (uc *OrchestrateVideoUseCase) HandleGossipOpenCloseCompleted(videoID, filen
 		return fmt.Errorf("invalid video ID format '%s': %w", videoID, err)
 	}
 	// Generate the full URL for the processed file
-	processedURL := fmt.Sprintf("http://localhost:8084/processed-videos/%s", filename)
+	processedURL := fmt.Sprintf(uc.processedVideoURL, filename)
 	if err := uc.videoRepo.UpdateStatusAndProcessedFile(id, domain.StatusProcessed, processedURL); err != nil {
 		return fmt.Errorf("update final status and processed file: %w", err)
 	}
