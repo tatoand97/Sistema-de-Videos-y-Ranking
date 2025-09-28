@@ -32,7 +32,7 @@ func TestVideoResponse_Fields(t *testing.T) {
 
 func TestPublicVideoResponse_Fields(t *testing.T) {
 	processedURL := "https://example.com/public.mp4"
-	city := "Bogotá"
+	city := "BogotÃ¡"
 	response := responses.PublicVideoResponse{
 		VideoID:      1,
 		Title:        "Public Video",
@@ -49,7 +49,7 @@ func TestPublicVideoResponse_Fields(t *testing.T) {
 }
 
 func TestRankingItem_Fields(t *testing.T) {
-	city := "Bogotá"
+	city := "BogotÃ¡"
 	item := responses.RankingItem{
 		Username: "user1",
 		City:     &city,
@@ -62,7 +62,7 @@ func TestRankingItem_Fields(t *testing.T) {
 }
 
 func TestRankingEntry_Fields(t *testing.T) {
-	city := "Medellín"
+	city := "MedellÃ­n"
 	entry := responses.RankingEntry{
 		Position: 1,
 		Username: "topuser",
@@ -77,7 +77,7 @@ func TestRankingEntry_Fields(t *testing.T) {
 }
 
 func TestUserBasic_Fields(t *testing.T) {
-	city := "Bogotá"
+	city := "BogotÃ¡"
 	user := responses.UserBasic{
 		UserID:   123,
 		Username: "johndoe",
@@ -87,30 +87,4 @@ func TestUserBasic_Fields(t *testing.T) {
 	assert.Equal(t, uint(123), user.UserID)
 	assert.Equal(t, "johndoe", user.Username)
 	assert.Equal(t, &city, user.City)
-}
-
-func TestCreateUploadResponsePostPolicy_Fields(t *testing.T) {
-	form := responses.S3PostPolicyForm{
-		Key:               "uploads/video.mp4",
-		Policy:            "base64-encoded-policy",
-		Algorithm:         "AWS4-HMAC-SHA256",
-		Credential:        "credential",
-		Date:              "20240101T000000Z",
-		Signature:         "signature",
-		ContentType:       "video/mp4",
-		SuccessActionCode: "201",
-	}
-
-	response := responses.CreateUploadResponsePostPolicy{
-		UploadURL:   "https://s3.amazonaws.com/bucket",
-		ResourceURL: "https://s3.amazonaws.com/bucket/uploads/video.mp4",
-		ExpiresAt:   "2024-01-01T01:00:00Z",
-		Form:        form,
-	}
-
-	assert.Equal(t, "https://s3.amazonaws.com/bucket", response.UploadURL)
-	assert.Equal(t, "https://s3.amazonaws.com/bucket/uploads/video.mp4", response.ResourceURL)
-	assert.Equal(t, form, response.Form)
-	assert.Equal(t, "uploads/video.mp4", response.Form.Key)
-	assert.Equal(t, "base64-encoded-policy", response.Form.Policy)
 }

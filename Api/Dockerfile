@@ -28,6 +28,24 @@ RUN apk add --no-cache file ca-certificates && update-ca-certificates
 COPY --from=build /out/api /app/api
 COPY internal/infrastructure/migrations /app/internal/infrastructure/migrations
 
+ENV DATABASE_URL=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
+    JWT_SECRET=6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn \
+    PORT=8080 \
+    CORS_ORIGIN=* \
+    UPLOAD_DIR=/uploads \
+    REDIS_ADDR=10.0.3.78:6379 \
+    CACHE_PREFIX=videorank: \
+    CACHE_TTL_SECONDS=120 \
+    MINIO_ENDPOINT=10.0.1.9:9000 \
+    MINIO_ACCESS_KEY=minioadmin \
+    MINIO_SECRET_KEY=minioadmin123 \
+    MINIO_BUCKET=raw-videos \
+    MINIO_USE_SSL=false \
+    RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672/ \
+    STATES_MACHINE_QUEUE=states_machine_queue \
+    RABBITMQ_QUEUE_MAXLEN=1000
+
 RUN chmod +x /app/api && file /app/api
 EXPOSE 8080
 ENTRYPOINT ["/app/api"]
+
