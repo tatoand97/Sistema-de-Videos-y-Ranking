@@ -28,8 +28,12 @@ func (f *fakeUserRepoAuth) GetByEmail(ctx context.Context, email string) (*entit
 	}
 	return f.user, nil
 }
-func (f *fakeUserRepoAuth) EmailExists(ctx context.Context, email string) (bool, error) { return false, nil }
-func (f *fakeUserRepoAuth) GetPermissions(ctx context.Context, userID uint) ([]string, error) { return []string{"read"}, nil }
+func (f *fakeUserRepoAuth) EmailExists(ctx context.Context, email string) (bool, error) {
+	return false, nil
+}
+func (f *fakeUserRepoAuth) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
+	return []string{"read"}, nil
+}
 
 type fakeCacheAuth struct {
 	blacklisted bool
@@ -62,7 +66,7 @@ func TestLogin_Success(t *testing.T) {
 	user := &entities.User{
 		UserID:       1,
 		Email:        "test@example.com",
-		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMye.Uo0QZQyHdcqtQ/iBRXSo0wFuze1F.",
+		PasswordHash: string(pwHash),
 		FirstName:    "Test",
 		LastName:     "User",
 	}

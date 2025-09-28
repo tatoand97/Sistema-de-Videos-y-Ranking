@@ -14,6 +14,7 @@ export default function MyVideos() {
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [refreshing, setRefreshing] = useState<Record<string, boolean>>({});
+  const [publishing, setPublishing] = useState<Record<string, boolean>>({});
 
   const load = async () => {
     if (!token) return;
@@ -92,12 +93,23 @@ export default function MyVideos() {
                 <button
                   className="btn secondary"
                   disabled={!processed}
-                  onClick={() => {
-                    if (!processed) return;
-                    alert('¡Listo para publicar! Tu video ya está disponible en la sección pública cuando el procesamiento ha finalizado.');
+                  onClick={async () => {
+                    if (!processed || !token) return;
+                    if (!confirm('Publicar este video para que aparezca en la sección pública?')) return;
+                    try {
+                      setPublishing(prev => ({ ...prev, [v.video_id]: true }));
+                      await endpoints.publishVideo(token, v.video_id);
+                      await refreshOne(v.video_id);
+                      alert('Video publicado exitosamente.');
+                    } catch (e: any) {
+                      const msg = e?.message || 'Error desconocido';
+                      alert(`No se pudo publicar: ${msg}`);
+                    } finally {
+                      setPublishing(prev => ({ ...prev, [v.video_id]: false }));
+                    }
                   }}
                 >
-                  Listo para publicar
+                  {publishing[v.video_id] ? 'Publicando…' : 'Listo para publicar'}
                 </button>
                 <button className="btn danger" onClick={() => remove(v.video_id)}>Eliminar</button>
               </div>
