@@ -195,8 +195,8 @@ func main() {
 		Cache:              cache,
 		CacheSchemaVersion: getEnvOrDefault("SCHEMA_VERSION", "v2"),
 		ProcessedVideoURL:  fmt.Sprintf("http://%s:%s/processed-videos/%%s", 
-			getEnvOrDefault("PROCESSED_VIDEO_HOST"), 
-			getEnvOrDefault("PROCESSED_VIDEO_PORT")),
+			getEnvOrDefault("PROCESSED_VIDEO_HOST", "localhost"), 
+			getEnvOrDefault("PROCESSED_VIDEO_PORT", "8084")),
 	})
 
 	port := getEnvOrDefault("PORT", "8080")
