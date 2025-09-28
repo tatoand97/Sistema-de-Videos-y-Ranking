@@ -17,6 +17,7 @@ type Config struct {
 	DatabaseURL         string
 	MaxRetries          int
 	RetryDelayMinutes   int
+	ProcessedVideoURL   string
 }
 
 func LoadConfig() *Config {
@@ -35,6 +36,9 @@ func LoadConfig() *Config {
 		DatabaseURL:       getEnv("DATABASE_URL", "postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable"),
 		MaxRetries:        getEnvInt("MAX_RETRIES", 3),
 		RetryDelayMinutes: getEnvInt("RETRY_DELAY_MINUTES", 5),
+		ProcessedVideoURL: fmt.Sprintf("http://%s:%s/processed-videos/%%s", 
+			getEnv("PROCESSED_VIDEO_HOST", "localhost"), 
+			getEnv("PROCESSED_VIDEO_PORT", "8084")),
 	}
 }
 
