@@ -13,7 +13,7 @@
           </elementProp>
           <elementProp name="HOST" elementType="Argument">
             <stringProp name="Argument.name">HOST</stringProp>
-            <stringProp name="Argument.value">localhost</stringProp>
+            <stringProp name="Argument.value">ec2-98-89-171-224.compute-1.amazonaws.com</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="PORT" elementType="Argument">
@@ -23,7 +23,7 @@
           </elementProp>
           <elementProp name="VUSERS_INTERACTIVO" elementType="Argument">
             <stringProp name="Argument.name">VUSERS_INTERACTIVO</stringProp>
-            <stringProp name="Argument.value">10</stringProp>
+            <stringProp name="Argument.value">1</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="RAMP_INTERACTIVO" elementType="Argument">
@@ -33,12 +33,12 @@
           </elementProp>
           <elementProp name="DURATION_INTERACTIVO" elementType="Argument">
             <stringProp name="Argument.name">DURATION_INTERACTIVO</stringProp>
-            <stringProp name="Argument.value">600</stringProp>
+            <stringProp name="Argument.value">60</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="VUSERS_UPLOAD" elementType="Argument">
             <stringProp name="Argument.name">VUSERS_UPLOAD</stringProp>
-            <stringProp name="Argument.value">5</stringProp>
+            <stringProp name="Argument.value">0</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="RAMP_UPLOAD" elementType="Argument">
@@ -78,7 +78,7 @@
           </elementProp>
           <elementProp name="RESULT_DIR" elementType="Argument">
             <stringProp name="Argument.name">RESULT_DIR</stringProp>
-            <stringProp name="Argument.value">C:\Users\User\Downloads\Pruebas de Carga mb\results</stringProp>
+            <stringProp name="Argument.value">C:\Users\User\Downloads\ScriptsJmeter\results</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -138,7 +138,7 @@
           <stringProp name="shareMode">shareMode.all</stringProp>
         </CSVDataSet>
         <hashTree/>
-        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think Time 1–3s">
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think Time 1–3s" enabled="true">
           <stringProp name="ConstantTimer.delay">1000</stringProp>
           <stringProp name="RandomTimer.range">2000</stringProp>
         </UniformRandomTimer>
@@ -248,7 +248,7 @@ if (vid) vars.put(&apos;VIDEO_ID_RESOLVED&apos;, vid)</stringProp>
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Public / Vote video (1)" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Public / Vote video (1)">
           <stringProp name="HTTPSampler.path">/api/public/videos/${VIDEO_ID_RESOLVED}/vote</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
@@ -275,7 +275,7 @@ if (vid) vars.put(&apos;VIDEO_ID_RESOLVED&apos;, vid)</stringProp>
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Ranking / Get rankings">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Ranking / Get rankings" enabled="true">
           <stringProp name="HTTPSampler.path">/api/public/rankings</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
@@ -416,7 +416,7 @@ if (vid) vars.put(&apos;VIDEO_ID_RESOLVED&apos;, vid)</stringProp>
         </ResultCollector>
         <hashTree/>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG-Upload (login → upload multipart)" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG-Upload (login → upload multipart)">
         <stringProp name="ThreadGroup.num_threads">${VUSERS_UPLOAD}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">${RAMP_UPLOAD}</stringProp>
         <stringProp name="ThreadGroup.duration">${DURATION_UPLOAD}</stringProp>
@@ -454,7 +454,7 @@ if (vid) vars.put(&apos;VIDEO_ID_RESOLVED&apos;, vid)</stringProp>
           <stringProp name="shareMode">shareMode.all</stringProp>
         </CSVDataSet>
         <hashTree/>
-        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think Time 1–3s">
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think Time 1–3s" enabled="true">
           <stringProp name="ConstantTimer.delay">1000</stringProp>
           <stringProp name="RandomTimer.range">2000</stringProp>
         </UniformRandomTimer>
@@ -553,7 +553,7 @@ if (jwt) vars.put(&apos;jwt&apos;, jwt)</stringProp>
               <elementProp name="title" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.name">title</stringProp>
-                <stringProp name="Argument.value">${TITLE}</stringProp>
+                <stringProp name="Argument.value">${TITLE}_${__time(yyyyMMdd_HHmmss)}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
               </elementProp>
@@ -635,7 +635,7 @@ if (jwt) vars.put(&apos;jwt&apos;, jwt)</stringProp>
           <stringProp name="filename">${RESULT_DIR}/${FECHA_HORA}_TG-Upload-tree.csv</stringProp>
         </ResultCollector>
         <hashTree/>
-        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report">
+        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
