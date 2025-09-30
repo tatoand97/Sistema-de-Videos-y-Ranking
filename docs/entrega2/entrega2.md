@@ -1,6 +1,6 @@
 # Arquitectura de Migración a la Nube
 
-[Documento base pdf](https://drive.google.com/file/d/1_3dRX9mB9M9X8CIazQZEIB9CSLGLGqa4/view?usp=sharing) (Equivalente a lo que se presenta en el readme):
+[Documento base pdf](https://drive.google.com/file/d/1Tp4nY7XF09juAGXBzTFp1rY2o9fx0npL/view?usp=sharing) (Equivalente a lo que se presenta en el readme):
 
 A continuación, se describen los ajustes realizados y la arquitectura de la migración a la nube, además de una breve descripción de los servicios y tecnologías AWS usadas.
 
@@ -27,7 +27,7 @@ Los cambios más relevantes se realizaron en el manejo de los Dockerfile, para d
 ### Aplicación (BFF + Jobs)
 - **Backend API (Go/REST):** BFF para el front. Expone endpoints para subir videos, consultar estado, y leer rankings. Publica mensajes a la cola, lee/escribe cache y metadata.  
 - **Workers (Go):** procesos especializados para tareas de media: *audio removal, trim, edit, watermarking, open/close*, etc.  
-- **State Machine / Orquestador:** coordina el pipeline de cada video (p. ej., `UPLOADED → QUEUED → PROCESSING → READY/FAILED`), encadena pasos y reintentos.  
+- **State Machine / Orquestador:** coordina el pipeline de cada video ( `(uploaded-> trim video → edit video→ audio removal →watermarking-> gossip(cortinilla)->procesamiento finalizado `), encadena pasos y reintentos.  
 - **Admin Cache:** job de mantenimiento que recalienta/invalida caches (listas, conteos, rankings).  
 
 ### Mensajería
@@ -50,7 +50,7 @@ Los cambios más relevantes se realizaron en el manejo de los Dockerfile, para d
 2. **Encolar:** la API guarda metadata inicial en PostgreSQL, actualiza Redis con estado `QUEUED`, y publica un mensaje en RabbitMQ con el `job_id` y pasos requeridos.  
 3. **Consumo:** un worker toma el mensaje, descarga del MinIO, ejecuta la etapa (p. ej., trim), sube el artefacto resultante a MinIO.  
 4. **Estado/Progreso:** el worker actualiza PostgreSQL (auditoría y trazabilidad) y Redis (estado y % progreso) y emite un evento para la siguiente etapa de la state machine.  
-5. **Orquestación:** la State Machine encadena etapas (p. ej., *normalize → watermark → transcode → thumbnail*). En caso de error, reintento/backoff; si falla de forma definitiva, marca `FAILED` y envía a DLQ.  
+5. **Orquestación:** la State Machine encadena etapas (uploaded-> trim video → edit video→ audio removal →watermarking-> gossip(cortinilla)->procesamiento finalizado). En caso de error, reintento/backoff; si falla de forma definitiva, marca `FAILED`.  
 6. **Finalización:** con éxito, queda `READY` y se disparan tareas de post-proceso (generación de previews, actualización de índices/rankings).  
 
 ### B. Lectura y ranking de videos
@@ -76,8 +76,7 @@ Los cambios más relevantes se realizaron en el manejo de los Dockerfile, para d
 
 - Escala horizontal en **Workers** (picos de procesamiento) y **API** (lecturas).  
 - **RabbitMQ** amortigua picos.  
-- Idempotencia de jobs: usa claves de *dedup*, *locks* en Redis y marcas de etapa en Postgres para reintentos seguros.  
-- DLQ en RabbitMQ y reprocesos controlados por la State Machine.  
+- Idempotencia de jobs: usa claves de *dedup*, *locks* en Redis y marcas de etapa en Postgres para reintentos seguros.    
 - Caches con TTL + invalidación por evento (p. ej., al terminar un job o cambiar un conteo).  
 - Separación de responsabilidades: objetos en MinIO, control en PostgreSQL, hot path en Redis.  
 
