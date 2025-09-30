@@ -1,6 +1,6 @@
 # Arquitectura de Migración a la Nube
 
-[Documento base pdf](https://drive.google.com/file/d/1bjdX-FyB1E8WFU20kBNWp30shhSFmGQK/view?usp=sharing) (Equivalente a lo que se presenta en el readme):
+[Documento base pdf](https://drive.google.com/file/d/1Tp4nY7XF09juAGXBzTFp1rY2o9fx0npL/view?usp=sharing) (Equivalente a lo que se presenta en el readme):
 
 A continuación, se describen los ajustes realizados y la arquitectura de la migración a la nube, además de una breve descripción de los servicios y tecnologías AWS usadas.
 
@@ -76,8 +76,7 @@ Los cambios más relevantes se realizaron en el manejo de los Dockerfile, para d
 
 - Escala horizontal en **Workers** (picos de procesamiento) y **API** (lecturas).  
 - **RabbitMQ** amortigua picos.  
-- Idempotencia de jobs: usa claves de *dedup*, *locks* en Redis y marcas de etapa en Postgres para reintentos seguros.  
-- DLQ en RabbitMQ y reprocesos controlados por la State Machine.  
+- Idempotencia de jobs: usa claves de *dedup*, *locks* en Redis y marcas de etapa en Postgres para reintentos seguros.    
 - Caches con TTL + invalidación por evento (p. ej., al terminar un job o cambiar un conteo).  
 - Separación de responsabilidades: objetos en MinIO, control en PostgreSQL, hot path en Redis.  
 
