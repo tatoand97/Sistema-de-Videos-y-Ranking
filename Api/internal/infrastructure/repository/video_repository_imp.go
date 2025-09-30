@@ -82,7 +82,7 @@ func (r *videoRepository) Delete(ctx context.Context, id uint) error {
 
 // UpdateStatus updates the status of a video by id.
 func (r *videoRepository) UpdateStatus(ctx context.Context, id uint, status entities.VideoStatus) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status": string(status),
 	}
 	// processed_at constraint in DB allows non-null when status IN ('PROCESSED','PUBLISHED').

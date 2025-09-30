@@ -35,9 +35,6 @@ func (f *fakeUserRepoForReg) GetByEmail(ctx context.Context, email string) (*ent
 func (f *fakeUserRepoForReg) EmailExists(ctx context.Context, email string) (bool, error) {
 	return f.emailExists, nil
 }
-func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
-	return []string{}, nil
-}
 
 func (f *fakeUserRepoForReg) GetPermissions(ctx context.Context, userID uint) ([]string, error) {
 	return []string{"read"}, nil
@@ -76,7 +73,7 @@ func TestRegister_Success(t *testing.T) {
 		"password1": "password123",
 		"password2": "password123",
 		"country": "Colombia",
-		"city": "Bogotá"
+		"city": "BogotÃ¡"
 	}`
 
 	w := httptest.NewRecorder()
@@ -118,7 +115,7 @@ func TestRegister_EmailExists(t *testing.T) {
 		"password1": "password123",
 		"password2": "password123",
 		"country": "Colombia",
-		"city": "Bogotá"
+		"city": "BogotÃ¡"
 	}`
 
 	w := httptest.NewRecorder()
@@ -143,7 +140,7 @@ func TestRegister_PasswordMismatch(t *testing.T) {
 		"password1": "password123",
 		"password2": "different",
 		"country": "Colombia",
-		"city": "Bogotá"
+		"city": "BogotÃ¡"
 	}`
 
 	w := httptest.NewRecorder()
@@ -193,7 +190,7 @@ func TestRegister_InvalidCountry(t *testing.T) {
 		"password1": "password123",
 		"password2": "password123",
 		"country": "InvalidCountry",
-		"city": "Bogotá"
+		"city": "BogotÃ¡"
 	}`
 
 	w := httptest.NewRecorder()
@@ -218,7 +215,7 @@ func TestRegister_CreateUserError(t *testing.T) {
 		"password1": "password123",
 		"password2": "password123",
 		"country": "Colombia",
-		"city": "Bogotá"
+		"city": "BogotÃ¡"
 	}`
 
 	w := httptest.NewRecorder()

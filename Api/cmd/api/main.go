@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
-    "strings"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -92,16 +92,14 @@ func setupRabbitPublisher(rabbitURL, queue string) interfaces.MessagePublisher {
 // It uses the same env var names as Workers/AdminCache for consistency:
 // - REDIS_ADDR (e.g., "redis:6379")
 // - CACHE_PREFIX (default: "videorank:")
-// - CACHE_TTL_SECONDS (default: 120)
 func setupRedisCacheFromEnv() interfaces.Cache {
 	addr := os.Getenv("REDIS_ADDR")
 	if addr == "" {
 		return nil
 	}
 	prefix := getEnvOrDefault("CACHE_PREFIX", "videorank:")
-	ttl := atoiOrDefault(os.Getenv("CACHE_TTL_SECONDS"), 120)
 	rdb := infraCache.MustRedisClient(addr)
-	return infraCache.NewRedisCache(rdb, prefix, ttl)
+	return infraCache.NewRedisCache(rdb, prefix)
 }
 
 // Redis Aggregates removed; rankings served from DB.
@@ -131,7 +129,6 @@ func main() {
 
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
 	userService := useCase.NewUserService(userRepo, locRepo)
-	locationService := useCase.NewLocationService(locRepo)
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	voteRepo := postgresrepo.NewVoteRepository(db)
 
@@ -183,22 +180,23 @@ func main() {
 	})
 	r.Static("/static", "./static")
 	statusService := useCase.NewStatusService()
-	// Redis cache and idempotency TTL
+	// Redis cache solo lectura
 	cache := setupRedisCacheFromEnv()
-	idemTTL := atoiOrDefault(os.Getenv("IDEMPOTENCY_TTL_SECONDS"), 3600)
 	// Public service without Redis aggregates
 	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
 	handlers.NewRouter(r, handlers.RouterConfig{
-		AuthService:     authService,
-		UserService:     userService,
-		LocationService: locationService,
-		UploadsUC:       uploadsUC,
-		PublicService:   publicService,
-		StatusService:   statusService,
-		JWTSecret:       jwtSecret,
-		Cache:           cache,
-		IdemTTLSeconds:  idemTTL,
+		AuthService:        authService,
+		UserService:        userService,
+		UploadsUC:          uploadsUC,
+		PublicService:      publicService,
+		StatusService:      statusService,
+		JWTSecret:          jwtSecret,
+		Cache:              cache,
+		CacheSchemaVersion: getEnvOrDefault("SCHEMA_VERSION", "v2"),
+		ProcessedVideoURL:  fmt.Sprintf("http://%s:%s/processed-videos/%%s", 
+			getEnvOrDefault("PROCESSED_VIDEO_HOST", "localhost"), 
+			getEnvOrDefault("PROCESSED_VIDEO_PORT", "8084")),
 	})
 
 	port := getEnvOrDefault("PORT", "8080")

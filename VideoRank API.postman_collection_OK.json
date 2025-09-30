@@ -7,8 +7,21 @@
     "_exporter_id": "31371962"
   },
   "variable": [
-    { "key": "host", "value": "localhost", "type": "string" },
-    { "key": "port", "value": "8080", "type": "string" }
+    {
+      "key": "host",
+      "value": "localhost",
+      "type": "string"
+    },
+    {
+      "key": "port",
+      "value": "8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
@@ -18,9 +31,13 @@
         "header": [],
         "url": {
           "raw": "{{host}}:{{port}}/health",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["health"]
+          "path": [
+            "health"
+          ]
         }
       },
       "response": []
@@ -30,7 +47,10 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
         "body": {
           "mode": "raw",
@@ -38,9 +58,15 @@
         },
         "url": {
           "raw": "{{host}}:{{port}}/api/auth/signup",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","auth","signup"]
+          "path": [
+            "api",
+            "auth",
+            "signup"
+          ]
         }
       },
       "response": [
@@ -48,7 +74,12 @@
           "name": "Email ya registrado",
           "status": "Bad Request",
           "code": 400,
-          "header": [ { "key": "Content-Type", "value": "application/json" } ],
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
           "body": "{\n  \"error\": \"email_already_in_use\"\n}"
         }
       ]
@@ -60,12 +91,13 @@
           "listen": "test",
           "script": {
             "exec": [
-              "// Guarda el token JWT en la variable de entorno 'jwt'",
               "try {",
               "  const data = pm.response.json();",
               "  const token = data.access_token || data.token || data.jwt;",
-              "  if (token) { pm.environment.set('jwt', token); }",
-              "} catch(e) { console.log('Sin JSON o sin token'); }"
+              "  if (token) { pm.collectionVariables.set('jwt', token); }",
+              "} catch(e) {",
+              "  console.log('Sin JSON o sin token');",
+              "}"
             ],
             "type": "text/javascript",
             "packages": {}
@@ -74,16 +106,27 @@
       ],
       "request": {
         "method": "POST",
-        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"Password123!\"\n}"
         },
         "url": {
           "raw": "{{host}}:{{port}}/api/auth/login",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","auth","login"]
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
         }
       },
       "response": [
@@ -91,7 +134,12 @@
           "name": "Login exitoso",
           "status": "OK",
           "code": 200,
-          "header": [ { "key": "Content-Type", "value": "application/json" } ],
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
           "body": "{\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"access_token\": \"<jwt>\"\n}"
         }
       ]
@@ -100,12 +148,22 @@
       "name": "Auth / Me (protected)",
       "request": {
         "method": "GET",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/me",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","me"]
+          "path": [
+            "api",
+            "me"
+          ]
         }
       },
       "response": []
@@ -114,12 +172,23 @@
       "name": "Auth / Logout",
       "request": {
         "method": "POST",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/auth/logout",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","auth","logout"]
+          "path": [
+            "api",
+            "auth",
+            "logout"
+          ]
         }
       },
       "response": []
@@ -128,22 +197,56 @@
       "name": "Videos / Upload (protected)",
       "request": {
         "method": "POST",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "body": {
           "mode": "formdata",
           "formdata": [
-            { "key": "title", "value": "Example title", "type": "text" },
-            { "key": "video_file", "type": "file", "src": "" },
-            { "key": "checksum", "value": "", "type": "text", "disabled": true },
-            { "key": "sizeBytes", "value": "", "type": "text", "disabled": true },
-            { "key": "mimeType", "value": "video/mp4", "type": "text", "disabled": true }
+            {
+              "key": "title",
+              "value": "Example title",
+              "type": "text"
+            },
+            {
+              "key": "video_file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "checksum",
+              "value": "",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "sizeBytes",
+              "value": "",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "mimeType",
+              "value": "video/mp4",
+              "type": "text",
+              "disabled": true
+            }
           ]
         },
         "url": {
           "raw": "{{host}}:{{port}}/api/videos/upload",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","videos","upload"]
+          "path": [
+            "api",
+            "videos",
+            "upload"
+          ]
         }
       },
       "response": []
@@ -152,26 +255,22 @@
       "name": "Videos / List (protected)",
       "request": {
         "method": "GET",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/videos",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","videos"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Videos / Statuses (public)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}:{{port}}/api/videos/statuses",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","videos","statuses"]
+          "path": [
+            "api",
+            "videos"
+          ]
         }
       },
       "response": []
@@ -180,13 +279,29 @@
       "name": "Videos / Get by ID (protected)",
       "request": {
         "method": "GET",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/videos/{{video_id}}",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","videos","{{video_id}}"],
-          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+          "path": [
+            "api",
+            "videos",
+            "{{video_id}}"
+          ],
+          "variable": [
+            {
+              "key": "video_id",
+              "value": "a1b2c3d4"
+            }
+          ]
         }
       },
       "response": []
@@ -195,13 +310,29 @@
       "name": "Videos / Delete by ID (protected)",
       "request": {
         "method": "DELETE",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/videos/{{video_id}}",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","videos","{{video_id}}"],
-          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+          "path": [
+            "api",
+            "videos",
+            "{{video_id}}"
+          ],
+          "variable": [
+            {
+              "key": "video_id",
+              "value": "a1b2c3d4"
+            }
+          ]
         }
       },
       "response": []
@@ -210,13 +341,30 @@
       "name": "Videos / Publish (protected)",
       "request": {
         "method": "POST",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/videos/{{video_id}}/publish",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","videos","{{video_id}}","publish"],
-          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+          "path": [
+            "api",
+            "videos",
+            "{{video_id}}",
+            "publish"
+          ],
+          "variable": [
+            {
+              "key": "video_id",
+              "value": "a1b2c3d4"
+            }
+          ]
         }
       },
       "response": []
@@ -228,9 +376,15 @@
         "header": [],
         "url": {
           "raw": "{{host}}:{{port}}/api/public/videos",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","public","videos"]
+          "path": [
+            "api",
+            "public",
+            "videos"
+          ]
         }
       },
       "response": []
@@ -239,13 +393,31 @@
       "name": "Public / Vote video (protected)",
       "request": {
         "method": "POST",
-        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
         "url": {
           "raw": "{{host}}:{{port}}/api/public/videos/{{video_id}}/vote",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","public","videos","{{video_id}}","vote"],
-          "variable": [ { "key": "video_id", "value": "a1b2c3d4" } ]
+          "path": [
+            "api",
+            "public",
+            "videos",
+            "{{video_id}}",
+            "vote"
+          ],
+          "variable": [
+            {
+              "key": "video_id",
+              "value": "a1b2c3d4"
+            }
+          ]
         }
       },
       "response": []
@@ -257,31 +429,28 @@
         "header": [],
         "url": {
           "raw": "{{host}}:{{port}}/api/public/rankings?city=&page=1&pageSize=20",
-          "host": ["{{host}}"],
+          "host": [
+            "{{host}}"
+          ],
           "port": "{{port}}",
-          "path": ["api","public","rankings"],
+          "path": [
+            "api",
+            "public",
+            "rankings"
+          ],
           "query": [
-            { "key": "city", "value": "" },
-            { "key": "page", "value": "1" },
-            { "key": "pageSize", "value": "20" }
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Location / City ID",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}:{{port}}/api/location/city-id?country=&city=",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": ["api","location","city-id"],
-          "query": [
-            { "key": "country", "value": "" },
-            { "key": "city", "value": "" }
+            {
+              "key": "city",
+              "value": ""
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "20"
+            }
           ]
         }
       },

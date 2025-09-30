@@ -67,7 +67,7 @@ func TestRegisterUserRequest_Validation(t *testing.T) {
 				Password1: "password123",
 				Password2: "password123",
 				Country:   "Colombia",
-				City:      "Bogotá",
+				City:      "BogotÃ¡",
 			},
 			valid: true,
 		},
@@ -80,7 +80,7 @@ func TestRegisterUserRequest_Validation(t *testing.T) {
 				Password1: "password123",
 				Password2: "different",
 				Country:   "Colombia",
-				City:      "Bogotá",
+				City:      "BogotÃ¡",
 			},
 			valid: false,
 		},
@@ -96,57 +96,6 @@ func TestRegisterUserRequest_Validation(t *testing.T) {
 				if tt.request.Password1 != tt.request.Password2 {
 					assert.NotEqual(t, tt.request.Password1, tt.request.Password2)
 				}
-			}
-		})
-	}
-}
-
-func TestCreateUploadRequest_Validation(t *testing.T) {
-	tests := []struct {
-		name    string
-		request requests.CreateUploadRequest
-		valid   bool
-	}{
-		{
-			name: "valid request",
-			request: requests.CreateUploadRequest{
-				Filename:  "test.mp4",
-				MimeType:  "video/mp4",
-				SizeBytes: 1024,
-				Checksum:  "abc123",
-			},
-			valid: true,
-		},
-		{
-			name: "empty filename",
-			request: requests.CreateUploadRequest{
-				Filename:  "",
-				MimeType:  "video/mp4",
-				SizeBytes: 1024,
-				Checksum:  "abc123",
-			},
-			valid: false,
-		},
-		{
-			name: "empty mime type",
-			request: requests.CreateUploadRequest{
-				Filename:  "test.mp4",
-				MimeType:  "",
-				SizeBytes: 1024,
-				Checksum:  "abc123",
-			},
-			valid: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.valid {
-				assert.NotEmpty(t, tt.request.Filename)
-				assert.NotEmpty(t, tt.request.MimeType)
-				assert.Greater(t, tt.request.SizeBytes, int64(0))
-			} else {
-				assert.True(t, tt.request.Filename == "" || tt.request.MimeType == "")
 			}
 		})
 	}

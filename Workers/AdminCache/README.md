@@ -1,35 +1,44 @@
 # AdminCache Worker
 
-Cachea el ranking en Redis con TTL corto y refresco periódico. No consume colas ni usa RabbitMQ.
+Cachea y publica los rankings Top-10 desde PostgreSQL hacia Redis siguiendo las reglas del Administrador de Cache (ACR): version de esquema, locks distribuidos, stale-while-revalidate y observabilidad por ciclo.
 
-## Qué hace
-- Ejecuta un warmup cada `REFRESH_INTERVAL_SECONDS` para calcular el ranking (global y por ciudad) desde Postgres y lo guarda paginado en Redis con TTL `CACHE_TTL_SECONDS`.
-- No hay invalidación por eventos; el refresco es únicamente periódico.
+## Que hace
+- Ejecuta un ciclo programado (`REFRESH_INTERVAL_SECONDS`, por defecto 300s) que lee PostgreSQL, normaliza y valida los Top-10 globales y por ciudad.
+- Cada escritura es atomica: reemplaza el conjunto completo, incluye metadatos (`as_of`, `fresh_until`, `stale_until`, `schema_version`) y aplica TTL con `stale-while-revalidate` + jitter +/-10 %.
+- Usa locks con lease (`CACHE_LOCK_LEASE_SECONDS`) para que un unico worker refresque cada clave a la vez. Si el refresco falla, se mantiene el dato **stale** hasta `CACHE_MAX_STALE_SECONDS`.
+- Registra metricas via logs estructurados (exitos, errores, lock contention, uso de stale) por cada ciclo.
 
-## Claves Redis
-- Global: `rank:global:page:{N}:size:{S}`
-- Por ciudad: `rank:city:{slug}:page:{N}:size:{S}`
-- Se almacena con prefijo `CACHE_PREFIX` (por defecto `videorank:`).
+## Claves Redis (prefijo `CACHE_PREFIX`, default `videorank:`)
+- Ranking global: `rank:global:{schema_version}`
+- Ranking ciudad: `rank:city:{city_slug}:{schema_version}`
+- Indice de ciudades activas: `rank:index:cities:{schema_version}`
+- Locks: `rank:lock:global:{schema_version}` / `rank:lock:city:{city_slug}:{schema_version}`
 
-## Variables (.env)
-Revisa `AdminCache/.env`:
+Cada payload almacena hasta 10 elementos con `rank`, `user_id`, `username`, `score`, y los metadatos temporales necesarios para controlar `fresh`/`stale`.
+
+## Variables de entorno (`AdminCache/.env`)
 ```
 # Redis
 REDIS_ADDR=redis:6379
 CACHE_PREFIX=videorank:
-CACHE_TTL_SECONDS=120
+SCHEMA_VERSION=v2
+CACHE_TTL_FRESH_SECONDS=900
+CACHE_MAX_STALE_SECONDS=600
+CACHE_JITTER_PERCENT=10
+CACHE_LOCK_LEASE_SECONDS=10
+CACHE_MAX_TOP_USERS=10
 
 # Postgres (ajusta al DSN de tu DB)
 POSTGRES_DSN=postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
+DB_READ_TIMEOUT_SECONDS=3
+DB_MAX_RETRIES=3
 
 # Warmup
-REFRESH_INTERVAL_SECONDS=60
-WARM_PAGES=3
+REFRESH_INTERVAL_SECONDS=300
+BATCH_SIZE_CITIES=50
+# Lista opcional (nombres libres) -> se normaliza a slug
 WARM_CITIES=bogota,medellin,cali
-PAGE_SIZE_DEFAULT=20
 ```
-
-> Si quieres usar el mismo Postgres/Redis de vote-system-docker, ajusta `POSTGRES_DSN`.
 
 ## Ejecutar
 Con todo en este folder:
@@ -41,10 +50,10 @@ docker compose logs -f admincache
 ## Ver Redis
 ```bash
 docker exec -it redis redis-cli -- scan 0 match 'videorank:rank:*' count 100
-docker exec -it redis redis-cli get 'videorank:rank:global:page:1:size:20' | jq .
+docker exec -it redis redis-cli get 'videorank:rank:global:v2' | jq .
 ```
 
 ## Notas
-- Si quieres que el SQL sea parametrizable por env (como en vote-system), puedo agregar `RANK_SQL` y fallback a un default alineado a tu esquema.
-- Para reflejo inmediato, se podría agregar recomputo eager o modo incremental con ZSET.
-
+- El worker prioriza disponibilidad: si la extraccion desde PostgreSQL falla, mantiene la version stale hasta que expire `CACHE_MAX_STALE_SECONDS`; al vencer, emite alerta (log `stale cache expired`).
+- Para invalidacion dirigida, puedes eliminar las claves versionadas (`rank:city:{slug}:{schema_version}`) y dejar que el siguiente ciclo las regenere.
+- Si necesitas exponer metricas a Prometheus u otro backend, conecta los logs estructurados al pipeline correspondiente.

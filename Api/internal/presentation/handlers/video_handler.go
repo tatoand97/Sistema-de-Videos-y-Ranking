@@ -18,10 +18,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type VideoHandlers struct{ uploadsUC *useCase.UploadsUseCase }
+type VideoHandlers struct{ 
+	uploadsUC *useCase.UploadsUseCase
+	processedVideoURL string
+}
 
-func NewVideoHandlers(uploadsUC *useCase.UploadsUseCase) *VideoHandlers {
-	return &VideoHandlers{uploadsUC: uploadsUC}
+func NewVideoHandlers(uploadsUC *useCase.UploadsUseCase, processedVideoURL string) *VideoHandlers {
+	return &VideoHandlers{uploadsUC: uploadsUC, processedVideoURL: processedVideoURL}
 }
 
 // ListVideos handles GET /api/videos (authenticated)
@@ -40,7 +43,7 @@ func (h *VideoHandlers) ListVideos(c *gin.Context) {
 	// Map to OAS Video schema
 	out := make([]responses.VideoResponse, 0, len(videos))
 	for _, v := range videos {
-		out = append(out, toVideoResponse(v))
+		out = append(out, h.toVideoResponse(v))
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -151,7 +154,7 @@ func (h *VideoHandlers) GetVideoDetail(c *gin.Context) {
 		}
 	}
 
-	resp := toVideoResponse(v)
+	resp := h.toVideoResponse(v)
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -273,7 +276,7 @@ func parseVideoIDOrAbort(c *gin.Context) (uint, bool) {
 }
 
 // toVideoResponse maps an entities.Video to responses.VideoResponse.
-func toVideoResponse(v *entities.Video) responses.VideoResponse {
+func (h *VideoHandlers) toVideoResponse(v *entities.Video) responses.VideoResponse {
 	status := "uploaded"
 	if v.Status == string(entities.StatusPublished) {
 		status = "published"
@@ -300,7 +303,7 @@ func toVideoResponse(v *entities.Video) responses.VideoResponse {
 			resp.ProcessedURL = v.ProcessedFile
 		} else {
 			// ProcessedFile contains only the filename, construct the full URL
-			processedURL := fmt.Sprintf("http://localhost:8084/processed-videos/%s", *v.ProcessedFile)
+			processedURL := fmt.Sprintf(h.processedVideoURL, *v.ProcessedFile)
 			resp.ProcessedURL = &processedURL
 		}
 	}

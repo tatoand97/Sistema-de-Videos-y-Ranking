@@ -11,30 +11,27 @@ import (
 
 // RouterConfig groups router dependencies to reduce parameters.
 type RouterConfig struct {
-	AuthService     *useCase.AuthService
-	UserService     *useCase.UserService
-	LocationService *useCase.LocationService
-	UploadsUC       *useCase.UploadsUseCase
-	PublicService   *useCase.PublicService
-	StatusService   *useCase.StatusService
-	JWTSecret       string
-	Cache           interfaces.Cache
-	IdemTTLSeconds  int
+	AuthService        *useCase.AuthService
+	UserService        *useCase.UserService
+	UploadsUC          *useCase.UploadsUseCase
+	PublicService      *useCase.PublicService
+	StatusService      *useCase.StatusService
+	JWTSecret          string
+	Cache              interfaces.Cache
+	CacheSchemaVersion string
+	ProcessedVideoURL  string
 }
 
 func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	authHandlers := NewAuthHandlers(cfg.AuthService)
 	userHandlers := NewUserHandlers(cfg.UserService)
-	videoHandlers := NewVideoHandlers(cfg.UploadsUC)
-	locationHandlers := NewLocationHandlers(cfg.LocationService)
-	// Constructor con cache para idempotencia; sin agregados Redis
-	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.IdemTTLSeconds)
+	videoHandlers := NewVideoHandlers(cfg.UploadsUC, cfg.ProcessedVideoURL)
+	// Constructor con cache de solo lectura
+	publicHandlers := NewPublicHandlersWithCache(cfg.PublicService, cfg.Cache, cfg.CacheSchemaVersion)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	// Público: ubicación
-	router.GET("/api/location/city-id", locationHandlers.GetCityID)
 	router.GET("/api/public/videos", publicHandlers.ListPublicVideos)
 	router.GET("/api/public/rankings", publicHandlers.ListRankings)
 	// Se eliminaron endpoints basados en poll_id (leaderboard/stats/count)
@@ -45,7 +42,6 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	authGroup.Use(middlewares.JWTMiddleware(cfg.AuthService, cfg.JWTSecret))
 	authGroup.POST("/api/auth/logout", authHandlers.Logout)
 	authGroup.GET("/api/me", authHandlers.Me)
-
 	videoGroup := authGroup.Group("/api/videos")
 	videoGroup.GET("", videoHandlers.ListVideos)
 	videoGroup.POST("/upload", videoHandlers.Upload)
@@ -53,7 +49,7 @@ func NewRouter(router *gin.Engine, cfg RouterConfig) {
 	videoGroup.DELETE("/:video_id", videoHandlers.DeleteVideo)
 	videoGroup.POST("/:video_id/publish", videoHandlers.PublishVideo)
 
-	// Ruta protegida para votar por un video público
+	// Ruta protegida para votar por un video publico
 	authGroup.POST("/api/public/videos/:video_id/vote", publicHandlers.VotePublicVideo)
 
 }

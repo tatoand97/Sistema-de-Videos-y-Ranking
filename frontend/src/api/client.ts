@@ -1,4 +1,4 @@
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://ec2-98-89-171-224.compute-1.amazonaws.com:8080';
 
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
