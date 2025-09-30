@@ -1,6 +1,6 @@
 # Arquitectura de Migración a la Nube
 
-[Documento base pdf](https://drive.google.com/file/d/1_3dRX9mB9M9X8CIazQZEIB9CSLGLGqa4/view?usp=sharing) (Equivalente a lo que se presenta en el readme):
+[Documento base pdf](https://drive.google.com/file/d/1bjdX-FyB1E8WFU20kBNWp30shhSFmGQK/view?usp=sharing) (Equivalente a lo que se presenta en el readme):
 
 A continuación, se describen los ajustes realizados y la arquitectura de la migración a la nube, además de una breve descripción de los servicios y tecnologías AWS usadas.
 

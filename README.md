@@ -7,7 +7,7 @@
 - **Juan Carlos Martinez Muñoz** - jc.martinezm1@uniandes.edu.co - Developer
 
 # Nuevas entregas
-[Entrega 2](docs/entrega2.md#arquitectura-de-migración-a-la-nube)
+[Entrega 2-Arquitectura y cambios](docs/entrega2/entrega2.md#arquitectura-de-migración-a-la-nube)
 
 # Sistema de Videos y Ranking
 
