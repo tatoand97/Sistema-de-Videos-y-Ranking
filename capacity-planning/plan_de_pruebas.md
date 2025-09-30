@@ -169,7 +169,7 @@ flowchart TD
 
 ## 12. Gráficos simulados
 **Throughput vs. Usuarios**  
-![Throughput vs Usuarios](jmeter_throughput_vs_users.png)
+![Throughput vs Usuarios](images/jmeter_throughput_vs_users.png)
 
 **Tiempo de Respuesta p95 vs. Carga**  
-![p95 vs Carga](jmeter_tiempo_respuesta_vs_carga.png)
+![p95 vs Carga](images/jmeter_tiempo_respuesta_vs_carga.png)
