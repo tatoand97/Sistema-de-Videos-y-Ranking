@@ -1,0 +1,5 @@
+timeStamp,elapsed,label,responseCode,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1759103863931,254,Auth / Login,200,true,,934,301,1,2,http://ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/login,254,0,84
+1759103867151,45349,Videos / Upload (multipart),201,true,,498,13255030,1,2,http://ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/videos/upload,45349,0,0
+1759103914438,150,Auth / Login,200,true,,934,791,1,2,http://ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/login,150,0,0
+1759103915905,43531,Videos / Upload (multipart),201,true,,498,13255038,1,1,http://ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/videos/upload,43531,0,0

@@ -27,11 +27,8 @@
 		},
 		{
 			"name": "Auth / Signup",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [
 					{
 						"key": "Content-Type",
@@ -40,7 +37,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Tester\",\n  \"email\": \"alice@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Madrid\",\n  \"country\": \"Spain\"\n}"
+					"raw": "{\n  \"first_name\": \"user10\",\n  \"last_name\": \"Tester\",\n  \"email\": \"user10@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogotá\",\n  \"country\": \"Colombia\"\n}"
 				},
 				"url": {
 					"raw": "{{host}}:{{port}}/api/auth/signup",
@@ -59,7 +56,7 @@
 				{
 					"name": "Email ya registrado",
 					"originalRequest": {
-						"method": "GET",
+						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
@@ -68,7 +65,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Tester\",\n  \"email\": \"alice@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Madrid\",\n  \"country\": \"Spain\"\n}"
+							"raw": "{\n  \"first_name\": \"user10\",\n  \"last_name\": \"Tester\",\n  \"email\": \"user10@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogotá\",\n  \"country\": \"Colombia\"\n}"
 						},
 						"url": {
 							"raw": "{{host}}:{{port}}/api/auth/signup",
@@ -112,7 +109,8 @@
 							"} catch(e) { console.log('Sin JSON o sin token'); }"
 						],
 						"type": "text/javascript",
-						"packages": {}
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
@@ -126,7 +124,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"Password123!\"\n}"
+					"raw": "{\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"Password123!\"\n}"
 				},
 				"url": {
 					"raw": "{{host}}:{{port}}/api/auth/login",
@@ -154,7 +152,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"Password123!\"\n}"
+							"raw": "{\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"Password123!\"\n}"
 						},
 						"url": {
 							"raw": "{{host}}:{{port}}/api/auth/login",
@@ -454,7 +452,7 @@
 					"variable": [
 						{
 							"key": "video_id",
-							"value": "a1b2c3d4"
+							"value": "29"
 						}
 					]
 				}
@@ -494,18 +492,78 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/signup",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"first_name\": \"cristian\",\n  \"last_name\": \"Tester\",\n  \"email\": \"cristian@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogota\",\n  \"country\": \"Colombia\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/signup",
+					"host": [
+						"ec2-98-89-171-224",
+						"compute-1",
+						"amazonaws",
+						"com"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"signup"
+					]
+				},
+				"description": "Generated from cURL: curl --location 'ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/signup' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Tester\",\n  \"email\": \"alice@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogota\",\n  \"country\": \"Colombia\"\n}'"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
 		{
 			"key": "host",
-			"value": "localhost",
-			"type": "string"
+			"value": "localhost"
 		},
 		{
 			"key": "port",
-			"value": "8080",
-			"type": "string"
+			"value": "8080"
 		}
 	]
 }
