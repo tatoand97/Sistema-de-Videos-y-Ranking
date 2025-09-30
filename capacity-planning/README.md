@@ -74,14 +74,28 @@ La aplicación se ejecuta en AWS sobre instancias EC2 tipo **t3.small** para el 
 - **Flujo:** Login → listar videos disponibles → votar ×3 → consultar ranking.
 
 **Figura 1. Flujo Escenario Interactivo**  
-![Figura 1 — Flujo Escenario Interactivo](images/figura01_flujo_interactivo.png "Figura 1. Flujo Escenario Interactivo")
+
+```mermaid
+flowchart TD
+  A["POST /api/auth/login"] --> B["GET /api/public/videos"]
+  B --> C["POST /api/public/videos/:id/vote (1)"] 
+  C --> D["POST /api/public/videos/:id/vote (2)"]
+  D --> E["POST /api/public/videos/:id/vote (3)"]
+  E --> F["GET /api/public/rankings?city=..."]
+```
 
 ### 2.2. Escenario Carga/Asíncrono (Uploads)
 - **Objetivo:** Someter la ingestión y el pipeline asíncrono.  
 - **Flujo:** Login → carga de video (upload).
 
 **Figura 2. Flujo Escenario Upload**  
-![Figura 2 — Flujo Escenario Upload](images/figura02_flujo_upload.png "Figura 2. Flujo Escenario Upload")
+```mermaid
+flowchart TD
+  A["POST /api/auth/login (jugador)"] --> B["POST /api/videos/upload (multipart 30-100 MB)"]
+  B --> C["Broker encola tarea"]
+  C --> D["Worker ffmpeg procesa 720p/30s + watermark"]
+  D --> E["GET /api/videos/:video_id (status = processed)"]
+```
 
 ---
 
