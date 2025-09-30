@@ -40,7 +40,8 @@
 ---
 
 ## Introducción
-Este informe resume el resultado de las pruebas de humo y las pruebas de carga escalonadas ejecutadas sobre dos rutas críticas del **Sistema de Video y Ranking**. Las pruebas sobre los escenarios **Interactivo** y **Upload** permiten visualizar el comportamiento del sistema a medida que aumentan los usuarios concurrentes, comparando los resultados frente a los criterios del Plan de Pruebas.
+Este informe resume el resultado de las pruebas de humo y las pruebas de carga escalonadas ejecutadas sobre dos rutas críticas del **Sistema de Video y Ranking**. Las pruebas sobre los escenarios **Interactivo** y **Upload** permiten visualizar el comportamiento del sistema a medida que aumentan los usuarios concurrentes, comparando los resultados frente a los criterios del Plan de Pruebas. (Ver ![Plan de Pruebas](plan_de_pruebas.md "Plan"))
+
 
 ---
 
