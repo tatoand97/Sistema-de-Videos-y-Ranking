@@ -27,7 +27,7 @@ Los cambios más relevantes se realizaron en el manejo de los Dockerfile, para d
 ### Aplicación (BFF + Jobs)
 - **Backend API (Go/REST):** BFF para el front. Expone endpoints para subir videos, consultar estado, y leer rankings. Publica mensajes a la cola, lee/escribe cache y metadata.  
 - **Workers (Go):** procesos especializados para tareas de media: *audio removal, trim, edit, watermarking, open/close*, etc.  
-- **State Machine / Orquestador:** coordina el pipeline de cada video (p. ej., `UPLOADED → QUEUED → PROCESSING → READY/FAILED`), encadena pasos y reintentos.  
+- **State Machine / Orquestador:** coordina el pipeline de cada video ( `(uploaded-> trim video → edit video→ audio removal →watermarking-> gossip(cortinilla)->procesamiento finalizado `), encadena pasos y reintentos.  
 - **Admin Cache:** job de mantenimiento que recalienta/invalida caches (listas, conteos, rankings).  
 
 ### Mensajería
@@ -50,7 +50,7 @@ Los cambios más relevantes se realizaron en el manejo de los Dockerfile, para d
 2. **Encolar:** la API guarda metadata inicial en PostgreSQL, actualiza Redis con estado `QUEUED`, y publica un mensaje en RabbitMQ con el `job_id` y pasos requeridos.  
 3. **Consumo:** un worker toma el mensaje, descarga del MinIO, ejecuta la etapa (p. ej., trim), sube el artefacto resultante a MinIO.  
 4. **Estado/Progreso:** el worker actualiza PostgreSQL (auditoría y trazabilidad) y Redis (estado y % progreso) y emite un evento para la siguiente etapa de la state machine.  
-5. **Orquestación:** la State Machine encadena etapas (p. ej., *normalize → watermark → transcode → thumbnail*). En caso de error, reintento/backoff; si falla de forma definitiva, marca `FAILED` y envía a DLQ.  
+5. **Orquestación:** la State Machine encadena etapas (uploaded-> trim video → edit video→ audio removal →watermarking-> gossip(cortinilla)->procesamiento finalizado). En caso de error, reintento/backoff; si falla de forma definitiva, marca `FAILED`.  
 6. **Finalización:** con éxito, queda `READY` y se disparan tareas de post-proceso (generación de previews, actualización de índices/rankings).  
 
 ### B. Lectura y ranking de videos
