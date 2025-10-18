@@ -28,21 +28,21 @@ RUN apk add --no-cache file ca-certificates && update-ca-certificates
 COPY --from=build /out/api /app/api
 COPY internal/infrastructure/migrations /app/internal/infrastructure/migrations
 
-ENV DATABASE_URL=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
+ENV DATABASE_URL=postgres://app_user:app_password@videorank.cfkc2y4acj9g.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
     JWT_SECRET=6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn \
     PORT=8080 \
     CORS_ORIGIN=* \
     UPLOAD_DIR=/uploads \
-    REDIS_ADDR=10.0.3.78:6379 \
+    REDIS_ADDR=10.0.3.71:6379 \
     CACHE_PREFIX=videorank: \
     CACHE_TTL_SECONDS=120 \
     AWS_REGION=us-east-1 \
-    AWS_ACCESS_KEY_ID=changeme \
-    AWS_SECRET_ACCESS_KEY=changeme \
-    S3_BUCKET=raw-videos \
-    S3_ENDPOINT= \
+    AWS_ACCESS_KEY_ID=ASIAXGQWHVU2NHKVETB2 \
+    AWS_SECRET_ACCESS_KEY=UPhGfB0Y6tbLkjbY3W/MZuPGBp+AR9aKcgNKvVbA \
+    S3_BUCKET=video-ranking-raw-videos \
+    S3_ENDPOINT=\
     S3_USE_PATH_STYLE=false \
-    RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672/ \
+    RABBITMQ_URL=amqp://admin:admin@10.0.5.20:5672/ \
     STATES_MACHINE_QUEUE=states_machine_queue \
     RABBITMQ_QUEUE_MAXLEN=1000
 

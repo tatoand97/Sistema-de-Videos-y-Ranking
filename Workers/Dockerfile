@@ -32,40 +32,40 @@ RUN chmod +x /usr/local/bin/start-workers.sh \
     && mkdir -p /tmp \
     && chmod 1777 /tmp
 
-ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672 \
+ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.20:5672 \
     AWS_REGION=us-east-1 \
-    AWS_ACCESS_KEY_ID=changeme \
-    AWS_SECRET_ACCESS_KEY=changeme \
+    AWS_ACCESS_KEY_ID=ASIAXGQWHVU2NHKVETB2 \
+    AWS_SECRET_ACCESS_KEY=UPhGfB0Y6tbLkjbY3W/MZuPGBp+AR9aKcgNKvVbA \
     S3_ENDPOINT= \
     S3_USE_PATH_STYLE=false \
     STATE_MACHINE_QUEUE=states_machine_queue \
     EDIT_VIDEO_QUEUE=edit_video_queue \
     AUDIO_REMOVAL_QUEUE=audio_removal_queue \
     WATERMARKING_QUEUE=watermarking_queue \
-    DATABASE_URL=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
-    REDIS_ADDR=10.0.3.78:6379 \
+    DATABASE_URL=postgres://app_user:app_password@videorank.cfkc2y4acj9g.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
+    REDIS_ADDR=10.0.3.71:6379 \
     TRIM_VIDEO_QUEUE_NAME=trim_video_queue \
-    TRIM_VIDEO_RAW_BUCKET=raw-videos \
-    TRIM_VIDEO_PROCESSED_BUCKET=processed-videos-trim \
+    TRIM_VIDEO_RAW_BUCKET=video-ranking-raw-videos \
+    TRIM_VIDEO_PROCESSED_BUCKET=video-ranking-processed-videos-trim \
     TRIM_VIDEO_MAX_SECONDS=30 \
     TRIM_VIDEO_MAX_RETRIES=3 \
     EDIT_VIDEO_QUEUE_NAME=edit_video_queue \
-    EDIT_VIDEO_RAW_BUCKET=processed-videos-trim \
-    EDIT_VIDEO_PROCESSED_BUCKET=processed-videos-edit \
+    EDIT_VIDEO_RAW_BUCKET=video-ranking-processed-videos-trim \
+    EDIT_VIDEO_PROCESSED_BUCKET=video-ranking-processed-videos-edit \
     EDIT_VIDEO_MAX_SECONDS=30 \
     EDIT_VIDEO_MAX_RETRIES=3 \
     AUDIO_REMOVAL_QUEUE_NAME=audio_removal_queue \
-    AUDIO_REMOVAL_RAW_BUCKET=processed-videos-edit \
-    AUDIO_REMOVAL_PROCESSED_BUCKET=processed-videos-audio-removal \
+    AUDIO_REMOVAL_RAW_BUCKET=video-ranking-processed-videos-edit \
+    AUDIO_REMOVAL_PROCESSED_BUCKET=video-ranking-processed-videos-audio-removal \
     AUDIO_REMOVAL_MAX_RETRIES=3 \
     WATERMARKING_QUEUE_NAME=watermarking_queue \
-    WATERMARKING_RAW_BUCKET=processed-videos-audio-removal \
-    WATERMARKING_PROCESSED_BUCKET=processed-videos-watermarking \
+    WATERMARKING_RAW_BUCKET=video-ranking-processed-videos-audio-removal \
+    WATERMARKING_PROCESSED_BUCKET=video-ranking-processed-videos-watermarking \
     WATERMARKING_MAX_SECONDS=30 \
     WATERMARKING_MAX_RETRIES=3 \
     GOSSIP_QUEUE_NAME=gossip_open_close_queue \
-    GOSSIP_S3_BUCKET_RAW=processed-videos-watermarking \
-    GOSSIP_S3_BUCKET_PROCESSED=processed-videos \
+    GOSSIP_S3_BUCKET_RAW=video-ranking-processed-videos-watermarking \
+    GOSSIP_S3_BUCKET_PROCESSED=video-ranking-processed-videos \
     GOSSIP_MAX_SECONDS=30 \
     GOSSIP_INTRO_SECONDS=2.5 \
     GOSSIP_OUTRO_SECONDS=2.5 \
@@ -75,8 +75,8 @@ ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672 \
     GOSSIP_MAX_RETRIES=3 \
     STATES_MACHINE_MAX_RETRIES=3 \
     STATES_MACHINE_RETRY_DELAY_MINUTES=5 \
-    ADMIN_CACHE_REDIS_ADDR=10.0.3.78:6379 \
-    ADMIN_CACHE_POSTGRES_DSN=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require  \
+    ADMIN_CACHE_REDIS_ADDR=10.0.3.71:6379 \
+    ADMIN_CACHE_POSTGRES_DSN=postgres://app_user:app_password@videorank.cfkc2y4acj9g.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require  \
     REFRESH_INTERVAL_SECONDS=30
 
 USER worker

@@ -71,7 +71,7 @@ func (s *videoStorage) Save(ctx context.Context, objectName string, reader io.Re
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(objectName),
 		Body:          reader,
-		ContentLength: size,
+		ContentLength: aws.Int64(size),
 	}
 	if contentType != "" {
 		input.ContentType = aws.String(contentType)
