@@ -15,10 +15,8 @@ func TestNewContainer_NilConfig(t *testing.T) {
 
 func TestNewContainer_InvalidMinIOConfig(t *testing.T) {
 	config := &infrastructure.Config{
-		MinIOEndpoint:  "",
-		MinIOAccessKey: "",
-		MinIOSecretKey: "",
-		RabbitMQURL:    "amqp://localhost:5672",
+		S3Region:    "",
+		RabbitMQURL: "amqp://localhost:5672",
 	}
 
 	container, err := infrastructure.NewContainer(config)
@@ -28,10 +26,8 @@ func TestNewContainer_InvalidMinIOConfig(t *testing.T) {
 
 func TestNewContainer_InvalidRabbitMQConfig(t *testing.T) {
 	config := &infrastructure.Config{
-		MinIOEndpoint:  "localhost:9000",
-		MinIOAccessKey: "minioadmin",
-		MinIOSecretKey: "minioadmin",
-		RabbitMQURL:    "invalid-url",
+		S3Region:    "us-east-1",
+		RabbitMQURL: "invalid-url",
 	}
 
 	container, err := infrastructure.NewContainer(config)

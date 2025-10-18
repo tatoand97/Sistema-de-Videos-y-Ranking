@@ -33,9 +33,11 @@ RUN chmod +x /usr/local/bin/start-workers.sh \
     && chmod 1777 /tmp
 
 ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672 \
-    MINIO_ENDPOINT=10.0.1.9:9000 \
-    MINIO_ACCESS_KEY=minioadmin \
-    MINIO_SECRET_KEY=minioadmin123 \
+    AWS_REGION=us-east-1 \
+    AWS_ACCESS_KEY_ID=changeme \
+    AWS_SECRET_ACCESS_KEY=changeme \
+    S3_ENDPOINT= \
+    S3_USE_PATH_STYLE=false \
     STATE_MACHINE_QUEUE=states_machine_queue \
     EDIT_VIDEO_QUEUE=edit_video_queue \
     AUDIO_REMOVAL_QUEUE=audio_removal_queue \
@@ -62,8 +64,8 @@ ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672 \
     WATERMARKING_MAX_SECONDS=30 \
     WATERMARKING_MAX_RETRIES=3 \
     GOSSIP_QUEUE_NAME=gossip_open_close_queue \
-    GOSSIP_MINIO_BUCKET_RAW=processed-videos-watermarking \
-    GOSSIP_MINIO_BUCKET_PROCESSED=processed-videos \
+    GOSSIP_S3_BUCKET_RAW=processed-videos-watermarking \
+    GOSSIP_S3_BUCKET_PROCESSED=processed-videos \
     GOSSIP_MAX_SECONDS=30 \
     GOSSIP_INTRO_SECONDS=2.5 \
     GOSSIP_OUTRO_SECONDS=2.5 \
@@ -74,7 +76,8 @@ ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672 \
     STATES_MACHINE_MAX_RETRIES=3 \
     STATES_MACHINE_RETRY_DELAY_MINUTES=5 \
     ADMIN_CACHE_REDIS_ADDR=10.0.3.78:6379 \
-    ADMIN_CACHE_POSTGRES_DSN=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require
+    ADMIN_CACHE_POSTGRES_DSN=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require  \
+    REFRESH_INTERVAL_SECONDS=30
 
 USER worker
 ENTRYPOINT ["/usr/local/bin/start-workers.sh"]

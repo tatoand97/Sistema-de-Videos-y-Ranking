@@ -9,9 +9,11 @@ import (
 func TestNewContainer_WithValidConfig(t *testing.T) {
 	config := &Config{
 		RabbitMQURL:     "amqp://guest:guest@localhost:5672/",
-		MinIOEndpoint:   "localhost:9000",
-		MinIOAccessKey:  "minioadmin",
-		MinIOSecretKey:  "minioadmin",
+		S3Region:        "us-east-1",
+		S3Endpoint:      "https://s3.us-east-1.amazonaws.com",
+		S3AccessKey:     "access",
+		S3SecretKey:     "secret",
+		S3UsePathStyle:  true,
 		RawBucket:       "raw-videos",
 		ProcessedBucket: "processed-videos",
 		QueueName:       "test-queue",
@@ -24,9 +26,9 @@ func TestNewContainer_WithValidConfig(t *testing.T) {
 		FPS:             30,
 		LogoPath:        "./assets/logo.png",
 	}
-	
+
 	container, err := NewContainer(config)
-	
+
 	// Expected to fail in test environment due to missing services
 	if err != nil {
 		assert.Error(t, err)
@@ -39,9 +41,9 @@ func TestNewContainer_WithValidConfig(t *testing.T) {
 
 func TestNewContainer_WithEmptyConfig(t *testing.T) {
 	config := &Config{}
-	
+
 	container, err := NewContainer(config)
-	
+
 	// Should fail with empty configuration
 	assert.Error(t, err)
 	assert.Nil(t, container)
@@ -50,9 +52,11 @@ func TestNewContainer_WithEmptyConfig(t *testing.T) {
 func TestConfig_Fields(t *testing.T) {
 	config := &Config{
 		RabbitMQURL:     "test-url",
-		MinIOEndpoint:   "test-endpoint",
-		MinIOAccessKey:  "test-access",
-		MinIOSecretKey:  "test-secret",
+		S3Region:        "us-east-1",
+		S3Endpoint:      "https://s3.us-east-1.amazonaws.com",
+		S3AccessKey:     "test-access",
+		S3SecretKey:     "test-secret",
+		S3UsePathStyle:  true,
 		RawBucket:       "raw",
 		ProcessedBucket: "processed",
 		QueueName:       "queue",
@@ -66,11 +70,13 @@ func TestConfig_Fields(t *testing.T) {
 		FPS:             25,
 		LogoPath:        "/path/to/logo.png",
 	}
-	
+
 	assert.Equal(t, "test-url", config.RabbitMQURL)
-	assert.Equal(t, "test-endpoint", config.MinIOEndpoint)
-	assert.Equal(t, "test-access", config.MinIOAccessKey)
-	assert.Equal(t, "test-secret", config.MinIOSecretKey)
+	assert.Equal(t, "us-east-1", config.S3Region)
+	assert.Equal(t, "https://s3.us-east-1.amazonaws.com", config.S3Endpoint)
+	assert.Equal(t, "test-access", config.S3AccessKey)
+	assert.Equal(t, "test-secret", config.S3SecretKey)
+	assert.True(t, config.S3UsePathStyle)
 	assert.Equal(t, "raw", config.RawBucket)
 	assert.Equal(t, "processed", config.ProcessedBucket)
 	assert.Equal(t, "queue", config.QueueName)

@@ -4,13 +4,16 @@ package infrastructure
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
 	RabbitMQURL     string
-	MinIOEndpoint   string
-	MinIOAccessKey  string
-	MinIOSecretKey  string
+	S3Region        string
+	S3Endpoint      string
+	S3AccessKey     string
+	S3SecretKey     string
+	S3UsePathStyle  bool
 	RawBucket       string
 	ProcessedBucket string
 	QueueName       string
@@ -29,6 +32,7 @@ func LoadConfig() *Config {
 	maxRetries := getEnvInt("MAX_RETRIES", 5)
 	queueMax := getEnvInt("QUEUE_MAX_LENGTH", 1000)
 	maxSeconds := getEnvInt("MAX_SECONDS", 30)
+	usePathStyle := strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true")
 
 	intro := getEnvFloat("INTRO_SECONDS", 2.5)
 	outro := getEnvFloat("OUTRO_SECONDS", 2.5)
@@ -44,11 +48,13 @@ func LoadConfig() *Config {
 	return &Config{
 		// Usa RABBITMQ_URL
 		RabbitMQURL:     os.Getenv("RABBITMQ_URL"),
-		MinIOEndpoint:   os.Getenv("MINIO_ENDPOINT"),
-		MinIOAccessKey:  os.Getenv("MINIO_ACCESS_KEY"),
-		MinIOSecretKey:  os.Getenv("MINIO_SECRET_KEY"),
-		RawBucket:       os.Getenv("MINIO_BUCKET_RAW"),
-		ProcessedBucket: os.Getenv("MINIO_BUCKET_PROCESSED"),
+		S3Region:        os.Getenv("AWS_REGION"),
+		S3Endpoint:      os.Getenv("S3_ENDPOINT"),
+		S3AccessKey:     os.Getenv("AWS_ACCESS_KEY_ID"),
+		S3SecretKey:     os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		S3UsePathStyle:  usePathStyle,
+		RawBucket:       os.Getenv("S3_BUCKET_RAW"),
+		ProcessedBucket: os.Getenv("S3_BUCKET_PROCESSED"),
 		QueueName:       os.Getenv("QUEUE_NAME"),
 		MaxRetries:      maxRetries,
 		QueueMaxLength:  queueMax,

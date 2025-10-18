@@ -211,7 +211,7 @@ func (uc *UploadsUseCase) DeleteUserVideoIfEligible(ctx context.Context, userID,
 		return err
 	}
 	// Eligibility: not allowed if processed or published (published for voting)
-	if v.Status == string(entities.StatusPublished) {
+	if v.Status == string(entities.StatusPublished) || v.Status == string(entities.StatusProcessed) {
 		return domain.ErrInvalid
 	}
 	// Proceed to delete
@@ -231,7 +231,7 @@ func (uc *UploadsUseCase) PublishVideo(ctx context.Context, videoID uint) error 
 	if err != nil {
 		return err
 	}
-	if v.Status == string(entities.StatusPublished) {
+	if v.Status == string(entities.StatusPublished) || v.Status == string(entities.StatusProcessed) {
 		return nil
 	}
 	if v.Status != string(entities.StatusProcessed) {

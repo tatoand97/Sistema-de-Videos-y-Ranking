@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const processedBaseURL = "https://media.example.com/%s"
+
 type mockVideoRepo struct {
 	videos []*entities.Video
 	video  *entities.Video
@@ -65,7 +67,7 @@ func TestVideoHandlers_ListVideos_Success(t *testing.T) {
 	repo := &mockVideoRepo{videos: videos}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
@@ -89,7 +91,7 @@ func TestVideoHandlers_ListVideos_Unauthorized(t *testing.T) {
 	repo := &mockVideoRepo{}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.GET("/api/videos", h.ListVideos)
 
@@ -113,7 +115,7 @@ func TestVideoHandlers_GetVideoDetail_Success(t *testing.T) {
 	repo := &mockVideoRepo{video: video}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
@@ -136,7 +138,7 @@ func TestVideoHandlers_GetVideoDetail_NotFound(t *testing.T) {
 	repo := &mockVideoRepo{err: domain.ErrNotFound}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
@@ -159,7 +161,7 @@ func TestVideoHandlers_DeleteVideo_Success(t *testing.T) {
 	repo := &mockVideoRepo{video: video}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
@@ -189,7 +191,7 @@ func TestVideoHandlers_PublishVideo_Success(t *testing.T) {
 	repo := &mockVideoRepo{video: video}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
@@ -217,7 +219,7 @@ func TestVideoHandlers_PublishVideo_NotProcessed(t *testing.T) {
 	repo := &mockVideoRepo{video: video}
 	storage := &mockVideoStorage{}
 	uc := useCase.NewUploadsUseCase(repo, storage, nil, "")
-	h := handlers.NewVideoHandlers(uc)
+	h := handlers.NewVideoHandlers(uc, processedBaseURL)
 
 	r.Use(func(c *gin.Context) {
 		c.Set("userID", uint(10))
