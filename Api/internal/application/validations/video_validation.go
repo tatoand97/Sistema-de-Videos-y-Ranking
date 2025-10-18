@@ -1,9 +1,9 @@
 package validations
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/Eyevinn/mp4ff/mp4"
@@ -15,34 +15,52 @@ var okBrands = map[string]struct{}{
 	"isom": {}, "iso2": {}, "mp41": {}, "mp42": {}, "avc1": {}, "mp4v": {}, "mp71": {},
 }
 
-func CheckMP4(b []byte) (int, int, error) {
-	// Permite exactamente 100MB; rechaza s�lo si supera el l�mite.
-	if len(b) > MaxBytes {
-		return 0, 0, fmt.Errorf("excede 100MB (%.2fMB)", float64(len(b))/1024.0/1024.0)
+// CheckMP4 validates an MP4 stream, ensuring size, brand and resolution requirements.
+// It expects a reader that also implements io.Seeker so it can rewind after validation.
+func CheckMP4(rs io.ReadSeeker) (int, int, error) {
+	if rs == nil {
+		return 0, 0, errors.New("lector MP4 vacio")
 	}
 
-	w, h, ftypMajor, compat, err := mp4VideoDimsAndBrands(b)
+	if _, err := rs.Seek(0, io.SeekStart); err != nil {
+		return 0, 0, fmt.Errorf("no se pudo posicionar al inicio: %w", err)
+	}
+	defer func() {
+		_, _ = rs.Seek(0, io.SeekStart)
+	}()
+
+	size, err := rs.Seek(0, io.SeekEnd)
+	if err != nil {
+		return 0, 0, fmt.Errorf("no se pudo determinar tamano: %w", err)
+	}
+	if size > MaxBytes {
+		return 0, 0, fmt.Errorf("excede 100MB (%.2fMB)", float64(size)/1024.0/1024.0)
+	}
+	if _, err := rs.Seek(0, io.SeekStart); err != nil {
+		return 0, 0, fmt.Errorf("no se pudo reposicionar al inicio: %w", err)
+	}
+
+	w, h, major, compat, err := mp4VideoDimsAndBrands(rs)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	if _, ok := okBrands[ftypMajor]; !ok {
+	if _, ok := okBrands[major]; !ok {
 		return 0, 0, fmt.Errorf("brand MP4 no reconocido: major=%s compat=[%s]",
-			ftypMajor, strings.Join(compat, ","))
+			major, strings.Join(compat, ","))
 	}
 
 	if w < 1920 || h < 1080 {
-		return w, h, fmt.Errorf("resolución insuficiente: %dx%d (<1920x1080)", w, h)
+		return w, h, fmt.Errorf("resolucion insuficiente: %dx%d (<1920x1080)", w, h)
 	}
 
 	return w, h, nil
 }
 
-func mp4VideoDimsAndBrands(b []byte) (int, int, string, []string, error) {
-	r := bytes.NewReader(b)
+func mp4VideoDimsAndBrands(r io.Reader) (int, int, string, []string, error) {
 	f, err := mp4.DecodeFile(r)
 	if err != nil {
-		return 0, 0, "", nil, fmt.Errorf("no es MP4 válido: %w", err)
+		return 0, 0, "", nil, fmt.Errorf("no es MP4 valido: %w", err)
 	}
 	if f.Moov == nil || len(f.Moov.Traks) == 0 {
 		return 0, 0, "", nil, errors.New("MP4 sin 'moov' o sin 'trak'")
@@ -51,15 +69,15 @@ func mp4VideoDimsAndBrands(b []byte) (int, int, string, []string, error) {
 		return 0, 0, "", nil, errors.New("MP4 sin 'ftyp'")
 	}
 
-	major := f.Ftyp.MajorBrand()        // m�todo, no campo
-	compat := f.Ftyp.CompatibleBrands() // m�todo, no campo
+	major := f.Ftyp.MajorBrand()
+	compat := f.Ftyp.CompatibleBrands()
 
 	for _, tr := range f.Moov.Traks {
 		if w, h, ok := videoDimsFromTrack(tr); ok {
 			return w, h, major, compat, nil
 		}
 	}
-	return 0, 0, major, compat, errors.New("no se encontró track de video")
+	return 0, 0, major, compat, errors.New("no se encontro track de video")
 }
 
 // videoDimsFromTrack intenta extraer dimensiones de un trak de video.
@@ -84,3 +102,4 @@ func videoDimsFromTrack(tr *mp4.TrakBox) (int, int, bool) {
 
 	return 0, 0, false
 }
+

@@ -1,7 +1,6 @@
 package useCase
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -62,19 +61,6 @@ func userIDFromCtx(ctx context.Context) (uint, error) {
 	return userID, nil
 }
 
-func readAllFromHeader(h *multipart.FileHeader) ([]byte, error) {
-	f, err := h.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	buf := make([]byte, h.Size)
-	if _, err := io.ReadFull(f, buf); err != nil {
-		return nil, err
-	}
-	return buf, nil
-}
-
 func sanitizeBaseName(name string) string {
 	base := filepath.Base(name)
 	if base == "." || base == ".." || strings.TrimSpace(base) == "" {
@@ -101,8 +87,7 @@ func contentTypeFromHeader(h *multipart.FileHeader) string {
 	return ct
 }
 
-func (uc *UploadsUseCase) saveFile(ctx context.Context, objectName string, data []byte, contentType string, size int64) (string, error) {
-	reader := bytes.NewReader(data)
+func (uc *UploadsUseCase) saveFile(ctx context.Context, objectName string, reader io.Reader, contentType string, size int64) (string, error) {
 	return uc.storage.Save(ctx, objectName, reader, size, contentType)
 }
 
@@ -157,14 +142,31 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 		return nil, err
 	}
 
-	fileBytes, err := readAllFromHeader(input.FileHeader)
+	file, err := input.FileHeader.Open()
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
-	// Validate MP4
-	if _, _, err := validations.CheckMP4(fileBytes); err != nil {
+	if _, _, err := validations.CheckMP4(file); err != nil {
 		return nil, fmt.Errorf("%w: %v", domain.ErrInvalid, err)
+	}
+
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	size := input.FileHeader.Size
+	if size <= 0 {
+		if s, err := file.Seek(0, io.SeekEnd); err == nil {
+			size = s
+		}
+		if _, err := file.Seek(0, io.SeekStart); err != nil {
+			return nil, err
+		}
+	}
+	if size <= 0 {
+		return nil, fmt.Errorf("%w: invalid file size", domain.ErrInvalid)
 	}
 
 	// Build a unique object key to avoid overwriting files with same original name
@@ -172,7 +174,7 @@ func (uc *UploadsUseCase) UploadMultipart(ctx context.Context, input UploadVideo
 	objectName := buildObjectName(base)
 	contentType := contentTypeFromHeader(input.FileHeader)
 
-	url, err := uc.saveFile(ctx, objectName, fileBytes, contentType, input.FileHeader.Size)
+	url, err := uc.saveFile(ctx, objectName, file, contentType, size)
 	if err != nil {
 		return nil, err
 	}

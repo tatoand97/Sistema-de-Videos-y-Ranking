@@ -1,8 +1,10 @@
 package application_test
 
 import (
-	"api/internal/application/validations"
+	"bytes"
 	"testing"
+
+	"api/internal/application/validations"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -47,7 +49,7 @@ func TestCheckMP4(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			width, height, err := validations.CheckMP4(tt.data)
+			width, height, err := validations.CheckMP4(bytes.NewReader(tt.data))
 
 			if tt.wantErr {
 				assert.Error(t, err)
