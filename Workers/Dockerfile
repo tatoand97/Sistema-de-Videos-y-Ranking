@@ -34,7 +34,7 @@ RUN chmod +x /usr/local/bin/start-workers.sh \
 
 ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.20:5672 \
     AWS_REGION=us-east-1 \
-    AWS_ACCESS_KEY_ID=ASIAXGQWHVU2NHKVETB2 \
+    AWS_ACCESS_KEY_ID=CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a \
     AWS_SECRET_ACCESS_KEY=UPhGfB0Y6tbLkjbY3W/MZuPGBp+AR9aKcgNKvVbA \
     S3_ENDPOINT= \
     S3_USE_PATH_STYLE=false \
