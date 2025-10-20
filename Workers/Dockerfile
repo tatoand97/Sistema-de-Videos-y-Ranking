@@ -33,11 +33,12 @@ RUN chmod +x /usr/local/bin/start-workers.sh \
     && chmod 1777 /tmp
 
 ENV RABBITMQ_URL=amqp://admin:admin@10.0.5.20:5672 \
-    AWS_REGION=us-east-1 \
-    AWS_ACCESS_KEY_ID=CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a \
-    AWS_SECRET_ACCESS_KEY=UPhGfB0Y6tbLkjbY3W/MZuPGBp+AR9aKcgNKvVbA \
-    S3_ENDPOINT= \
-    S3_USE_PATH_STYLE=false \
+AWS_REGION=${AWS_REGION} \
+    AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+    AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    S3_BUCKET=${S3_BUCKET_NAME} \
+    S3_ENDPOINT=${S3_ENDPOINT:-} \
+    S3_USE_PATH_STYLE='false' \
     STATE_MACHINE_QUEUE=states_machine_queue \
     EDIT_VIDEO_QUEUE=edit_video_queue \
     AUDIO_REMOVAL_QUEUE=audio_removal_queue \

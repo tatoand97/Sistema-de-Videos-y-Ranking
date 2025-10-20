@@ -89,12 +89,13 @@ services:
       CACHE_PREFIX: "videorank:"
       CACHE_TTL_SECONDS: "120"
 
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: ASIAXGQWHVU2B6IPJZIB
-      AWS_SECRET_ACCESS_KEY: CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a
+      # Pass AWS credentials/region from host environment
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       S3_BUCKET: raw-videos
-      S3_ENDPOINT: ""
-      S3_USE_PATH_STYLE: "false"
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       # RabbitMQ to publish processing jobs
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
       STATES_MACHINE_QUEUE: states_machine_queue
@@ -141,11 +142,11 @@ services:
         condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: ASIAXGQWHVU2B6IPJZIB
-      AWS_SECRET_ACCESS_KEY: CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a
-      S3_ENDPOINT: ""
-      S3_USE_PATH_STYLE: "false"
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: raw-videos
       PROCESSED_BUCKET: processed-videos-trim
       QUEUE_NAME: trim_video_queue
@@ -169,11 +170,11 @@ services:
         condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: ASIAXGQWHVU2B6IPJZIB
-      AWS_SECRET_ACCESS_KEY: CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a
-      S3_ENDPOINT: ""
-      S3_USE_PATH_STYLE: "false"
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: processed-videos-trim
       PROCESSED_BUCKET: processed-videos-edit
       QUEUE_NAME: edit_video_queue
@@ -197,11 +198,11 @@ services:
         condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: ASIAXGQWHVU2B6IPJZIB
-      AWS_SECRET_ACCESS_KEY: CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a
-      S3_ENDPOINT: ""
-      S3_USE_PATH_STYLE: "false"
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: processed-videos-edit
       PROCESSED_BUCKET: processed-videos-audio-removal
       QUEUE_NAME: audio_removal_queue
@@ -224,11 +225,11 @@ services:
         condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: ASIAXGQWHVU2B6IPJZIB
-      AWS_SECRET_ACCESS_KEY: CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a
-      S3_ENDPOINT: ""
-      S3_USE_PATH_STYLE: "false"
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: processed-videos-audio-removal
       PROCESSED_BUCKET: processed-videos-watermarking
       QUEUE_NAME: watermarking_queue
