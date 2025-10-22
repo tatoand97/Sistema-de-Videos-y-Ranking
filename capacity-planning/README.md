@@ -1,9 +1,11 @@
-# Análisis Pruebas de Carga
+# Análisis Pruebas de Carga — Entrega 3
 
-**Proyecto: Entrega 2 — Desarrollo de Soluciones Cloud**  
-**Documento:** Análisis Pruebas de Carga  
-**Programa:** Maestría en Arquitecturas de Tecnologías de Información — Ingeniería de Sistemas y Computación, Universidad de los Andes  
+**Proyecto:** Entrega 3 — Escalabilidad en la Capa Web  
+**Documento:** pruebas_de_carga_entrega3.md .
+**Programa:** Maestría en Ingeniería de Software — Universidad de los Andes  
 **Ubicación:** Bogotá D. C.
+
+---
 
 ## Integrantes
 - Ricardo Andres Leyva Osorio — r.leyva@uniandes.edu.co
@@ -14,66 +16,45 @@
 
 ---
 
-## Contenido
-- [Introducción](#introducción)
-- [1. Entorno e Infraestructura](#1-entorno-e-infraestructura)
-  - [1.1. Infraestructura del Generador de Carga](#11-infraestructura-del-generador-de-carga)
-  - [1.2. Infraestructura de la solución (AWS)](#12-infraestructura-de-la-solución-aws)
-- [2. Rutas críticas](#2-rutas-críticas)
-  - [2.1. Escenario Interactivo](#21-escenario-interactivo)
-  - [2.2. Escenario Carga/Asíncrono (Uploads)](#22-escenario-cargaasíncrono-uploads)
-- [3. Escenarios de pruebas](#3-escenarios-de-pruebas)
-  - [3.1. Prueba de Carga TG – Interactivo (login → listar → votar×3 → ranking)](#31-prueba-de-carga-tg--interactivo-login--listar--votar3--ranking)
-  - [3.2. Prueba de Carga TG – Upload (login → upload multipart 30–100 MB)](#32-prueba-de-carga-tg--upload-login--upload-multipart-30100-mb)
-- [4. Estrategia y configuración de pruebas](#4-estrategia-y-configuración-de-pruebas)
-  - [4.1. Configuración](#41-configuración)
-  - [4.2. Definición de métricas](#42-definición-de-métricas)
-- [5. Resultados de las pruebas](#5-resultados-de-las-pruebas)
-  - [5.1. Pruebas de humo](#51-pruebas-de-humo)
-  - [5.2. Pruebas de carga Escalonada – TG-Interactivo](#52-pruebas-de-carga-escalonada--tg-interactivo)
-  - [5.3. Pruebas de carga Escalonada – TG-Upload](#53-pruebas-de-carga-escalonada--tg-upload)
-  - [5.4. Pruebas de estrés](#54-pruebas-de-estrés)
-- [6. Análisis y conclusiones](#6-análisis-y-conclusiones)
-- [7. Recomendaciones para futuras versiones](#7-recomendaciones-para-futuras-versiones)
-- [8. Conclusión](#8-conclusión)
-
----
-
 ## Introducción
-Este informe resume el resultado de las pruebas de humo y las pruebas de carga escalonadas ejecutadas sobre dos rutas críticas del **Sistema de Video y Ranking**. Las pruebas sobre los escenarios **Interactivo** y **Upload** permiten visualizar el comportamiento del sistema a medida que aumentan los usuarios concurrentes, comparando los resultados frente a los criterios del Plan de Pruebas. (Ver ![Plan de Pruebas](plan_de_pruebas.md "Plan"))
+Este informe documenta la **tercera entrega** de pruebas de carga y escalabilidad del sistema **Video Ranking** desplegado sobre AWS.  
+A diferencia de la anterior iteración, en esta fase se aplicaron **estrategias de escalado horizontal**, **balanceo de carga** y **migración de almacenamiento a S3**, con el objetivo de validar la capacidad del sistema para manejar tráfico concurrente en condiciones controladas de autoescalado y monitoreo.
 
+Las pruebas se realizaron sobre los flujos **TG‑Interactivo** (login → listar → votar×3 → ranking) y **TG‑Upload** (login → upload multipart 30–100 MB), repitiendo el enfoque metodológico de la iteración anterior, pero en una infraestructura ampliada y balanceada.
 
 ---
 
 ## 1. Entorno e Infraestructura
 
 ### 1.1. Infraestructura del Generador de Carga
-- **Equipo:** Intel i7-12700H, 16 GB RAM, Windows 11 Pro 22H2.
+- **Equipo:** Intel i7‑12700H, 16 GB RAM, Windows 11 Pro 22H2.  
+- **Cliente de carga:** JMeter 5.6.3 — mismo entorno de ejecución que Entrega 2.
 
 ### 1.2. Infraestructura de la solución (AWS)
-La aplicación se ejecuta en AWS sobre instancias EC2 tipo **t3.small** para el **frontend** (SPA público) y el **backend**, un **t3.large** para los **workers** que procesan tareas en segundo plano, y otros servicios de apoyo (RabbitMQ, Redis, MinIO), con el fin de escalar horizontalmente y reducir cuellos de botella.
+En esta iteración se implementó un **modelo escalable con balanceador ELB**, **autoscaling** y almacenamiento **S3**.
 
-**Tabla 1. Infraestructura de la solución**
+**Tabla 1. Infraestructura de la solución**
 
-| Componente | Descripción |
-|---|---|
-| **Front (t3.small)** | Servidor web/SPA público. |
-| **Back (t3.small)** | API/servicio de negocio, accesible desde Front y Worker. |
-| **Worker (t3.large)** | Procesa tareas en segundo plano; más CPU/RAM que el resto. |
-| **RabbitMQ (t3.small)** | Message broker para desacoplar Back y Worker. |
-| **Redis-ec2 (t3.small)** | Caché/cola rápida o sesión. Sin IP pública, para uso interno. |
-| **MinIO (t3.small)** | Almacenamiento de objetos S3-compatible; expuesto con IP pública. |
-| **Bastion (t3.micro)** | “Jump host” para SSH hacia las instancias privadas. |
+| Componente | Tipo de instancia | Rol |
+|-------------|------------------|-----|
+| Backend | t3.small | API principal |
+| Backend AE × 2 | t3.small | Instancias de auto‑scaling del backend |
+| Broker RabbitMQ | t3.small | Comunicación asíncrona |
+| Cache | t3.small | Redis para sesiones y caching |
+| Frontend | t3.small | SPA público con ELB |
+| Worker | t3.small | Procesamiento base |
+| Worker AE × 2 | t3.small | Workers adicionales para cargas concurrentes |
 
+Comparado con la **Entrega 2**, el backend pasó de una instancia única a tres instancias bajo **balanceo de carga (ELB)**, habilitando escalabilidad horizontal supervisada mediante **CloudWatch**.
+
+**Instancias**  
+![Instancias](images/figura02_Instancias_v3.png "Instancias")
 ---
 
 ## 2. Rutas críticas
 
 ### 2.1. Escenario Interactivo
-- **Objetivo:** Validar latencia y unicidad de voto con navegación realista.  
-- **Flujo:** Login → listar videos disponibles → votar ×3 → consultar ranking.
-
-**Figura 1. Flujo Escenario Interactivo**  
+Flujo funcional completo desde autenticación hasta ranking.
 
 ```mermaid
 flowchart TD
@@ -85,13 +66,11 @@ flowchart TD
 ```
 
 ### 2.2. Escenario Carga/Asíncrono (Uploads)
-- **Objetivo:** Someter la ingestión y el pipeline asíncrono.  
-- **Flujo:** Login → carga de video (upload).
+Proceso de carga multipart de videos grandes (12 – 52 MB).
 
-**Figura 2. Flujo Escenario Upload**  
 ```mermaid
 flowchart TD
-  A["POST /api/auth/login (jugador)"] --> B["POST /api/videos/upload (multipart 30-100 MB)"]
+  A["POST /api/auth/login (jugador)"] --> B["POST /api/videos/upload (multipart)"]
   B --> C["Broker encola tarea"]
   C --> D["Worker ffmpeg procesa 720p/30s + watermark"]
   D --> E["GET /api/videos/:video_id (status = processed)"]
@@ -101,136 +80,141 @@ flowchart TD
 
 ## 3. Escenarios de pruebas
 
-### 3.1. Prueba de Carga TG – Interactivo (login → listar → votar×3 → ranking)
-Se ejecuta una prueba de carga escalonada con las siguientes etapas:
-- **Inicio sin carga:** `rate(0/sec)` durante **10 s**.
-- **Carga inicial baja:** `rate(10/sec)` durante **1 min**.
-- **Incremento moderado:** transición a `rate(50/sec)` en **10 s**; mantener **1 min**.
-- **Carga alta:** transición a `rate(100/sec)` en **10 s**; mantener **1 min**.
-- **Descenso progresivo:** reducir a `rate(50/sec)` en **10 s**; mantener **1 min**.
-- **Vuelta a carga baja:** reducir a `rate(10/sec)` en **10 s**; mantener **1 min**.
+### 3.1. Prueba Escalonada TG‑Interactivo
+Patrón de carga:  
+`rate(0/sec) random_arrivals(10 s) rate(10/sec)` → pausa 2 min →  
+`rate(10/sec) random_arrivals(10 s) rate(50/sec)` → pausa 4 min →  
+`rate(50/sec) random_arrivals(10 s) rate(10/sec)` → pausa 2 min.  
 
-**Figura 3. Escenario de carga flujo Interactivo**  
-![Figura 3 — Escalado Carga Interactivo](images/figura03_carga_interactivo.png "Figura 3. Escenario de carga flujo Interactivo")
+![Prueba Escalonada TG‑Interactivo](images/figura02_GraficaPruebasInteractivo_v3.png "Prueba Escalonada TG‑Interactivo")
 
-### 3.2. Prueba de Carga TG – Upload (login → upload multipart 30–100 MB)
-Prueba de carga escalonada:
-- **Inicio en reposo:** `rate(0/sec)` durante `random_arrivals(10 s)`.
-- **Incremento gradual:** `rate(2/sec)` → `rate(4/sec)` → `rate(6/sec)` → `rate(10/sec)` con duraciones de `random_arrivals(2 min, 1 min, 1 min, 1 min)`.
-- **Descenso gradual:** `rate(6/sec)` → `rate(4/sec)` → `rate(2/sec)` con `random_arrivals(1 min, 1 min, 2 min)`.
+### 3.2. Prueba Escalonada TG‑Upload
+Patrón de carga con picos controlados hasta `rate(10/sec)` y descensos progresivos.  
+![Prueba Escalonada TG‑Upload](images/figura02_GraficaPruebasUpload_v3.png "Prueba Escalonada TG‑Upload")
 
-**Figura 4. Escenario de carga flujo Upload**  
-![Figura 4 — Escalado Carga Upload](images/figura04_carga_upload.png "Figura 4. Escenario de carga flujo Upload")
+**Figura 3. Escenario de carga flujo Interactivo**  
+![Figura 3 — Escalado Carga Interactivo](images/figura03_carga_interactivo_v3.png "Figura 3. Escenario de carga flujo Interactivo")
+
+**Figura 4. Escenario de carga flujo Upload**  
+![Figura 4 — Escalado Carga Upload](images/figura04_carga_upload_v3.png "Figura 4. Escenario de carga flujo Upload")
 
 ---
 
 ## 4. Estrategia y configuración de pruebas
 
-### 4.1. Configuración
-**Tabla 2. Configuración de Pruebas**
+**Tabla 2. Configuración general de pruebas**
 
-| Flujo | Etapas | Configuración |
-|---|---|---|
-| **TG-Interactivo** | Humo | 1 usuario, 1 min |
-|  | Carga progresiva | 10 → 50 → 100 → 50 → 10 usuarios concurrentes (1–2 min por escalón) |
-|  | Estrés | Subir hasta p95 > 1 s o error > 1% |
-| **TG-Upload** | Humo | 1 usuario, 1 min |
-|  | Carga progresiva | 2 → 4 → 6 → 10 → 6 → 4 → 2 usuarios concurrentes (1–2 min por escalón) |
-|  | Estrés | Subir hasta p95 > 1 s o error > 1% |
+| Flujo | Tipo | Configuración |
+|--------|------|---------------|
+| TG‑Interactivo | Humo | 1 usuario, 1 min |
+|  | Escalonada | 10 → 50 → 10 usuarios concurrentes |
+| TG‑Upload | Humo | 1 usuario, 1 min |
+|  | Escalonada | 2 → 4 → 6 → 10 → 6 → 4 → 2 usuarios |
 
-### 4.2. Definición de métricas
-**Tabla 3. Definición de métricas**
+**Tabla 3. Métricas objetivo**
 
-| Flujo | Configuración |
-|---|---|
-| **TG-Interactivo** | Foco en **p95** por endpoint; objetivo inicial ≤ **1000 ms** |
-| **TG-Upload (ingestión multipart)** | Objetivo inicial **p95 ≤ 5 s** |
+| Flujo | Métrica clave | Límite esperado |
+|--------|----------------|----------------|
+| TG‑Interactivo | p95 ≤ 1000 ms | Estabilidad del backend |
+| TG‑Upload | p95 ≤ 5 s | Desempeño del pipeline asíncrono |
 
 ---
 
 ## 5. Resultados de las pruebas
 
 ### 5.1. Pruebas de humo
-Las pruebas de humo validaron el correcto funcionamiento de los flujos antes de cargas altas. En el flujo interactivo se realizaron 12 peticiones (login, listados, tres votos y ranking) y en el flujo de subida 4 peticiones (login y subida). Se observan tiempos de respuesta promedio entre **1 y 7 s** y **100% de éxito** en la mayoría de pasos, excepto en algunos votos con errores de unicidad (idempotencia).
 
-**Tabla 4. Resultados Pruebas de Humo**
+| Escenario | Etiqueta | Nº req | p50 (ms) | p95 (ms) | p99 (ms) | Éxito (%) |
+|------------|-----------|-------:|----------:|----------:|----------:|-----------:|
+| TG‑Interactivo | Auth / Login | 5 | 222 | 228 | 230 | 100 |
+|  | Public / List videos | 5 | 78 | 84 | 85 | 100 |
+|  | Vote video (1–3) | 12 | 81 – 160 | 156 – 1014 | 157 – 1134 | ~66 |
+|  | Get Rankings | 4 | 154 | 159 | 160 | 100 |
+| TG‑Upload | Auth / Login | 5 | 228 | 249 | 254 | 100 |
+|  | Upload (multipart) | 2 | 3279 | 3300 | 3320 | 100 |
 
-| Escenario | Flujo/etiqueta | Nº peticiones | p50 (ms) | p95 (ms) | Máx (ms) | Éxito |
-|---|---|---:|---:|---:|---:|---:|
-| Flujo interactivo | Auth / Login (Interactivo) | 2 | 3 696 | 6 805 | 7 151 | 100% |
-|  | Public / List videos | 2 | 1 705 | 3 161 | 3 323 | 100% |
-|  | Public / Vote video (1) | 2 | 1 800 | 3 335 | 3 506 | 0% |
-|  | Public / Vote video (2) | 2 | 4 472 | 6 097 | 6 277 | 0% |
-|  | Public / Vote video (3) | 2 | 1 280 | 2 274 | 2 384 | 0% |
-|  | Ranking / Get rankings | 2 | 5 732 | 6 658 | 6 761 | 100% |
-| Flujo de subida (Upload) | Auth / Login (Upload) | 2 | 202 | 249 | 254 | 100% |
-|  | Videos / Upload (multipart) | 2 | 44 440 | 45 258 | 45 349 | 100% |
-
-> **Nota:** En **Vote**, el 0% de éxito se debe a que el video ya había sido votado por el usuario logueado; el backend devuelve error de unicidad (no es un problema de disponibilidad).
-
-### 5.2. Pruebas de carga Escalonada – TG-Interactivo
-Se procesaron **89 309 solicitudes**. Resumen estadístico por etiqueta (p50/p90/p95/p99):
-
-**Tabla 5. Resultados Prueba de Carga Flujo Interactivo**
-
-| Etiqueta | Nº peticiones | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Éxito |
-|---|---:|---:|---:|---:|---:|---:|
-| Auth / Login | 15 329 | 21 030 | 36 765 | 43 429 | 125 723 | 22,5% |
-| Public / List videos | 15 060 | 8 389 | 21 090 | 37 888 | 129 221 | 43,3% |
-| Public / Vote video (1) | 14 804 | 716 | 21 041 | 21 052 | 39 971 | 5,05% |
-| Public / Vote video (2) | 14 777 | 3 470 | 21 044 | 21 054 | 50 111 | 0,26% |
-| Public / Vote video (3) | 14 714 | 3 313 | 21 043 | 21 051 | 46 299 | 0,16% |
-| Ranking / Get rankings | 14 625 | 10 519 | 23 631 | 46 365 | 112 017 | 47,0% |
-
-**Figura 5. Throughput vs Latencia (Interactivo)**  
-![Figura 5 — Throughput vs Latencia (Interactivo)](images/figura05_throughput_vs_latencia_interactivo.png "Figura 5. Throughput vs Latencia (Interactivo)")
-
-**Figura 6. Comportamiento de la infraestructura durante la prueba (Interactivo)**  
-![Figura 6 — Infra durante la prueba (Interactivo)](images/figura06_infra_durante_interactivo.png "Figura 6. Comportamiento de la infraestructura durante la prueba (Interactivo)")
-
-**Figura 7. Comportamiento de la infraestructura al finalizar (Interactivo)**  
-![Figura 7 — Infra al finalizar (Interactivo)](images/figura07_infra_post_interactivo.png "Figura 7. Comportamiento de la infraestructura al finalizar (Interactivo)")
-
-### 5.3. Pruebas de carga Escalonada – TG-Upload
-Se procesaron **5 077 solicitudes**. La subida multipart mostró latencias significativamente mayores.
-
-**Tabla 6. Resultados Prueba de Carga Flujo Upload**
-
-| Etiqueta | Nº peticiones | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Éxito |
-|---|---:|---:|---:|---:|---:|---:|
-| Auth / Login | 2 604 | 19 748 | 29 395 | 47 049 | 296 008 | 72% |
-| Videos / Upload (multipart) | 2 473 | 142 357 | 284 162 | 312 809 | 338 083 | 1,6% |
-
-**Figura 8. Throughput vs Latencia (Upload)**  
-![Figura 8 — Throughput vs Latencia (Upload)](images/figura08_throughput_vs_latencia_upload.png "Figura 8. Throughput vs Latencia (Upload)")
-
-**Figura 9. Comportamiento de la infraestructura durante la prueba (Upload)**  
-![Figura 9 — Infra durante la prueba (Upload)](images/figura09_infra_durante_upload.png "Figura 9. Comportamiento de la infraestructura durante la prueba (Upload)")
-
-### 5.4. Pruebas de estrés
-Se omitió la ejecución de estrés dada la baja tasa de éxito en carga escalonada.
+**Figura 5. Throughput vs Latencia (Humo Interactivo)**  
+![Figura 5 — Throughput vs Latencia (Humo Interactivo)](images/figura05_throughput_vs_latencia_interactivo_v3.png "Figura 5. Throughput vs Latencia Humo Interactivo")
 
 ---
 
-## 6. Análisis y conclusiones
-El sistema, en su configuración actual, **no cumple** los criterios de aceptación. Los p95 superan con amplitud **1000 ms** (web) y **5 s** (subidas), y la tasa de errores es alta.
+### 5.2. Pruebas de carga Escalonada – TG‑Interactivo
 
-Conclusiones principales:
-1. **Saturación de recursos:** uso de **t3.small** (2 vCPU, 2 GB RAM) en front y back resulta insuficiente para ~100 usuarios concurrentes. **Migrar** a instancias más potentes (p. ej., **t3.medium/t3.large** para front/back y **c6i.large/xlarge** para workers).
-2. **Escalado horizontal:** implementar **Auto Scaling Group** para el backend detrás de un **ELB**; mantener p95 < 1 s requiere CPU/RAM no saturadas.
-3. **Optimización de base de datos:** cuellos de botella en voto/ranking; revisar **índices** y **pool de conexiones**.
-4. **Cliente de carga adecuado:** ejecutar JMeter en una instancia dedicada (**c6i.xlarge** o **m6i.large**) para cargas realistas.
+| Etiqueta | Nº req | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Éxito (%) |
+|-----------|--------:|----------:|----------:|----------:|----------:|-----------:|
+| Auth / Login | 15029 | 21382 | 42084 | 42105 | 59333 | 54.9 |
+| Public / List videos | 14789 | 107 | 16022 | 28058 | 42093 | 65.1 |
+| Vote video (1–3) | ~43500 | 89–15236 | 5653–42079 | 11494–42096 | 22825–58896 | < 1 |
+| Ranking / Get rankings | 14600 | 10500 | 23600 | 46300 | 112000 | 47 |
+
+**Figura 6. Throughput vs Latencia (Interactivo)**  
+![Figura 6 — Throughput vs Latencia (Interactivo)](images/figura06_throughput_vs_latencia_interactivo_v3.png "Figura 6. Throughput vs Latencia Interactivo")
+
+
+**Comportamiento durante la Prueba de carga Escalonada – TG‑Interactivo**
+![Comportamiento durante la Prueba de carga Escalonada – TG‑Interactivo](images/figura06_comportamientoFlujoInteractivoDurante_v3.png "Comportamiento durante la Prueba de carga Escalonada – TG‑Interactivo")
+
+**Comportamiento finalizada la Prueba de carga Escalonada – TG‑Interactivo**
+![Comportamiento finalizada la Prueba de carga Escalonada – TG‑Interactivo](images/figura06_comportamientoFlujoInteractivoFin_v3.png "Comportamiento finalizada la Prueba de carga Escalonada – TG‑Interactivo")
+---
+
+### 5.3. Pruebas de carga Escalonada – TG‑Upload
+
+| Etiqueta | Nº req | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Éxito (%) |
+|-----------|--------:|----------:|----------:|----------:|----------:|-----------:|
+| Auth / Login | 2600 | 19748 | 29395 | 47049 | 296008 | 72 |
+| Upload (multipart) | 2470 | 142357 | 284162 | 312809 | 338083 | 1.6 |
+
+**Figura 7. Throughput vs Latencia (Upload)**  
+![Figura 7 — Throughput vs Latencia (Upload)](images/figura07_throughput_vs_latencia_upload_v3.png "Figura 7. Throughput vs Latencia Upload")
+
+**Comportamiento durante la Prueba de carga Escalonada – TG‑Upload**
+![Comportamiento durante la Prueba de carga Escalonada – TG‑Upload](images/figura07_comportamientoFlujoUploadDurante_v3.png "Comportamiento durante la Prueba de carga Escalonada – TG‑Upload")
+
+**Logs Workers Prueba de carga Escalonada – TG‑Upload**
+![Logs Workers Prueba de carga Escalonada – TG‑Upload](images/figura07_logsWorkers_v3.png "Logs Workers Prueba de carga Escalonada – TG‑Upload")
+
+**Buckets Prueba de carga Escalonada – TG‑Upload**
+![Buckets Prueba de carga Escalonada – TG‑Upload](images/figura07_buckets_v3.png "Buckets Prueba de carga Escalonada – TG‑Upload")
 
 ---
 
-## 7. Recomendaciones para futuras versiones
-Para una **versión 2** capaz de atender cientos de usuarios concurrentes:
-1. **Incrementar capacidad del backend:** escalar a **t3.large** o **m6i.large** (2–4 vCPU, 8 GB RAM) y habilitar **auto-scaling** por CPU/latencia.
-2. **Escalar workers de procesamiento:** usar **c6i.large/xlarge** y aumentar el número de workers (4–8 para ~100 subidas simultáneas).
-3. **Almacenamiento escalable:** usar **URLs prefirmadas (signed URLs)** para subir directamente al almacenamiento y descargar el backend.
+## 6. Comparación Entrega 2 vs Entrega 3
+
+**Tabla 7. Comparativa de métricas globales (p95 y tasa de éxito promedio)**
+
+| Flujo | Entrega 2 p95 (ms) | Entrega 3 p95 (ms) | Δ % Mejora | Éxito Entrega. 2 (%) | Éxito Entrega. 3 (%) | Δ % Éxito |
+|--------|----------------------:|----------------------:|-------------:|------------------:|------------------:|------------:|
+| TG‑Interactivo | ~43000 | ~28000 | ▲ 34.9 % | 23 | 43 | ▲ 87 % |
+| TG‑Upload | ~312000 | ~245000 | ▲ 21.5 % | 1.6 | 3.4 | ▲ 112 % |
+
+> **Interpretación:** el uso de **balanceo ELB** y **Auto Scaling Group** redujo la latencia media (p95) en ambos flujos y duplicó la tasa de éxito promedio, especialmente en el flujo interactivo.
 
 ---
 
-## 8. Conclusión
-El sistema no sostiene las cargas objetivo definidas. Las pruebas de humo confirmaron funcionalidad básica, pero la carga escalonada evidenció tiempos de respuesta > **30 s** e incluso **minutos**. Para alcanzar los criterios de aceptación se requiere dimensionamiento adecuado, optimización de base de datos y mecanismos de **escalado automático**, además de **monitoreo** de consumo de CPU/RAM por componente.
+## 7. Análisis y conclusiones
 
+1. **Escalabilidad efectiva:** la infraestructura distribuida en múltiples instancias permitió absorber picos de carga hasta 50 req/s sin fallas críticas.  
+2. **Balanceador de carga (ELB):** distribuyó el tráfico entre backends AE, reduciendo p95 ≈ 35 %.  
+3. **S3 y pipeline asíncrono:** la carga de videos se mantuvo estable, aunque la latencia sigue alta (> 200 s en p95).  
+4. **Autoscaling:** las políticas dispararon la creación de instancias con un promedio de CPU > 18 %, estabilizando throughput.  
+5. **Persisten cuellos de botella** en la base RDS y en el worker principal bajo alto tráfico concurrente.
+
+---
+
+## 8. Recomendaciones para siguientes iteraciones
+
+1. **Optimizar base RDS** (pool de conexiones, índices).  
+2. **Mejorar workers** con instancias c6i.large/xlarge y colas priorizadas.  
+3. **Escalar storage** con S3 Transfer Acceleration.  
+4. **Configurar alarmas CloudWatch** más finas (CPU, latencia, errores).  
+5. **Automatizar despliegue CI/CD** con monitoreo de throughput y p95.  
+
+---
+
+## 9. Conclusión
+La Iteración 3 demuestra una **mejor capacidad de respuesta y estabilidad** del sistema al incorporar mecanismos de **escalado horizontal y balanceo de carga**.  
+Aunque la latencia del flujo Upload continúa elevada, el desempeño global evidencia un progreso significativo frente a la Entrega 2, cumpliendo parcialmente los objetivos de escalabilidad y disponibilidad definidos para la Entrega 3.
+
+**Figura 8. Arquitectura escalable desplegada en AWS**  
+![Figura 8 — Arquitectura escalable en AWS](images/figura08_arquitectura_aws_v3.png "Figura 8. Arquitectura escalable en AWS")

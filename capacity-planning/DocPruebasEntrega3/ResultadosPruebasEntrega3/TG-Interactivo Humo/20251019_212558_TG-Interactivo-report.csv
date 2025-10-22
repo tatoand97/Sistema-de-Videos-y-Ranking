@@ -1,0 +1,27 @@
+timeStamp,elapsed,label,responseCode,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,Latency,Connect
+1760927159425,230,Auth / Login,200,true,,935,299,1,1,230,81
+1760927160728,78,Public / List videos,200,true,,782,685,1,1,77,0
+1760927163210,86,Public / Vote video (1),200,true,,440,771,1,1,85,0
+1760927165347,150,Public / Vote video (2),400,false,,471,771,1,1,149,72
+1760927167935,148,Public / Vote video (3),400,false,,471,771,1,1,147,73
+1760927169775,160,Ranking / Get rankings,200,true,,464,718,1,1,160,79
+1760927172478,221,Auth / Login,200,true,,935,790,1,1,221,75
+1760927174541,85,Public / List videos,200,true,,782,685,1,1,85,0
+1760927176160,80,Public / Vote video (1),200,true,,440,771,1,1,79,0
+1760927177568,165,Public / Vote video (2),400,false,,471,771,1,1,164,85
+1760927180019,151,Public / Vote video (3),400,false,,471,771,1,1,151,75
+1760927182722,150,Ranking / Get rankings,200,true,,464,718,1,1,150,73
+1760927185400,222,Auth / Login,200,true,,935,790,1,1,222,76
+1760927187195,78,Public / List videos,200,true,,782,685,1,1,78,0
+1760927189407,79,Public / Vote video (1),200,true,,440,771,1,1,79,0
+1760927190592,1164,Public / Vote video (2),400,false,,471,771,1,1,1163,1085
+1760927194611,147,Public / Vote video (3),400,false,,471,771,1,1,147,73
+1760927196414,156,Ranking / Get rankings,200,true,,464,718,1,1,156,78
+1760927198250,222,Auth / Login,200,true,,935,790,1,1,222,75
+1760927200727,80,Public / List videos,200,true,,782,685,1,1,80,0
+1760927202804,82,Public / Vote video (1),200,true,,440,771,1,1,82,0
+1760927205562,156,Public / Vote video (2),400,false,,471,771,1,1,156,75
+1760927208314,157,Public / Vote video (3),400,false,,471,771,1,1,157,78
+1760927211374,152,Ranking / Get rankings,200,true,,464,718,1,1,152,74
+1760927213158,222,Auth / Login,200,true,,935,790,1,1,222,75
+1760927216062,76,Public / List videos,200,true,,782,685,1,1,76,0
