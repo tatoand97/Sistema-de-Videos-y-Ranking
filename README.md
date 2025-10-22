@@ -9,6 +9,10 @@
 # Nuevas entregas
 [Entrega 2-Arquitectura y cambios](docs/entrega2/entrega2.md#arquitectura-de-migración-a-la-nube)
 
+[Entrega 3-Arquitectura, cambios y pruebas](docs/entrega3/entrega3.md#arquitectura-para-implementación-de-soluciones-escalables-en-la-nube)
+
+
+
 # Sistema de Videos y Ranking
 
 [![Ver el video corto en YouTube](https://img.youtube.com/vi/LyWnp02K7Fs/maxresdefault.jpg)](https://www.youtube.com/watch?v=LyWnp02K7Fs)
