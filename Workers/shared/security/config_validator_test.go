@@ -11,7 +11,7 @@ func TestValidateRabbitMQURL_Success(t *testing.T) {
 		"amqp://myuser:mypass@192.168.1.100:5672/",
 		"amqps://secure:password123@rabbit.domain.com:5671/production",
 	}
-	
+
 	for _, url := range validURLs {
 		t.Run(url, func(t *testing.T) {
 			err := ValidateRabbitMQURL(url)
@@ -33,13 +33,13 @@ func TestValidateRabbitMQURL_InvalidFormat(t *testing.T) {
 		"://missing-scheme",
 		"amqp://[invalid-host",
 	}
-	
+
 	for _, url := range invalidURLs {
 		t.Run(url, func(t *testing.T) {
 			err := ValidateRabbitMQURL(url)
 			assert.Error(t, err)
 			// Error message may vary based on URL format
-		assert.Error(t, err)
+			assert.Error(t, err)
 		})
 	}
 }
@@ -51,7 +51,7 @@ func TestValidateRabbitMQURL_InvalidScheme(t *testing.T) {
 		"tcp://user:pass@localhost:5672/",
 		"ftp://user:pass@localhost:5672/",
 	}
-	
+
 	for _, url := range invalidSchemes {
 		t.Run(url, func(t *testing.T) {
 			err := ValidateRabbitMQURL(url)
@@ -68,7 +68,7 @@ func TestValidateRabbitMQURL_WeakCredentials(t *testing.T) {
 		"amqp://guest:guest@localhost:5672/",
 		"amqp://test:test@localhost:5672/",
 	}
-	
+
 	for _, url := range weakCredURLs {
 		t.Run(url, func(t *testing.T) {
 			err := ValidateRabbitMQURL(url)
@@ -83,38 +83,38 @@ func TestValidateRabbitMQURL_NoCredentials(t *testing.T) {
 	assert.NoError(t, err) // No credentials is allowed
 }
 
-func TestValidateMinIOConfig_Success(t *testing.T) {
-	err := ValidateMinIOConfig("localhost:9000", "accesskey123", "secretkey123")
+func TestValidateS3Config_Success(t *testing.T) {
+	err := ValidateS3Config("us-east-1", "accesskey123", "secretkey123")
 	assert.NoError(t, err)
 }
 
-func TestValidateMinIOConfig_MissingEndpoint(t *testing.T) {
-	err := ValidateMinIOConfig("", "accesskey", "secretkey")
+func TestValidateS3Config_MissingRegion(t *testing.T) {
+	err := ValidateS3Config("", "accesskey", "secretkey")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "MINIO_ENDPOINT is required")
+	assert.Contains(t, err.Error(), "AWS_REGION is required")
 }
 
-func TestValidateMinIOConfig_MissingAccessKey(t *testing.T) {
-	err := ValidateMinIOConfig("localhost:9000", "", "secretkey")
+func TestValidateS3Config_MissingAccessKey(t *testing.T) {
+	err := ValidateS3Config("us-east-1", "", "secretkey")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "MINIO_ACCESS_KEY is required")
+	assert.Contains(t, err.Error(), "AWS_ACCESS_KEY_ID is required")
 }
 
-func TestValidateMinIOConfig_MissingSecretKey(t *testing.T) {
-	err := ValidateMinIOConfig("localhost:9000", "accesskey", "")
+func TestValidateS3Config_MissingSecretKey(t *testing.T) {
+	err := ValidateS3Config("us-east-1", "accesskey", "")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "MINIO_SECRET_KEY is required")
+	assert.Contains(t, err.Error(), "AWS_SECRET_ACCESS_KEY is required")
 }
 
-func TestValidateMinIOConfig_ShortSecretKey(t *testing.T) {
-	err := ValidateMinIOConfig("localhost:9000", "accesskey", "short")
+func TestValidateS3Config_ShortSecretKey(t *testing.T) {
+	err := ValidateS3Config("us-east-1", "accesskey", "short")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "must be at least 8 characters")
 }
 
 func TestGetEnvWithValidation_Required(t *testing.T) {
 	t.Setenv("TEST_VAR", "test_value")
-	
+
 	value, err := GetEnvWithValidation("TEST_VAR", "default", true)
 	assert.NoError(t, err)
 	assert.Equal(t, "test_value", value)
@@ -122,7 +122,7 @@ func TestGetEnvWithValidation_Required(t *testing.T) {
 
 func TestGetEnvWithValidation_RequiredMissing(t *testing.T) {
 	t.Setenv("TEST_VAR", "")
-	
+
 	value, err := GetEnvWithValidation("NONEXISTENT_VAR", "default", true)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "is required")
@@ -137,7 +137,7 @@ func TestGetEnvWithValidation_OptionalWithDefault(t *testing.T) {
 
 func TestGetEnvWithValidation_OptionalEmpty(t *testing.T) {
 	t.Setenv("EMPTY_VAR", "")
-	
+
 	value, err := GetEnvWithValidation("EMPTY_VAR", "default_value", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "default_value", value)
@@ -145,7 +145,7 @@ func TestGetEnvWithValidation_OptionalEmpty(t *testing.T) {
 
 func TestGetIntEnvWithValidation_Success(t *testing.T) {
 	t.Setenv("INT_VAR", "42")
-	
+
 	value, err := GetIntEnvWithValidation("INT_VAR", 10, 1, 100)
 	assert.NoError(t, err)
 	assert.Equal(t, 42, value)
@@ -159,7 +159,7 @@ func TestGetIntEnvWithValidation_Default(t *testing.T) {
 
 func TestGetIntEnvWithValidation_InvalidFormat(t *testing.T) {
 	t.Setenv("INVALID_INT", "not_a_number")
-	
+
 	value, err := GetIntEnvWithValidation("INVALID_INT", 25, 1, 100)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid integer value")
@@ -178,11 +178,11 @@ func TestGetIntEnvWithValidation_OutOfRange(t *testing.T) {
 		{"above maximum", "150", 1, 100, 25},
 		{"negative when positive required", "-5", 1, 100, 25},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("RANGE_TEST", tt.value)
-			
+
 			value, err := GetIntEnvWithValidation("RANGE_TEST", tt.expected, tt.min, tt.max)
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "must be between")
@@ -204,13 +204,13 @@ func TestGetIntEnvWithValidation_BoundaryValues(t *testing.T) {
 		{"just below minimum", "0", 1, 100, false},
 		{"just above maximum", "101", 1, 100, false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("BOUNDARY_TEST", tt.value)
-			
+
 			value, err := GetIntEnvWithValidation("BOUNDARY_TEST", 50, tt.min, tt.max)
-			
+
 			if tt.valid {
 				assert.NoError(t, err)
 				expectedValue := 1
@@ -234,7 +234,7 @@ func TestValidateQueueName_Success(t *testing.T) {
 		"queue123",
 		"a",
 	}
-	
+
 	for _, name := range validNames {
 		t.Run(name, func(t *testing.T) {
 			err := ValidateQueueName(name)
@@ -254,7 +254,7 @@ func TestValidateQueueName_TooLong(t *testing.T) {
 	for i := range longName {
 		longName = longName[:i] + "a" + longName[i+1:]
 	}
-	
+
 	err := ValidateQueueName(longName)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "too long")
@@ -267,7 +267,7 @@ func TestValidateQueueName_WithSpaces(t *testing.T) {
 		"trailing-space ",
 		"middle space queue",
 	}
-	
+
 	for _, name := range invalidNames {
 		t.Run(name, func(t *testing.T) {
 			err := ValidateQueueName(name)
@@ -283,44 +283,44 @@ func TestValidateQueueName_MaxLength(t *testing.T) {
 	for i := range maxLengthName {
 		maxLengthName = maxLengthName[:i] + "a" + maxLengthName[i+1:]
 	}
-	
+
 	err := ValidateQueueName(maxLengthName)
 	assert.NoError(t, err)
 }
 
 func TestConfigValidation_Integration(t *testing.T) {
 	// Test integration of multiple validation functions
-	
+
 	// Set up valid environment
 	t.Setenv("RABBITMQ_URL", "amqp://myuser:mypass@localhost:5672/")
-	t.Setenv("MINIO_ENDPOINT", "localhost:9000")
-	t.Setenv("MINIO_ACCESS_KEY", "accesskey123")
-	t.Setenv("MINIO_SECRET_KEY", "secretkey123")
+	t.Setenv("AWS_REGION", "us-east-1")
+	t.Setenv("AWS_ACCESS_KEY_ID", "accesskey123")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "secretkey123")
 	t.Setenv("QUEUE_NAME", "video-processing")
 	t.Setenv("MAX_WORKERS", "10")
-	
+
 	// Validate RabbitMQ
 	rabbitURL, err := GetEnvWithValidation("RABBITMQ_URL", "", true)
 	assert.NoError(t, err)
 	err = ValidateRabbitMQURL(rabbitURL)
 	assert.NoError(t, err)
-	
-	// Validate MinIO
-	endpoint, err := GetEnvWithValidation("MINIO_ENDPOINT", "", true)
+
+	// Validate S3
+	region, err := GetEnvWithValidation("AWS_REGION", "", true)
 	assert.NoError(t, err)
-	accessKey, err := GetEnvWithValidation("MINIO_ACCESS_KEY", "", true)
+	accessKey, err := GetEnvWithValidation("AWS_ACCESS_KEY_ID", "", true)
 	assert.NoError(t, err)
-	secretKey, err := GetEnvWithValidation("MINIO_SECRET_KEY", "", true)
+	secretKey, err := GetEnvWithValidation("AWS_SECRET_ACCESS_KEY", "", true)
 	assert.NoError(t, err)
-	err = ValidateMinIOConfig(endpoint, accessKey, secretKey)
+	err = ValidateS3Config(region, accessKey, secretKey)
 	assert.NoError(t, err)
-	
+
 	// Validate queue name
 	queueName, err := GetEnvWithValidation("QUEUE_NAME", "", true)
 	assert.NoError(t, err)
 	err = ValidateQueueName(queueName)
 	assert.NoError(t, err)
-	
+
 	// Validate integer config
 	maxWorkers, err := GetIntEnvWithValidation("MAX_WORKERS", 5, 1, 50)
 	assert.NoError(t, err)
@@ -329,25 +329,25 @@ func TestConfigValidation_Integration(t *testing.T) {
 
 func TestConfigValidation_ErrorCascade(t *testing.T) {
 	// Test that validation errors cascade properly
-	
+
 	// Set invalid values
 	t.Setenv("RABBITMQ_URL", "invalid-url")
-	t.Setenv("MINIO_SECRET_KEY", "short")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "short")
 	t.Setenv("QUEUE_NAME", "queue with spaces")
 	t.Setenv("MAX_WORKERS", "invalid")
-	
+
 	// Each validation should fail
 	rabbitURL, _ := GetEnvWithValidation("RABBITMQ_URL", "", true)
 	err := ValidateRabbitMQURL(rabbitURL)
 	assert.Error(t, err)
-	
-	err = ValidateMinIOConfig("localhost:9000", "access", "short")
+
+	err = ValidateS3Config("us-east-1", "access", "short")
 	assert.Error(t, err)
-	
+
 	queueName, _ := GetEnvWithValidation("QUEUE_NAME", "", true)
 	err = ValidateQueueName(queueName)
 	assert.Error(t, err)
-	
+
 	_, err = GetIntEnvWithValidation("MAX_WORKERS", 5, 1, 50)
 	assert.Error(t, err)
 }

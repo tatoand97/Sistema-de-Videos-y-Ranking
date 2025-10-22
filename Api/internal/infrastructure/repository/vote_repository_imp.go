@@ -34,11 +34,12 @@ func (r *voteRepository) Create(ctx context.Context, videoID, userID uint) error
 
 func (r *voteRepository) CreateWithEvent(ctx context.Context, videoID, userID uint, eventID *string) error {
 	type voteRow struct {
-		VoteID  uint    `gorm:"column:vote_id"`
 		UserID  uint    `gorm:"column:user_id"`
 		VideoID uint    `gorm:"column:video_id"`
 		EventID *string `gorm:"column:event_id"`
 	}
+
+	// Allow the database identity column to generate vote_id automatically.
 	v := voteRow{UserID: userID, VideoID: videoID, EventID: eventID}
 	if err := r.db.WithContext(ctx).Table("vote").Create(&v).Error; err != nil {
 		var pgErr *pgconn.PgError

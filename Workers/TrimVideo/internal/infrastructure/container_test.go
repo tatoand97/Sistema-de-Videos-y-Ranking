@@ -12,12 +12,10 @@ func TestNewContainer_NilConfig(t *testing.T) {
 	})
 }
 
-func TestNewContainer_InvalidMinIOConfig(t *testing.T) {
+func TestNewContainer_InvalidS3Config(t *testing.T) {
 	config := &Config{
-		MinIOEndpoint:  "",
-		MinIOAccessKey: "",
-		MinIOSecretKey: "",
-		RabbitMQURL:    "amqp://localhost:5672",
+		S3Region:    "",
+		RabbitMQURL: "amqp://localhost:5672",
 	}
 
 	container, err := NewContainer(config)
@@ -27,10 +25,8 @@ func TestNewContainer_InvalidMinIOConfig(t *testing.T) {
 
 func TestNewContainer_InvalidRabbitMQConfig(t *testing.T) {
 	config := &Config{
-		MinIOEndpoint:  "localhost:9000",
-		MinIOAccessKey: "minioadmin",
-		MinIOSecretKey: "minioadmin",
-		RabbitMQURL:    "invalid-url",
+		S3Region:    "us-east-1",
+		RabbitMQURL: "invalid-url",
 	}
 
 	container, err := NewContainer(config)
@@ -52,9 +48,8 @@ func TestContainer_Structure(t *testing.T) {
 
 func TestContainer_ConfigValidation(t *testing.T) {
 	config := &Config{
-		MinIOEndpoint:     "localhost:9000",
-		MinIOAccessKey:    "minioadmin",
-		MinIOSecretKey:    "minioadmin",
+		S3Region:          "us-east-1",
+		S3Endpoint:        "https://s3.us-east-1.amazonaws.com",
 		RabbitMQURL:       "amqp://guest:guest@localhost:5672/",
 		MaxRetries:        3,
 		QueueMaxLength:    1000,
@@ -64,7 +59,7 @@ func TestContainer_ConfigValidation(t *testing.T) {
 		MaxSeconds:        30,
 	}
 
-	assert.NotEmpty(t, config.MinIOEndpoint)
+	assert.NotEmpty(t, config.S3Region)
 	assert.NotEmpty(t, config.RabbitMQURL)
 	assert.Greater(t, config.MaxRetries, 0)
 	assert.Greater(t, config.MaxSeconds, 0)

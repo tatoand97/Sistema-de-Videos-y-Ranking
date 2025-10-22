@@ -10,7 +10,7 @@ Arquitectura por capas (idéntica al worker de Watermarking):
 gossipOpenClose/
 ├─ cmd/main.go
 ├─ internal/
-│  ├─ adapters/        # MinIO, RabbitMQ, handler de mensajes
+│  ├─ adapters/        # S3, RabbitMQ, handler de mensajes
 │  ├─ application/
 │  │  ├─ services/     # ffmpeg: genera intro/outro y concatena
 │  │  └─ usecases/     # OpenCloseUseCase
@@ -27,9 +27,9 @@ gossipOpenClose/
 
 - `RABBIT_URL`  (ej: `amqp://user:pass@rabbitmq:5672/`)
 - `QUEUE_NAME`  (nombre de la cola de trabajo)
-- `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_SSL`
-- `MINIO_BUCKET_RAW`       (bucket de entrada)
-- `MINIO_BUCKET_PROCESSED` (bucket de salida)
+- `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` (opcional), `S3_USE_PATH_STYLE` (opcional)
+- `S3_BUCKET_RAW`       (bucket de entrada)
+- `S3_BUCKET_PROCESSED` (bucket de salida)
 - `MAX_SECONDS`            (reserva para compatibilidad, no se usa para recortar)
 - `INTRO_SECONDS`          (float, defecto `2.5`)
 - `OUTRO_SECONDS`          (float, defecto `2.5`)

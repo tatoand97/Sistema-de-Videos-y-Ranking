@@ -66,47 +66,6 @@ services:
       && /usr/local/bin/migrate -path=/migrations -database "$$DATABASE_URL" up
     restart: "no"
 
-  minio:
-    image: minio/minio:latest
-    command: ["server","/data","--console-address",":9001"]
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio12345
-    ports: ["9000:9000","9001:9001"]
-    volumes: [minio-data:/data]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  minio-buckets:
-    image: minio/mc
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio12345
-    entrypoint: >
-      /bin/sh -c "
-      until /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
-        echo 'Waiting for MinIO to be ready...'
-        sleep 2
-      done;
-      /usr/bin/mc mb myminio/raw-videos --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-trim --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-edit --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-audio-removal --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos-watermarking --ignore-existing;
-      /usr/bin/mc mb myminio/processed-videos --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/processed-videos;
-      echo 'Buckets created successfully';
-      exit 0;
-      "
-    restart: "no"
-
   api:
     build:
       context: ./Api
@@ -118,10 +77,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-buckets:
-        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgres://app_user:app_password@postgres:5432/videorank?sslmode=disable
       JWT_SECRET: 6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn
@@ -134,11 +89,13 @@ services:
       CACHE_PREFIX: "videorank:"
       CACHE_TTL_SECONDS: "120"
 
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio12345
-      MINIO_BUCKET: raw-videos
-      MINIO_USE_SSL: "false"
+      # Pass AWS credentials/region from host environment
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_BUCKET: raw-videos
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       # RabbitMQ to publish processing jobs
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
       STATES_MACHINE_QUEUE: states_machine_queue
@@ -146,8 +103,7 @@ services:
       RABBITMQ_QUEUE_MAXLEN: "1000"
       
       # Processed video URL configuration
-      PROCESSED_VIDEO_HOST: nginx
-      PROCESSED_VIDEO_PORT: "8084"
+      PROCESSED_VIDEO_BASE_URL: https://processed-videos.s3.us-east-1.amazonaws.com
     restart: unless-stopped
     healthcheck:
       test: [ "CMD","wget","--no-verbose","--tries=1","--spider","http://localhost:8080/health" ]
@@ -160,14 +116,10 @@ services:
     depends_on:
       api:
         condition: service_healthy
-      minio:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     ports:
       - "8080:8080" # API Proxy
-      - "8084:8084" # MinIO Files
-      - "8082:8082" # MinIO Console
       - "8083:8083" # RabbitMQ UI
       - "8081:8081" # Frontend estático
     volumes:
@@ -188,15 +140,13 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-buckets:
-        condition: service_completed_successfully
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio12345
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: raw-videos
       PROCESSED_BUCKET: processed-videos-trim
       QUEUE_NAME: trim_video_queue
@@ -218,15 +168,13 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-buckets:
-        condition: service_completed_successfully
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio12345
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: processed-videos-trim
       PROCESSED_BUCKET: processed-videos-edit
       QUEUE_NAME: edit_video_queue
@@ -248,15 +196,13 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-buckets:
-        condition: service_completed_successfully
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio12345
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: processed-videos-edit
       PROCESSED_BUCKET: processed-videos-audio-removal
       QUEUE_NAME: audio_removal_queue
@@ -277,15 +223,13 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-buckets:
-        condition: service_completed_successfully
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio12345
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       RAW_BUCKET: processed-videos-audio-removal
       PROCESSED_BUCKET: processed-videos-watermarking
       QUEUE_NAME: watermarking_queue
@@ -350,17 +294,15 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-buckets:
-        condition: service_completed_successfully
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio12345
-      MINIO_BUCKET_RAW: processed-videos-watermarking
-      MINIO_BUCKET_PROCESSED: processed-videos
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ASIAXGQWHVU2B6IPJZIB
+      AWS_SECRET_ACCESS_KEY: CRXbBkoAJus5XyYnBRJO4uh3NDG7BCawjB95a73a
+      S3_ENDPOINT: ""
+      S3_USE_PATH_STYLE: "false"
+      S3_BUCKET_RAW: processed-videos-watermarking
+      S3_BUCKET_PROCESSED: processed-videos
       QUEUE_NAME: gossip_open_close_queue
       MAX_SECONDS: "30"
       INTRO_SECONDS: "2.5"
@@ -404,4 +346,3 @@ volumes:
   rabbitmq-data:
   rabbitmq-logs:
   pg-data:
-  minio-data:

@@ -18,7 +18,7 @@ Cómo levantar el Backend/API
 - El frontend asume la API en `http://localhost:8080` (nginx → api).
 - Desde la raíz del repo, levanta los servicios necesarios:
 
-  1) Infra de soporte: `docker compose up -d postgres redis rabbitmq minio minio-buckets`
+  1) Infra de soporte: `docker compose up -d postgres redis rabbitmq`
   2) Migraciones (one-off): `docker compose up --build migrate && docker compose rm -f migrate`
   3) API + Nginx: `docker compose up -d api nginx`
 

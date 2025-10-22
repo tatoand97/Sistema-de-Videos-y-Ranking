@@ -4,6 +4,8 @@ import (
 	"watermarking/internal/adapters"
 	"watermarking/internal/application/services"
 	"watermarking/internal/application/usecases"
+
+	sharedstorage "shared/storage"
 )
 
 type Container struct {
@@ -13,15 +15,25 @@ type Container struct {
 }
 
 func NewContainer(config *Config) (*Container, error) {
-	storage, err := adapters.NewMinIOStorage(config.MinIOEndpoint, config.MinIOAccessKey, config.MinIOSecretKey)
-	if err != nil { return nil, err }
+	storageClient, err := sharedstorage.NewClient(sharedstorage.Config{
+		Region:       config.S3Region,
+		AccessKey:    config.S3AccessKey,
+		SecretKey:    config.S3SecretKey,
+		Endpoint:     config.S3Endpoint,
+		UsePathStyle: config.S3UsePathStyle,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	videoRepo := adapters.NewVideoRepository()
-	storageRepo := adapters.NewStorageRepository(storage)
+	storageRepo := adapters.NewStorageRepository(storageClient)
 	processing := services.NewMP4VideoProcessingService()
 
 	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	notificationService := services.NewNotificationService(publisher, config.StateMachineQueue)
 
 	uc := usecases.NewWatermarkingUseCase(
@@ -35,7 +47,9 @@ func NewContainer(config *Config) (*Container, error) {
 	)
 
 	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	handler := adapters.NewMessageHandler(uc)
 
 	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil

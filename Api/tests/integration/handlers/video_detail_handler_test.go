@@ -48,7 +48,7 @@ func (f *fakeVideoRepoDetail) GetByIDAndUser(_ context.Context, id, userID uint)
 func setupVideoDetailRouter(repo *fakeVideoRepoDetail, withAuth bool) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	uc := useCase.NewUploadsUseCase(repo, &fakeStorage{}, nil, "")
-	h := hdl.NewVideoHandlers(uc)
+	h := hdl.NewVideoHandlers(uc, processedBaseURL)
 	r := gin.New()
 	if withAuth {
 		r.Use(func(c *gin.Context) {

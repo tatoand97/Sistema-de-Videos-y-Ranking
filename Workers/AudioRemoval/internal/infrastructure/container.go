@@ -4,6 +4,8 @@ import (
 	"audioremoval/internal/adapters"
 	"audioremoval/internal/application/services"
 	"audioremoval/internal/application/usecases"
+
+	sharedstorage "shared/storage"
 )
 
 type Container struct {
@@ -15,11 +17,13 @@ type Container struct {
 }
 
 func NewContainer(config *Config) (*Container, error) {
-	storage, err := adapters.NewMinIOStorage(
-		config.MinIOEndpoint,
-		config.MinIOAccessKey,
-		config.MinIOSecretKey,
-	)
+	storageClient, err := sharedstorage.NewClient(sharedstorage.Config{
+		Region:       config.S3Region,
+		AccessKey:    config.S3AccessKey,
+		SecretKey:    config.S3SecretKey,
+		Endpoint:     config.S3Endpoint,
+		UsePathStyle: config.S3UsePathStyle,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +39,7 @@ func NewContainer(config *Config) (*Container, error) {
 	}
 
 	videoRepo := adapters.NewVideoRepository()
-	storageRepo := adapters.NewStorageRepository(storage)
+	storageRepo := adapters.NewStorageRepository(storageClient)
 	processingService := services.NewMP4VideoProcessingService()
 	notificationService := services.NewNotificationService(publisher, config.StateMachineQueue)
 

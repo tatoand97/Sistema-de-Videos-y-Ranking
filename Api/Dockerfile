@@ -28,20 +28,21 @@ RUN apk add --no-cache file ca-certificates && update-ca-certificates
 COPY --from=build /out/api /app/api
 COPY internal/infrastructure/migrations /app/internal/infrastructure/migrations
 
-ENV DATABASE_URL=postgres://app_user:app_password@videorank.c1o2s0umijp6.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
+ENV DATABASE_URL=postgres://app_user:app_password@videorank.cfkc2y4acj9g.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require \
     JWT_SECRET=6EPOc2/6veZ71FAJSF68iv21ho83NLQSaycHEGTTjGO9TBmRsphMp5JqgieFTcGn \
     PORT=8080 \
     CORS_ORIGIN=* \
     UPLOAD_DIR=/uploads \
-    REDIS_ADDR=10.0.3.78:6379 \
+    REDIS_ADDR=10.0.3.71:6379 \
     CACHE_PREFIX=videorank: \
     CACHE_TTL_SECONDS=120 \
-    MINIO_ENDPOINT=10.0.1.9:9000 \
-    MINIO_ACCESS_KEY=minioadmin \
-    MINIO_SECRET_KEY=minioadmin123 \
-    MINIO_BUCKET=raw-videos \
-    MINIO_USE_SSL=false \
-    RABBITMQ_URL=amqp://admin:admin@10.0.5.108:5672/ \
+    AWS_REGION=${AWS_REGION} \
+    AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+    AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    S3_BUCKET=${S3_BUCKET_NAME} \
+    S3_ENDPOINT=${S3_ENDPOINT:-} \
+    S3_USE_PATH_STYLE='false' \
+    RABBITMQ_URL=amqp://admin:admin@10.0.5.20:5672/ \
     STATES_MACHINE_QUEUE=states_machine_queue \
     RABBITMQ_QUEUE_MAXLEN=1000
 

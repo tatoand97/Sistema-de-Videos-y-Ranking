@@ -19,6 +19,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const processedBaseURL = "https://media.example.com/%s"
+
 // --- Fakes ---
 
 type fakeVideoRepo struct {
@@ -70,7 +72,7 @@ func (f *fakeStorage) Save(_ context.Context, _ string, _ io.Reader, _ int64, _ 
 
 func setupVideoRouter(uc *useCase.UploadsUseCase, withAuth bool) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	h := hdl.NewVideoHandlers(uc)
+	h := hdl.NewVideoHandlers(uc, processedBaseURL)
 	r := gin.New()
 	if withAuth {
 		r.Use(func(c *gin.Context) { c.Set("userID", uint(10)); c.Next() })

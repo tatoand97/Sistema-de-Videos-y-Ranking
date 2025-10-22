@@ -1,15 +1,17 @@
 package application_test
 
 import (
-	"api/internal/application/validations"
+	"bytes"
 	"testing"
+
+	"api/internal/application/validations"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckMP4_ValidFile(t *testing.T) {
 	// Test with basic MP4 data - this will fail validation as expected
-	validMP4 := createTestValidMP4()
+	validMP4 := bytes.NewReader(createTestValidMP4())
 
 	_, _, err := validations.CheckMP4(validMP4)
 
@@ -19,7 +21,7 @@ func TestCheckMP4_ValidFile(t *testing.T) {
 }
 
 func TestCheckMP4_InvalidFile(t *testing.T) {
-	invalidData := []byte("invalid mp4 content")
+	invalidData := bytes.NewReader([]byte("invalid mp4 content"))
 
 	_, _, err := validations.CheckMP4(invalidData)
 
@@ -29,7 +31,7 @@ func TestCheckMP4_InvalidFile(t *testing.T) {
 }
 
 func TestCheckMP4_EmptyData(t *testing.T) {
-	_, _, err := validations.CheckMP4([]byte{})
+	_, _, err := validations.CheckMP4(bytes.NewReader([]byte{}))
 
 	assert.Error(t, err)
 	// Empty data will also trigger the moov/trak error
@@ -40,7 +42,7 @@ func TestCheckMP4_TooLarge(t *testing.T) {
 	// Create data larger than MaxBytes
 	largeData := make([]byte, validations.MaxBytes+1)
 
-	_, _, err := validations.CheckMP4(largeData)
+	_, _, err := validations.CheckMP4(bytes.NewReader(largeData))
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "excede 100MB")

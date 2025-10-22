@@ -72,7 +72,7 @@ graph TB
     
     subgraph "Storage Layer"
         PG[(PostgreSQL)]
-        MINIO[MinIO Object Storage]
+        S3[S3 Object Storage]
         REDIS[(Redis Cache)]
     end
     
@@ -88,13 +88,12 @@ graph TB
     NGINX --> API
     NGINX --> GRAF
     NGINX --> JAEGER
-    NGINX --> MINIO
     NGINX --> RMQ
     
     API --> RMQ
     API --> PG
     API --> REDIS
-    API --> MINIO
+    API --> S3
     
     RMQ --> WK1
     RMQ --> WK2
@@ -107,13 +106,13 @@ graph TB
     RMQ_DLX --> RMQ_DLQ
     
     WK1 --> PG
-    WK1 --> MINIO
+    WK1 --> S3
     WK2 --> PG
-    WK2 --> MINIO
+    WK2 --> S3
     WK3 --> PG
-    WK3 --> MINIO
+    WK3 --> S3
     WK4 --> PG
-    WK4 --> MINIO
+    WK4 --> S3
     WK5 --> REDIS
     WK6 --> PG
     WK7 --> PG
@@ -143,7 +142,7 @@ C4Context
     Person(user, "Usuario", "Sube y procesa videos")
     System(videoSystem, "Sistema de Videos", "Procesa videos con múltiples operaciones")
     
-    System_Ext(storage, "MinIO Storage", "Almacenamiento de objetos")
+    System_Ext(storage, "S3 Storage", "Almacenamiento de objetos")
     System_Ext(database, "PostgreSQL", "Base de datos relacional")
     System_Ext(cache, "Redis", "Cache en memoria")
     System_Ext(monitoring, "Stack Observabilidad", "Prometheus, Grafana, Loki, Jaeger")
@@ -174,7 +173,7 @@ graph LR
         G --> H
         
         H --> I[Update Database]
-        H --> J[Store in MinIO]
+        H --> J[Store in S3]
     end
     
     subgraph "State Management"
@@ -201,20 +200,20 @@ sequenceDiagram
     participant API
     participant RabbitMQ
     participant Worker
-    participant MinIO
+    participant S3
     participant PostgreSQL
     participant Redis
     
     Client->>API: POST /upload-video
-    API->>MinIO: Store raw video
+    API->>S3: Store raw video
     API->>PostgreSQL: Create video record
     API->>RabbitMQ: Publish processing message
     API->>Client: Return job ID
     
     RabbitMQ->>Worker: Consume message
-    Worker->>MinIO: Download raw video
+    Worker->>S3: Download raw video
     Worker->>Worker: Process video
-    Worker->>MinIO: Upload processed video
+    Worker->>S3: Upload processed video
     Worker->>PostgreSQL: Update video status
     Worker->>Redis: Cache result
     Worker->>RabbitMQ: Ack message
@@ -284,7 +283,7 @@ sequenceDiagram
 
 ### Storage
 - **PostgreSQL**: Base de datos principal
-- **MinIO**: Almacenamiento de objetos para videos
+- **S3**: Almacenamiento de objetos para videos
 - **Redis**: Cache en memoria
 
 ### Observability
@@ -304,7 +303,7 @@ sequenceDiagram
 ### 1. EditVideo Worker
 - **Función**: Edición general de videos
 - **Operaciones**: Cortes, filtros, efectos
-- **Storage**: MinIO para videos, PostgreSQL para metadatos
+- **Storage**: S3 para videos, PostgreSQL para metadatos
 
 ### 2. TrimVideo Worker
 - **Función**: Recorte de videos
@@ -632,7 +631,7 @@ paths:
                       database: { type: string }
                       redis: { type: string }
                       rabbitmq: { type: string }
-                      minio: { type: string }
+                      S3: { type: string }
 
   /metrics:
     get:
@@ -1013,10 +1012,13 @@ POSTGRES_PASSWORD=app_password
 POSTGRES_DB=videorank
 DATABASE_URL=postgres://app_user:app_password@postgres:5432/videorank
 
-# MinIO
-MINIO_ROOT_USER=minio
-MINIO_ROOT_PASSWORD=minio12345
-MINIO_ENDPOINT=minio:9000
+# AWS / S3
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+S3_BUCKET=raw-videos
+S3_ENDPOINT=
+S3_USE_PATH_STYLE=false
 
 # RabbitMQ
 RABBITMQ_DEFAULT_USER=admin
@@ -1033,7 +1035,7 @@ MAX_QUEUE_LENGTH=1000
 - **PostgreSQL**: 5432
 - **Redis**: 6379
 - **RabbitMQ**: 5672 (AMQP), 15672 (UI)
-- **MinIO**: 9000 (API), 9001 (Console)
+- **S3**: 9000 (API), 9001 (Console)
 - **Prometheus**: 9090
 - **Grafana**: 3000
 - **Loki**: 3100
@@ -1129,7 +1131,7 @@ Cómo levantar el Backend/API
 - El frontend asume la API en `http://localhost:8080` (nginx → api).
 - Desde la raíz del repo, levanta los servicios necesarios:
 
-  1) Infra de soporte: `docker compose up -d postgres redis rabbitmq minio minio-buckets`
+  1) Infra de soporte: `docker compose up -d postgres redis rabbitmq S3 S3-buckets`
   2) Migraciones (one-off): `docker compose up --build migrate && docker compose rm -f migrate`
   3) API + Nginx: `docker compose up -d api nginx`
 

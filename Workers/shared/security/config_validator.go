@@ -13,25 +13,25 @@ func ValidateRabbitMQURL(rabbitURL string) error {
 	if rabbitURL == "" {
 		return fmt.Errorf("RABBITMQ_URL is required")
 	}
-	
+
 	u, err := url.Parse(rabbitURL)
 	if err != nil {
 		return fmt.Errorf("invalid RABBITMQ_URL format: %v", err)
 	}
-	
+
 	if u.Scheme != "amqp" && u.Scheme != "amqps" {
 		return fmt.Errorf("RABBITMQ_URL must use amqp or amqps scheme")
 	}
-	
+
 	// Check for common weak/placeholder credentials
 	if u.User != nil {
 		username := u.User.Username()
 		password, _ := u.User.Password()
 		weakCreds := map[string]string{
-			"user": "pass",
+			"user":  "pass",
 			"admin": "admin",
 			"guest": "guest",
-			"test": "test",
+			"test":  "test",
 		}
 		for user, pass := range weakCreds {
 			if username == user && password == pass {
@@ -39,23 +39,23 @@ func ValidateRabbitMQURL(rabbitURL string) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
-// ValidateMinIOConfig validates MinIO configuration
-func ValidateMinIOConfig(endpoint, accessKey, secretKey string) error {
-	if endpoint == "" {
-		return fmt.Errorf("MINIO_ENDPOINT is required")
+// ValidateS3Config validates the minimal configuration required to interact with S3.
+func ValidateS3Config(region, accessKey, secretKey string) error {
+	if region == "" {
+		return fmt.Errorf("AWS_REGION is required")
 	}
 	if accessKey == "" {
-		return fmt.Errorf("MINIO_ACCESS_KEY is required")
+		return fmt.Errorf("AWS_ACCESS_KEY_ID is required")
 	}
 	if secretKey == "" {
-		return fmt.Errorf("MINIO_SECRET_KEY is required")
+		return fmt.Errorf("AWS_SECRET_ACCESS_KEY is required")
 	}
 	if len(secretKey) < 8 {
-		return fmt.Errorf("MINIO_SECRET_KEY must be at least 8 characters")
+		return fmt.Errorf("AWS_SECRET_ACCESS_KEY must be at least 8 characters")
 	}
 	return nil
 }
@@ -78,16 +78,16 @@ func GetIntEnvWithValidation(key string, defaultValue, min, max int) (int, error
 	if valueStr == "" {
 		return defaultValue, nil
 	}
-	
+
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
 		return defaultValue, fmt.Errorf("invalid integer value for %s: %v", key, err)
 	}
-	
+
 	if value < min || value > max {
 		return defaultValue, fmt.Errorf("%s must be between %d and %d, got %d", key, min, max, value)
 	}
-	
+
 	return value, nil
 }
 

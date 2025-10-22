@@ -64,13 +64,14 @@ func atoiOrDefault(s string, def int) int {
 	return def
 }
 
-func loadMinioConfigFromEnv() storage.MinioConfig {
-	return storage.MinioConfig{
-		Endpoint:  os.Getenv("MINIO_ENDPOINT"),
-		AccessKey: os.Getenv("MINIO_ACCESS_KEY"),
-		SecretKey: os.Getenv("MINIO_SECRET_KEY"),
-		UseSSL:    os.Getenv("MINIO_USE_SSL") == "true",
-		Bucket:    os.Getenv("MINIO_BUCKET"),
+func loadS3ConfigFromEnv() storage.S3Config {
+	return storage.S3Config{
+		Region:       os.Getenv("AWS_REGION"),
+		AccessKey:    os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretKey:    os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Endpoint:     os.Getenv("S3_ENDPOINT"),
+		UsePathStyle: strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true"),
+		Bucket:       os.Getenv("S3_BUCKET"),
 	}
 }
 
@@ -121,10 +122,10 @@ func main() {
 	locRepo := postgresrepo.NewLocationRepository(db)
 	videoRepo := postgresrepo.NewVideoRepository(db)
 
-	minioCfg := loadMinioConfigFromEnv()
-	videoStorage, err := storage.NewMinioVideoStorage(minioCfg)
+	s3Cfg := loadS3ConfigFromEnv()
+	videoStorage, err := storage.NewS3VideoStorage(s3Cfg)
 	if err != nil {
-		log.Fatalf("minio storage init failed: %v", err)
+		log.Fatalf("s3 storage init failed: %v", err)
 	}
 
 	authService := useCase.NewAuthService(userRepo, jwtSecret)
@@ -185,6 +186,16 @@ func main() {
 	// Public service without Redis aggregates
 	publicService := useCase.NewPublicService(publicRepo, voteRepo)
 
+	processedBase := strings.TrimRight(os.Getenv("PROCESSED_VIDEO_BASE_URL"), "/")
+	processedVideoURL := ""
+	if processedBase != "" {
+		processedVideoURL = fmt.Sprintf("%s/%%s", processedBase)
+	} else {
+		processedVideoURL = fmt.Sprintf("http://%s:%s/processed-videos/%%s",
+			getEnvOrDefault("PROCESSED_VIDEO_HOST", "localhost"),
+			getEnvOrDefault("PROCESSED_VIDEO_PORT", "8084"))
+	}
+
 	handlers.NewRouter(r, handlers.RouterConfig{
 		AuthService:        authService,
 		UserService:        userService,
@@ -194,9 +205,7 @@ func main() {
 		JWTSecret:          jwtSecret,
 		Cache:              cache,
 		CacheSchemaVersion: getEnvOrDefault("SCHEMA_VERSION", "v2"),
-		ProcessedVideoURL:  fmt.Sprintf("http://%s:%s/processed-videos/%%s", 
-			getEnvOrDefault("PROCESSED_VIDEO_HOST", "localhost"), 
-			getEnvOrDefault("PROCESSED_VIDEO_PORT", "8084")),
+		ProcessedVideoURL:  processedVideoURL,
 	})
 
 	port := getEnvOrDefault("PORT", "8080")
