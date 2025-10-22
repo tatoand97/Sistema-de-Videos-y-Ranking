@@ -1,3 +1,14 @@
+## 👥 Equipo de Desarrollo
+ 
+- **Ricardo Andres Leyva Osorio** - r.leyva@uniandes.edu.co - Developer
+- **Edda Camila Rodriguez Mojica** - ec.rodriguez@uniandes.edu.co - Developer
+- **Cristian David Paredes Bravo** - c.paredesb@uniandes.edu.co - Developer
+- **Andrea Carolina Cely Duarte** - a.celyd@uniandes.edu.co - Developer
+- **Juan Carlos Martinez Muñoz** - jc.martinezm1@uniandes.edu.co - Developer
+
+# Nuevas entregas
+[Entrega 2-Arquitectura y cambios](docs/entrega2/entrega2.md#arquitectura-de-migración-a-la-nube)
+
 # Sistema de Videos y Ranking
 
 [![Ver el video corto en YouTube](https://img.youtube.com/vi/LyWnp02K7Fs/maxresdefault.jpg)](https://www.youtube.com/watch?v=LyWnp02K7Fs)
@@ -12,13 +23,7 @@
 
 Sistema distribuido para procesamiento de videos con arquitectura de microservicios, implementando patrones de mensajería asíncrona y observabilidad completa.
 
-## 👥 Equipo de Desarrollo
- 
-- **Ricardo Andres Leyva Osorio** - r.leyva@uniandes.edu.co - Developer
-- **Edda Camila Rodriguez Mojica** - ec.rodriguez@uniandes.edu.co - Developer
-- **Cristian David Paredes Bravo** - c.paredesb@uniandes.edu.co - Developer
-- **Andrea Carolina Cely Duarte** - a.celyd@uniandes.edu.co - Developer
-- **Juan Carlos Martinez Muñoz** - jc.martinezm1@uniandes.edu.co - Developer
+
 
 ## Integración con sonar cloud
 https://sonarcloud.io/organizations/tatoand97/projects

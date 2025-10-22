@@ -1,0 +1,14 @@
+timeStamp,elapsed,label,responseCode,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1760927564570,228,Auth / Login,200,true,,935,299,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,228,0,80
+1760927567739,3279,Videos / Upload (multipart),201,true,,498,13255025,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/videos/upload,3279,0,0
+1760927572405,146,Auth / Login,200,true,,935,790,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,146,0,0
+1760927573985,3084,Videos / Upload (multipart),201,true,,498,13255033,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/videos/upload,3084,0,0
+1760927579378,152,Auth / Login,200,true,,935,790,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,152,0,0
+1760927580755,10420,Videos / Upload (multipart),201,true,,498,52513059,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/videos/upload,10420,0,0
+1760927593827,150,Auth / Login,200,true,,935,790,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,150,0,0
+1760927596144,2464,Videos / Upload (multipart),201,true,,498,13255025,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/videos/upload,2464,0,0
+1760927600146,148,Auth / Login,200,true,,935,790,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,148,0,0
+1760927601374,2580,Videos / Upload (multipart),201,true,,498,13255001,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/videos/upload,2580,0,0
+1760927606363,151,Auth / Login,200,true,,935,790,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,151,0,0
+1760927608812,9963,Videos / Upload (multipart),201,true,,498,52513047,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/videos/upload,9963,0,0
+1760927621589,146,Auth / Login,200,true,,935,790,1,1,http://ec2-3-94-216-59.compute-1.amazonaws.com:8080/api/auth/login,146,0,0
