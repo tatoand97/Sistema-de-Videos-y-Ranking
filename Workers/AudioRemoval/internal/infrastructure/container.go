@@ -4,21 +4,21 @@ import (
 	"audioremoval/internal/adapters"
 	"audioremoval/internal/application/services"
 	"audioremoval/internal/application/usecases"
+	"../../shared/messaging"
 
 	sharedstorage "shared/storage"
 )
 
 type Container struct {
 	Config         *Config
-	Consumer       *adapters.RabbitMQConsumer
-	Publisher      *adapters.RabbitMQPublisher
+	Consumer       *messaging.SQSConsumer
 	MessageHandler *adapters.MessageHandler
 	ProcessVideoUC *usecases.ProcessVideoUseCase
 }
 
 func NewContainer(config *Config) (*Container, error) {
 	storageClient, err := sharedstorage.NewClient(sharedstorage.Config{
-		Region:       config.S3Region,
+		Region:       config.AWSRegion,
 		AccessKey:    config.S3AccessKey,
 		SecretKey:    config.S3SecretKey,
 		Endpoint:     config.S3Endpoint,
@@ -28,12 +28,7 @@ func NewContainer(config *Config) (*Container, error) {
 		return nil, err
 	}
 
-	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
-	if err != nil {
-		return nil, err
-	}
-
-	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
+	consumer, err := messaging.NewSQSConsumer(config.AWSRegion, config.SQSQueueURL)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +36,7 @@ func NewContainer(config *Config) (*Container, error) {
 	videoRepo := adapters.NewVideoRepository()
 	storageRepo := adapters.NewStorageRepository(storageClient)
 	processingService := services.NewMP4VideoProcessingService()
-	notificationService := services.NewNotificationService(publisher, config.StateMachineQueue)
+	notificationService := services.NewNotificationService(consumer, config.StateMachineQueue)
 
 	processVideoUC := usecases.NewProcessVideoUseCase(
 		videoRepo,
@@ -57,7 +52,6 @@ func NewContainer(config *Config) (*Container, error) {
 	return &Container{
 		Config:         config,
 		Consumer:       consumer,
-		Publisher:      publisher,
 		MessageHandler: messageHandler,
 		ProcessVideoUC: processVideoUC,
 	}, nil

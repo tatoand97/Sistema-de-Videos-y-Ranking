@@ -5,19 +5,20 @@ import (
 	"gossipopenclose/internal/adapters"
 	"gossipopenclose/internal/application/services"
 	"gossipopenclose/internal/application/usecases"
+	"../../shared/messaging"
 
 	sharedstorage "shared/storage"
 )
 
 type Container struct {
 	Config         *Config
-	Consumer       *adapters.RabbitMQConsumer
+	Consumer       *messaging.SQSConsumer
 	MessageHandler *adapters.MessageHandler
 }
 
 func NewContainer(config *Config) (*Container, error) {
 	storageClient, err := sharedstorage.NewClient(sharedstorage.Config{
-		Region:       config.S3Region,
+		Region:       config.AWSRegion,
 		AccessKey:    config.S3AccessKey,
 		SecretKey:    config.S3SecretKey,
 		Endpoint:     config.S3Endpoint,
@@ -27,17 +28,15 @@ func NewContainer(config *Config) (*Container, error) {
 		return nil, err
 	}
 
-	videoRepo := adapters.NewVideoRepository()
-	storageRepo := adapters.NewStorageRepository(storageClient)
-
-	processing := services.NewOpenCloseVideoProcessingService()
-
-	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
+	consumer, err := messaging.NewSQSConsumer(config.AWSRegion, config.SQSQueueURL)
 	if err != nil {
 		return nil, err
 	}
 
-	notificationService := services.NewNotificationService(publisher, "states_machine_queue")
+	videoRepo := adapters.NewVideoRepository()
+	storageRepo := adapters.NewStorageRepository(storageClient)
+	processing := services.NewOpenCloseVideoProcessingService()
+	notificationService := services.NewNotificationService(consumer, "states_machine_queue")
 
 	uc := usecases.NewOpenCloseUseCase(
 		videoRepo,
@@ -53,11 +52,6 @@ func NewContainer(config *Config) (*Container, error) {
 		config.TargetHeight,
 		config.FPS,
 	)
-
-	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
-	if err != nil {
-		return nil, err
-	}
 
 	handler := adapters.NewMessageHandler(uc)
 	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil

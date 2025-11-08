@@ -3,22 +3,19 @@ package infrastructure
 import (
 	"statesmachine/internal/adapters"
 	"statesmachine/internal/application/usecases"
+	"../../shared/messaging"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Container struct {
-	Consumer       *adapters.RabbitMQConsumer
-	Publisher      *adapters.RabbitMQPublisher
+	Consumer       *messaging.SQSConsumer
 	MessageHandler *adapters.MessageHandler
 	DB             *gorm.DB
 }
 
 func NewContainer(config *Config) (*Container, error) {
-	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL)
-	if err != nil { return nil, err }
-
-	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
+	consumer, err := messaging.NewSQSConsumer(config.AWSRegion, config.SQSQueueURL)
 	if err != nil { return nil, err }
 
 	// Database connection
@@ -26,12 +23,11 @@ func NewContainer(config *Config) (*Container, error) {
 	if err != nil { return nil, err }
 
 	videoRepo := adapters.NewPostgresVideoRepository(db)
-	orchestrateUC := usecases.NewOrchestrateVideoUseCase(videoRepo, publisher, config.EditVideoQueue, config.AudioRemovalQueue, config.WatermarkingQueue, config.MaxRetries, config.RetryDelayMinutes, config.ProcessedVideoURL)
+	orchestrateUC := usecases.NewOrchestrateVideoUseCase(videoRepo, consumer, config.TrimVideoQueue, config.EditVideoQueue, config.AudioRemovalQueue, config.WatermarkingQueue, config.GossipQueue, config.MaxRetries, config.RetryDelayMinutes, config.ProcessedVideoURL)
 	messageHandler := adapters.NewMessageHandler(orchestrateUC)
 
 	return &Container{
 		Consumer:       consumer,
-		Publisher:      publisher,
 		MessageHandler: messageHandler,
 		DB:             db,
 	}, nil

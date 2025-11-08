@@ -3,8 +3,8 @@ module watermarking
 go 1.23
 
 require (
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.35.5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/streadway/amqp v1.1.0
 	github.com/stretchr/testify v1.11.1
 	shared v0.0.0
 )

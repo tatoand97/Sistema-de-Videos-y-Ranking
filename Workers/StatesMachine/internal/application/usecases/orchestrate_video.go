@@ -19,9 +19,11 @@ type WorkerMessage struct {
 type OrchestrateVideoUseCase struct {
 	videoRepo         domain.VideoRepository
 	publisher         domain.MessagePublisher
+	trimVideoQueue    string
 	editVideoQueue    string
 	audioRemovalQueue string
 	watermarkingQueue string
+	gossipQueue       string
 	maxRetries        int
 	retryDelayMinutes int
 	processedVideoURL string
@@ -30,16 +32,18 @@ type OrchestrateVideoUseCase struct {
 func NewOrchestrateVideoUseCase(
 	videoRepo domain.VideoRepository,
 	publisher domain.MessagePublisher,
-	editVideoQueue, audioRemovalQueue, watermarkingQueue string,
+	trimVideoQueue, editVideoQueue, audioRemovalQueue, watermarkingQueue, gossipQueue string,
 	maxRetries, retryDelayMinutes int,
 	processedVideoURL string,
 ) *OrchestrateVideoUseCase {
 	return &OrchestrateVideoUseCase{
 		videoRepo:         videoRepo,
 		publisher:         publisher,
+		trimVideoQueue:    trimVideoQueue,
 		editVideoQueue:    editVideoQueue,
 		audioRemovalQueue: audioRemovalQueue,
 		watermarkingQueue: watermarkingQueue,
+		gossipQueue:       gossipQueue,
 		maxRetries:        maxRetries,
 		retryDelayMinutes: retryDelayMinutes,
 		processedVideoURL: processedVideoURL,
@@ -81,7 +85,7 @@ func (uc *OrchestrateVideoUseCase) Execute(videoID string) error {
 		return fmt.Errorf("marshal message: %w", err)
 	}
 
-	if err := uc.publisher.PublishMessage("trim_video_queue", messageBytes); err != nil {
+	if err := uc.publisher.PublishMessage(uc.trimVideoQueue, messageBytes); err != nil {
 		return fmt.Errorf("publish to trim_video_queue: %w", err)
 	}
 
@@ -92,7 +96,7 @@ func (uc *OrchestrateVideoUseCase) Execute(videoID string) error {
 	logrus.WithFields(logrus.Fields{
 		"video_id":    videoID,
 		"filename":    video.OriginalFile,
-		"next_queue":  "trim_video_queue",
+		"next_queue":  uc.trimVideoQueue,
 		"timestamp":   time.Now().UTC(),
 	}).Info("StatesMachine: Message published to TrimVideo queue")
 
@@ -254,7 +258,7 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 		return fmt.Errorf("marshal message: %w", err)
 	}
 
-	if err := uc.publisher.PublishMessage("gossip_open_close_queue", messageBytes); err != nil {
+	if err := uc.publisher.PublishMessage(uc.gossipQueue, messageBytes); err != nil {
 		return fmt.Errorf("publish to gossip_open_close_queue: %w", err)
 	}
 
@@ -275,7 +279,7 @@ func (uc *OrchestrateVideoUseCase) HandleWatermarkingCompleted(videoID, filename
 	logrus.WithFields(logrus.Fields{
 		"video_id":   videoID,
 		"filename":   filename,
-		"next_queue": "gossip_open_close_queue",
+		"next_queue": uc.gossipQueue,
 		"timestamp":  time.Now().UTC(),
 	}).Info("StatesMachine: Message published to GossipOpenClose queue")
 

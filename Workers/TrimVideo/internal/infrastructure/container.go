@@ -4,20 +4,20 @@ import (
 	"trimvideo/internal/adapters"
 	"trimvideo/internal/application/services"
 	"trimvideo/internal/application/usecases"
+	"../../shared/messaging"
 
 	sharedstorage "shared/storage"
 )
 
 type Container struct {
 	Config         *Config
-	Consumer       *adapters.RabbitMQConsumer
-	Publisher      *adapters.RabbitMQPublisher
+	Consumer       *messaging.SQSConsumer
 	MessageHandler *adapters.MessageHandler
 }
 
 func NewContainer(config *Config) (*Container, error) {
 	storageClient, err := sharedstorage.NewClient(sharedstorage.Config{
-		Region:       config.S3Region,
+		Region:       config.AWSRegion,
 		AccessKey:    config.S3AccessKey,
 		SecretKey:    config.S3SecretKey,
 		Endpoint:     config.S3Endpoint,
@@ -27,7 +27,7 @@ func NewContainer(config *Config) (*Container, error) {
 		return nil, err
 	}
 
-	publisher, err := adapters.NewRabbitMQPublisher(config.RabbitMQURL)
+	consumer, err := messaging.NewSQSConsumer(config.AWSRegion, config.SQSQueueURL)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func NewContainer(config *Config) (*Container, error) {
 	videoRepo := adapters.NewVideoRepository()
 	storageRepo := adapters.NewStorageRepository(storageClient)
 	processing := services.NewMP4VideoProcessingService()
-	notification := services.NewNotificationService(publisher, config.StateMachineQueue)
+	notification := services.NewNotificationService(consumer, config.StateMachineQueue)
 
 	uc := usecases.NewProcessVideoUseCase(
 		videoRepo,
@@ -47,11 +47,7 @@ func NewContainer(config *Config) (*Container, error) {
 		config.MaxSeconds,
 	)
 
-	consumer, err := adapters.NewRabbitMQConsumer(config.RabbitMQURL, config.MaxRetries, config.QueueMaxLength)
-	if err != nil {
-		return nil, err
-	}
 	handler := adapters.NewMessageHandler(uc)
 
-	return &Container{Config: config, Consumer: consumer, Publisher: publisher, MessageHandler: handler}, nil
+	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil
 }

@@ -75,17 +75,15 @@ func loadS3ConfigFromEnv() storage.S3Config {
 	}
 }
 
-func setupRabbitPublisher(rabbitURL, queue string) interfaces.MessagePublisher {
-	if rabbitURL == "" {
+func setupSQSPublisher(region string) interfaces.MessagePublisher {
+	if region == "" {
 		return nil
 	}
-	p, err := infraMessaging.NewRabbitMQPublisher(rabbitURL)
+	p, err := infraMessaging.NewSQSPublisher(region)
 	if err != nil {
-		log.Printf("warning: rabbitmq publisher init failed: %v", err)
+		log.Printf("warning: sqs publisher init failed: %v", err)
 		return nil
 	}
-	maxLen := atoiOrDefault(os.Getenv("RABBITMQ_QUEUE_MAXLEN"), 1000)
-	_ = p.EnsureQueue(queue, maxLen, false)
 	return p
 }
 
@@ -133,8 +131,8 @@ func main() {
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	voteRepo := postgresrepo.NewVoteRepository(db)
 
-	audioQueue := getEnvOrDefault("STATES_MACHINE_QUEUE", "states_machine_queue")
-	messagePublisher := setupRabbitPublisher(os.Getenv("RABBITMQ_URL"), audioQueue)
+	sqsQueueURL := os.Getenv("SQS_STATES_MACHINE_QUEUE")
+	messagePublisher := setupSQSPublisher(os.Getenv("AWS_REGION"))
 	defer func() {
 		if messagePublisher != nil {
 			messagePublisher.Close()
@@ -142,7 +140,7 @@ func main() {
 	}()
 
 	// Build use cases (inject publisher into use case, not handlers)
-	uploadsUC := useCase.NewUploadsUseCase(videoRepo, videoStorage, messagePublisher, audioQueue)
+	uploadsUC := useCase.NewUploadsUseCase(videoRepo, videoStorage, messagePublisher, sqsQueueURL)
 
 	r := gin.Default()
 

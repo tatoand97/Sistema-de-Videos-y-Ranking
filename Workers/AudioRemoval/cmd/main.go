@@ -15,9 +15,9 @@ func main() {
 	if err != nil {
 		logrus.Fatal("Failed to initialize container:", err)
 	}
-	defer container.Publisher.Close()
-
-	if err := container.Consumer.StartConsuming(config.QueueName, container.MessageHandler); err != nil {
+	if err := container.Consumer.StartConsuming(func(data []byte) error {
+		return container.MessageHandler.Handle(data)
+	}); err != nil {
 		logrus.Fatal("Failed to start consuming:", err)
 	}
 

@@ -15,7 +15,9 @@ func main() {
 	if err != nil { logrus.Fatal("bootstrap error:", err) }
 	defer container.Consumer.Close()
 
-	if err := container.Consumer.StartConsuming(config.QueueName, container.MessageHandler); err != nil {
+	if err := container.Consumer.StartConsuming(func(data []byte) error {
+		return container.MessageHandler.Handle(data)
+	}); err != nil {
 		logrus.Fatal("start consuming:", err)
 	}
 

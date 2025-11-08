@@ -8,17 +8,15 @@ import (
 )
 
 type Config struct {
-	RabbitMQURL     string
-	S3Region        string
+	AWSRegion       string
 	S3Endpoint      string
 	S3AccessKey     string
 	S3SecretKey     string
 	S3UsePathStyle  bool
 	RawBucket       string
 	ProcessedBucket string
-	QueueName       string
+	SQSQueueURL     string
 	MaxRetries      int
-	QueueMaxLength  int
 	MaxSeconds      int
 	IntroSeconds    float64
 	OutroSeconds    float64
@@ -46,18 +44,15 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		// Usa RABBITMQ_URL
-		RabbitMQURL:     os.Getenv("RABBITMQ_URL"),
-		S3Region:        os.Getenv("AWS_REGION"),
+		AWSRegion:       os.Getenv("AWS_REGION"),
 		S3Endpoint:      os.Getenv("S3_ENDPOINT"),
 		S3AccessKey:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		S3SecretKey:     os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		S3UsePathStyle:  usePathStyle,
 		RawBucket:       os.Getenv("S3_BUCKET_RAW"),
 		ProcessedBucket: os.Getenv("S3_BUCKET_PROCESSED"),
-		QueueName:       os.Getenv("QUEUE_NAME"),
+		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
 		MaxRetries:      maxRetries,
-		QueueMaxLength:  queueMax,
 		MaxSeconds:      maxSeconds,
 		IntroSeconds:    intro,
 		OutroSeconds:    outro,
