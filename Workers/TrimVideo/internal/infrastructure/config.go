@@ -27,12 +27,6 @@ func LoadConfig() *Config {
 			maxRetries = n
 		}
 	}
-	queueMax := 1000
-	if v := os.Getenv("QUEUE_MAX_LENGTH"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil {
-			queueMax = n
-		}
-	}
 	maxSeconds := 30
 	if v := os.Getenv("MAX_SECONDS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {

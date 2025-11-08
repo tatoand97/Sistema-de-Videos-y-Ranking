@@ -1,22 +1,24 @@
 package main
 
 import (
+	"editvideo/internal/infrastructure"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/sirupsen/logrus"
-	"editvideo/internal/infrastructure"
 )
 
 func main() {
 
 	config := infrastructure.LoadConfig()
 	container, err := infrastructure.NewContainer(config)
-	if err != nil { logrus.Fatal("bootstrap error:", err) }
+	if err != nil {
+		logrus.Fatal("bootstrap error:", err)
+	}
 	defer container.Consumer.Close()
 
 	if err := container.Consumer.StartConsuming(func(data []byte) error {
-		return container.MessageHandler.Handle(data)
+		return container.MessageHandler.HandleMessage(data)
 	}); err != nil {
 		logrus.Fatal("start consuming:", err)
 	}

@@ -28,7 +28,6 @@ type Config struct {
 
 func LoadConfig() *Config {
 	maxRetries := getEnvInt("MAX_RETRIES", 5)
-	queueMax := getEnvInt("QUEUE_MAX_LENGTH", 1000)
 	maxSeconds := getEnvInt("MAX_SECONDS", 30)
 	usePathStyle := strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true")
 

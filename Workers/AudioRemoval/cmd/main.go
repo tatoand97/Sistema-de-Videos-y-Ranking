@@ -2,10 +2,10 @@ package main
 
 import (
 	"audioremoval/internal/infrastructure"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 		logrus.Fatal("Failed to initialize container:", err)
 	}
 	if err := container.Consumer.StartConsuming(func(data []byte) error {
-		return container.MessageHandler.Handle(data)
+		return container.MessageHandler.HandleMessage(data)
 	}); err != nil {
 		logrus.Fatal("Failed to start consuming:", err)
 	}

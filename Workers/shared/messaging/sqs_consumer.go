@@ -20,7 +20,7 @@ type SQSConsumer struct {
 type MessageHandler func([]byte) error
 
 func NewSQSConsumer(region, queueURL string) (*SQSConsumer, error) {
-	cfg, err := config.LoadDefaultConfig(context.Background(), 
+	cfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(region),
 		config.WithSharedConfigProfile(os.Getenv("AWS_PROFILE")),
 	)
@@ -75,4 +75,9 @@ func (c *SQSConsumer) PublishMessage(queueURL string, message interface{}) error
 		MessageBody: aws.String(string(messageBody)),
 	})
 	return err
+}
+
+// Close is a no-op placeholder to satisfy publisher interfaces.
+func (c *SQSConsumer) Close() error {
+	return nil
 }

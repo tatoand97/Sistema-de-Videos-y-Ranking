@@ -4,8 +4,8 @@ import (
 	"trimvideo/internal/adapters"
 	"trimvideo/internal/application/services"
 	"trimvideo/internal/application/usecases"
-	"../../shared/messaging"
 
+	"shared/messaging"
 	sharedstorage "shared/storage"
 )
 

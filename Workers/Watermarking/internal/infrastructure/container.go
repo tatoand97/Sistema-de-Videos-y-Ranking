@@ -4,7 +4,7 @@ import (
 	"watermarking/internal/adapters"
 	"watermarking/internal/application/services"
 	"watermarking/internal/application/usecases"
-	"../../shared/messaging"
+	"shared/messaging"
 
 	sharedstorage "shared/storage"
 )
@@ -51,3 +51,4 @@ func NewContainer(config *Config) (*Container, error) {
 
 	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil
 }
+

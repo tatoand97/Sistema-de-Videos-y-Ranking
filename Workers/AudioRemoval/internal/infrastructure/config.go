@@ -27,12 +27,6 @@ func LoadConfig() *Config {
 		}
 	}
 
-	queueMaxLength := 1000 // default value
-	if maxLength := os.Getenv("QUEUE_MAX_LENGTH"); maxLength != "" {
-		if parsed, err := strconv.Atoi(maxLength); err == nil {
-			queueMaxLength = parsed
-		}
-	}
 	usePathStyle := strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true")
 
 	return &Config{

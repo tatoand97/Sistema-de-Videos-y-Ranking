@@ -4,7 +4,7 @@ import (
 	"audioremoval/internal/adapters"
 	"audioremoval/internal/application/services"
 	"audioremoval/internal/application/usecases"
-	"../../shared/messaging"
+	"shared/messaging"
 
 	sharedstorage "shared/storage"
 )
@@ -56,3 +56,4 @@ func NewContainer(config *Config) (*Container, error) {
 		ProcessVideoUC: processVideoUC,
 	}, nil
 }
+

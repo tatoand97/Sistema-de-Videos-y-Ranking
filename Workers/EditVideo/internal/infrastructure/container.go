@@ -4,7 +4,7 @@ import (
 	"editvideo/internal/adapters"
 	"editvideo/internal/application/services"
 	"editvideo/internal/application/usecases"
-	"../../shared/messaging"
+	"shared/messaging"
 
 	sharedstorage "shared/storage"
 )
@@ -51,3 +51,4 @@ func NewContainer(config *Config) (*Container, error) {
 
 	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil
 }
+

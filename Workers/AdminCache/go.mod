@@ -3,9 +3,9 @@ module admincache
 go 1.23
 
 require (
-    github.com/jackc/pgx/v5 v5.5.4
-    github.com/redis/go-redis/v9 v9.5.1
-    github.com/stretchr/testify v1.11.1
+	github.com/jackc/pgx/v5 v5.5.4
+	github.com/redis/go-redis/v9 v9.5.1
+	github.com/stretchr/testify v1.11.1
 )
 
 require (

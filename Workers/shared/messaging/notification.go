@@ -1,9 +1,5 @@
 package messaging
 
-import (
-	"encoding/json"
-)
-
 type NotificationService struct {
 	publisher *SQSConsumer
 	queueURL  string
@@ -22,7 +18,7 @@ func (n *NotificationService) NotifyCompletion(videoID, filename string) error {
 		"filename": filename,
 		"status":   "completed",
 	}
-	
+
 	return n.publisher.PublishMessage(n.queueURL, message)
 }
 
@@ -33,6 +29,6 @@ func (n *NotificationService) NotifyError(videoID, filename, errorMsg string) er
 		"status":   "error",
 		"error":    errorMsg,
 	}
-	
+
 	return n.publisher.PublishMessage(n.queueURL, message)
 }

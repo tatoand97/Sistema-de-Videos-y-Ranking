@@ -5,7 +5,7 @@ import (
 	"gossipopenclose/internal/adapters"
 	"gossipopenclose/internal/application/services"
 	"gossipopenclose/internal/application/usecases"
-	"../../shared/messaging"
+	"shared/messaging"
 
 	sharedstorage "shared/storage"
 )
@@ -56,3 +56,4 @@ func NewContainer(config *Config) (*Container, error) {
 	handler := adapters.NewMessageHandler(uc)
 	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil
 }
+
