@@ -1,4 +1,4 @@
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://ec2-3-94-216-59.compute-1.amazonaws.com:8080';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://k8s-ingressn-ingressn-1a3b1d8c93-6653d3ddb36eda14.elb.us-east-1.amazonaws.com';
 
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';

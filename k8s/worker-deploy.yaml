@@ -31,11 +31,27 @@ spec:
             - name: REDIS_ADDR
               value: redis.default.svc.cluster.local:6379
             - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: dsn
-          # opcional: si el script lanza varios procesos, mantén uno solo en foreground
+              value: "postgres://app_user:app_password@database-1.c8outjtarywe.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require"
+            - name: SQS_STATES_MACHINE_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/states_machine_queue
+            - name: SQS_TRIM_VIDEO_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/trim-video-queue
+            - name: SQS_EDIT_VIDEO_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/edit-video-queue
+            - name: SQS_AUDIO_REMOVAL_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/audio-removal-queue
+            - name: SQS_WATERMARKING_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/watermarking-queue
+            - name: SQS_GOSSIP_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/gossip-queue
+            - name: AWS_REGION
+              value: us-east-1
+            - name: AWS_ACCESS_KEY_ID
+              value: 
+            - name: AWS_SECRET_ACCESS_KEY
+              value: 
+            - name: AWS_SESSION_TOKEN
+              value: 
           volumeMounts:
             - name: tmp
               mountPath: /tmp
