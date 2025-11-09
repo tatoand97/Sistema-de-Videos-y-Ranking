@@ -54,6 +54,15 @@ func getEnvOrDefault(key, def string) string {
 	return def
 }
 
+func firstNonEmptyEnv(keys ...string) string {
+	for _, key := range keys {
+		if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 func atoiOrDefault(s string, def int) int {
 	if s == "" {
 		return def
@@ -66,12 +75,13 @@ func atoiOrDefault(s string, def int) int {
 
 func loadS3ConfigFromEnv() storage.S3Config {
 	return storage.S3Config{
-		Region:       os.Getenv("AWS_REGION"),
-		AccessKey:    os.Getenv("AWS_ACCESS_KEY_ID"),
-		SecretKey:    os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		Endpoint:     os.Getenv("S3_ENDPOINT"),
-		UsePathStyle: strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true"),
-		Bucket:       os.Getenv("S3_BUCKET"),
+		Region:          os.Getenv("AWS_REGION"),
+		AccessKey:       os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretKey:       os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Endpoint:        os.Getenv("S3_ENDPOINT"),
+		UsePathStyle:    strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true"),
+		Bucket:          os.Getenv("S3_BUCKET"),
+		AnonymousAccess: strings.EqualFold(os.Getenv("S3_ANONYMOUS_ACCESS"), "true"),
 	}
 }
 
@@ -131,7 +141,15 @@ func main() {
 	publicRepo := postgresrepo.NewPublicRepository(db)
 	voteRepo := postgresrepo.NewVoteRepository(db)
 
-	sqsQueueURL := os.Getenv("SQS_STATES_MACHINE_QUEUE")
+	sqsQueueURL := firstNonEmptyEnv(
+		"SQS_STATES_MACHINE_QUEUE",
+		"SQS_STATE_MACHINE_QUEUE",
+		"SQS_QUEUE_URL",
+		"STATES_MACHINE_QUEUE", // legacy key used in some manifests/Dockerfiles
+	)
+	if sqsQueueURL == "" {
+		log.Printf("warning: no SQS queue url provided via env (SQS_STATES_MACHINE_QUEUE/SQS_STATE_MACHINE_QUEUE/SQS_QUEUE_URL/STATES_MACHINE_QUEUE)")
+	}
 	messagePublisher := setupSQSPublisher(os.Getenv("AWS_REGION"))
 	defer func() {
 		if messagePublisher != nil {

@@ -13,11 +13,13 @@ import (
 
 // Config defines the minimal parameters needed to instantiate an S3 client.
 type Config struct {
-	Region       string
-	AccessKey    string
-	SecretKey    string
-	Endpoint     string
-	UsePathStyle bool
+	Region          string
+	AccessKey       string
+	SecretKey       string
+	SessionToken    string
+	Endpoint        string
+	UsePathStyle    bool
+	AnonymousAccess bool
 }
 
 // Client is a thin wrapper over the AWS SDK S3 client to satisfy StorageService ports.
@@ -35,10 +37,12 @@ func NewClient(cfg Config) (*Client, error) {
 		config.WithRegion(cfg.Region),
 	}
 
-	if cfg.AccessKey != "" && cfg.SecretKey != "" {
-		loadOpts = append(loadOpts, config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, ""),
-		))
+	var customCreds aws.CredentialsProvider
+
+	if cfg.AnonymousAccess {
+		customCreds = aws.AnonymousCredentials{}
+	} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
+		customCreds = credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, cfg.SessionToken)
 	}
 
 	awsCfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
@@ -47,6 +51,9 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		if customCreds != nil {
+			o.Credentials = customCreds
+		}
 		if cfg.Endpoint != "" {
 			o.EndpointResolver = s3.EndpointResolverFromURL(cfg.Endpoint)
 		}

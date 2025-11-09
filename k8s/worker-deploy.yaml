@@ -51,11 +51,13 @@ spec:
             - name: AWS_REGION
               value: us-east-1
             - name: AWS_ACCESS_KEY_ID
-              value:
+              value: 
             - name: AWS_SECRET_ACCESS_KEY
-              value:
+              value: 
             - name: AWS_SESSION_TOKEN
-              value:
+              value: 
+            - name: S3_ANONYMOUS_ACCESS
+              value: "true"
             - name: RAW_VIDEOS_BUCKET
               value: raw-videos-4
             - name: PROCESSED_VIDEOS_TRIM_BUCKET
@@ -68,7 +70,39 @@ spec:
               value: processed-videos-watermarking-4
             - name: PROCESSED_VIDEOS_FINAL_BUCKET
               value: processed-videos-4
- 
+            - name: STATE_MACHINE_QUEUE
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/states_machine_queue
+            - name: TRIM_VIDEO_QUEUE_NAME
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/trim-video-queue
+            - name: TRIM_VIDEO_RAW_BUCKET
+              value: raw-videos-4
+            - name: TRIM_VIDEO_PROCESSED_BUCKET
+              value: processed-videos-trim-4
+            - name: EDIT_VIDEO_QUEUE_NAME
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/edit-video-queue
+            - name: EDIT_VIDEO_RAW_BUCKET
+              value: processed-videos-trim-4
+            - name: EDIT_VIDEO_PROCESSED_BUCKET
+              value: processed-videos-edit-4
+            - name: AUDIO_REMOVAL_QUEUE_NAME
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/audio-removal-queue
+            - name: AUDIO_REMOVAL_RAW_BUCKET
+              value: processed-videos-edit-4
+            - name: AUDIO_REMOVAL_PROCESSED_BUCKET
+              value: processed-videos-audio-removal-4
+            - name: WATERMARKING_QUEUE_NAME
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/watermarking-queue
+            - name: WATERMARKING_RAW_BUCKET
+              value: processed-videos-audio-removal-4
+            - name: WATERMARKING_PROCESSED_BUCKET
+              value: processed-videos-watermarking-4
+            - name: GOSSIP_QUEUE_NAME
+              value: https://sqs.us-east-1.amazonaws.com/253154888036/gossip-queue
+            - name: GOSSIP_S3_BUCKET_RAW
+              value: processed-videos-watermarking-4
+            - name: GOSSIP_S3_BUCKET_PROCESSED
+              value: processed-videos-4
+
           volumeMounts:
             - name: tmp
               mountPath: /tmp

@@ -15,12 +15,13 @@ import (
 
 // S3Config holds the necessary configuration for connecting to Amazon S3 or an S3-compatible service.
 type S3Config struct {
-	Region       string
-	AccessKey    string
-	SecretKey    string
-	Endpoint     string
-	UsePathStyle bool
-	Bucket       string
+	Region          string
+	AccessKey       string
+	SecretKey       string
+	Endpoint        string
+	UsePathStyle    bool
+	Bucket          string
+	AnonymousAccess bool
 }
 
 type videoStorage struct {
@@ -41,11 +42,14 @@ func NewS3VideoStorage(cfg S3Config) (interfaces.VideoStorage, error) {
 		config.WithRegion(cfg.Region),
 	}
 
-	// Allow using explicit credentials when provided, otherwise fall back to the default credential chain.
-	if cfg.AccessKey != "" && cfg.SecretKey != "" {
-		loadOpts = append(loadOpts, config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, ""),
-		))
+	var customCreds aws.CredentialsProvider
+
+	// Allow anonymous credentials when explicitly requested, otherwise honor static credentials
+	// and finally fall back to the default credential chain (e.g., IAM roles).
+	if cfg.AnonymousAccess {
+		customCreds = aws.AnonymousCredentials{}
+	} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
+		customCreds = credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, "")
 	}
 
 	awsCfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
@@ -54,6 +58,9 @@ func NewS3VideoStorage(cfg S3Config) (interfaces.VideoStorage, error) {
 	}
 
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		if customCreds != nil {
+			o.Credentials = customCreds
+		}
 		if cfg.Endpoint != "" {
 			o.EndpointResolver = s3.EndpointResolverFromURL(cfg.Endpoint)
 		}

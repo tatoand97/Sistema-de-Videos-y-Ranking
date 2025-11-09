@@ -11,7 +11,9 @@ type Config struct {
 	S3Endpoint        string
 	S3AccessKey       string
 	S3SecretKey       string
+	S3SessionToken    string
 	S3UsePathStyle    bool
+	S3AnonymousAccess bool
 	RawBucket         string
 	ProcessedBucket   string
 	SQSQueueURL       string
@@ -34,17 +36,24 @@ func LoadConfig() *Config {
 		}
 	}
 	usePathStyle := strings.EqualFold(os.Getenv("S3_USE_PATH_STYLE"), "true")
+	anonymousAccess := strings.EqualFold(os.Getenv("S3_ANONYMOUS_ACCESS"), "true")
+	stateMachineQueue := os.Getenv("SQS_STATE_MACHINE_QUEUE")
+	if stateMachineQueue == "" {
+		stateMachineQueue = os.Getenv("SQS_STATES_MACHINE_QUEUE")
+	}
 
 	return &Config{
 		AWSRegion:         os.Getenv("AWS_REGION"),
 		S3Endpoint:        os.Getenv("S3_ENDPOINT"),
 		S3AccessKey:       os.Getenv("AWS_ACCESS_KEY_ID"),
 		S3SecretKey:       os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		S3SessionToken:    os.Getenv("AWS_SESSION_TOKEN"),
 		S3UsePathStyle:    usePathStyle,
+		S3AnonymousAccess: anonymousAccess,
 		RawBucket:         os.Getenv("RAW_BUCKET"),
 		ProcessedBucket:   os.Getenv("PROCESSED_BUCKET"),
 		SQSQueueURL:       os.Getenv("SQS_EDIT_VIDEO_QUEUE"),
-		StateMachineQueue: os.Getenv("SQS_STATE_MACHINE_QUEUE"),
+		StateMachineQueue: stateMachineQueue,
 		MaxRetries:        maxRetries,
 		MaxSeconds:        maxSeconds,
 	}

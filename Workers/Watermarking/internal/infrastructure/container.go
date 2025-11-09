@@ -1,10 +1,10 @@
 package infrastructure
 
 import (
+	"shared/messaging"
 	"watermarking/internal/adapters"
 	"watermarking/internal/application/services"
 	"watermarking/internal/application/usecases"
-	"shared/messaging"
 
 	sharedstorage "shared/storage"
 )
@@ -17,11 +17,13 @@ type Container struct {
 
 func NewContainer(config *Config) (*Container, error) {
 	storageClient, err := sharedstorage.NewClient(sharedstorage.Config{
-		Region:       config.AWSRegion,
-		AccessKey:    config.S3AccessKey,
-		SecretKey:    config.S3SecretKey,
-		Endpoint:     config.S3Endpoint,
-		UsePathStyle: config.S3UsePathStyle,
+		Region:          config.AWSRegion,
+		AccessKey:       config.S3AccessKey,
+		SecretKey:       config.S3SecretKey,
+		SessionToken:    config.S3SessionToken,
+		Endpoint:        config.S3Endpoint,
+		UsePathStyle:    config.S3UsePathStyle,
+		AnonymousAccess: config.S3AnonymousAccess,
 	})
 	if err != nil {
 		return nil, err
@@ -51,4 +53,3 @@ func NewContainer(config *Config) (*Container, error) {
 
 	return &Container{Config: config, Consumer: consumer, MessageHandler: handler}, nil
 }
-
