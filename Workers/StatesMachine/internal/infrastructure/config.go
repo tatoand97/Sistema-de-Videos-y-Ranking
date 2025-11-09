@@ -24,7 +24,7 @@ type Config struct {
 func LoadConfig() *Config {
 	return &Config{
 		AWSRegion:         getEnv("AWS_REGION", "us-east-1"),
-		SQSQueueURL:       getEnv("SQS_QUEUE_URL", ""),
+		SQSQueueURL:       getEnv("SQS_STATES_MACHINE_QUEUE", ""),
 		TrimVideoQueue:    getEnv("SQS_TRIM_VIDEO_QUEUE", ""),
 		EditVideoQueue:    getEnv("SQS_EDIT_VIDEO_QUEUE", ""),
 		AudioRemovalQueue: getEnv("SQS_AUDIO_REMOVAL_QUEUE", ""),
@@ -62,5 +62,3 @@ func getEnvInt(key string, defaultValue int) int {
 	}
 	return defaultValue
 }
-
-

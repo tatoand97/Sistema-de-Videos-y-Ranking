@@ -50,7 +50,7 @@ func LoadConfig() *Config {
 		S3UsePathStyle:  usePathStyle,
 		RawBucket:       os.Getenv("S3_BUCKET_RAW"),
 		ProcessedBucket: os.Getenv("S3_BUCKET_PROCESSED"),
-		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
+		SQSQueueURL:     os.Getenv("SQS_GOSSIP_QUEUE"),
 		MaxRetries:      maxRetries,
 		MaxSeconds:      maxSeconds,
 		IntroSeconds:    intro,

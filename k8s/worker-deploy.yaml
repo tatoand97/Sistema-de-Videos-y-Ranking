@@ -30,7 +30,11 @@ spec:
               value: amqp://admin:admin@rabbitmq.default.svc.cluster.local:5672
             - name: REDIS_ADDR
               value: redis.default.svc.cluster.local:6379
+            - name: ADMIN_CACHE_REDIS_ADDR
+              value: redis.default.svc.cluster.local:6379
             - name: DATABASE_URL
+              value: "postgres://app_user:app_password@database-1.c8outjtarywe.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require"
+            - name: ADMIN_CACHE_POSTGRES_DSN
               value: "postgres://app_user:app_password@database-1.c8outjtarywe.us-east-1.rds.amazonaws.com:5432/videorank?sslmode=require"
             - name: SQS_STATES_MACHINE_QUEUE
               value: https://sqs.us-east-1.amazonaws.com/253154888036/states_machine_queue
@@ -47,11 +51,24 @@ spec:
             - name: AWS_REGION
               value: us-east-1
             - name: AWS_ACCESS_KEY_ID
-              value: 
+              value:
             - name: AWS_SECRET_ACCESS_KEY
-              value: 
+              value:
             - name: AWS_SESSION_TOKEN
-              value: 
+              value:
+            - name: RAW_VIDEOS_BUCKET
+              value: raw-videos-4
+            - name: PROCESSED_VIDEOS_TRIM_BUCKET
+              value: processed-videos-trim-4
+            - name: PROCESSED_VIDEOS_EDIT_BUCKET
+              value: processed-videos-edit-4
+            - name: PROCESSED_VIDEOS_AUDIO_REMOVAL_BUCKET
+              value: processed-videos-audio-removal-4
+            - name: PROCESSED_VIDEOS_WATERMARKING_BUCKET
+              value: processed-videos-watermarking-4
+            - name: PROCESSED_VIDEOS_FINAL_BUCKET
+              value: processed-videos-4
+ 
           volumeMounts:
             - name: tmp
               mountPath: /tmp

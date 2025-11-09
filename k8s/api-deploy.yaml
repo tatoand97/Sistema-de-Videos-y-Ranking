@@ -11,21 +11,18 @@ spec:
     metadata:
       labels: { app: cloud-api }
     spec:
-      # Recomendado: IRSA con un Role que permite S3 (en vez de credenciales en env)
-      serviceAccountName: cloud-api-sa
-      securityContext:
-        fsGroup: 10001
       containers:
         - name: api
           image: ricardoandres97/cloud-api:latest
           imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
+          ports: [{ containerPort: 8080 }]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp        # gin multipart parser necesita espacio de escritura
           envFrom:
-            - configMapRef: { name: api-config }
-            - secretRef: { name: api-secrets }
+            - configMapRef: { name: api-config }   # contiene variables antes en el Secret
           readinessProbe:
-            httpGet: { path: /health, port: 8080 }
+            httpGet: { path: /health, port: 8080 } # cambia a /healthz si es tu caso
             initialDelaySeconds: 5
             periodSeconds: 15
           livenessProbe:
@@ -36,18 +33,11 @@ spec:
             requests: { cpu: "250m", memory: "256Mi" }
             limits:   { cpu: "500m", memory: "512Mi" }
           securityContext:
-            runAsUser: 10001
             runAsNonRoot: true
+            runAsUser: 10001
             readOnlyRootFilesystem: true
-          volumeMounts:
-            - name: uploads
-              mountPath: /uploads
-            - name: tmp
-              mountPath: /tmp
       volumes:
-        - name: uploads
-          emptyDir: {}      # si necesitas persistencia, usa PVC
         - name: tmp
-          emptyDir: {}
+          emptyDir: {}               # scratch fs para /tmp cuando root es read-only
       nodeSelector:
-        kubernetes.io/arch: amd64   # garantiza compatibilidad con tu imagen
+        kubernetes.io/arch: amd64
