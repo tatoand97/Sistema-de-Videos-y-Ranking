@@ -4,18 +4,11 @@ metadata:
   name: app-ing
   namespace: default
   annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing            # o "internal"
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:REGION:ACCOUNT:certificate/UUID
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/healthcheck-path: /healthz
-    alb.ingress.kubernetes.io/group.name: apps                   # opcional, para compartir ALB con otros Ingress
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
 spec:
+  ingressClassName: nginx
   rules:
-    - host: app.tudominio.com
-      http:
+    - http:
         paths:
           - path: /api
             pathType: Prefix
@@ -23,7 +16,7 @@ spec:
               service:
                 name: cloud-api-svc
                 port:
-                  number: 80     # tu Service de API ya hace 80→8080
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
