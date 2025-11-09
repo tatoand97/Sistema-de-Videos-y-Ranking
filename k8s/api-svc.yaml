@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-api-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  selector: { app: cloud-api }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

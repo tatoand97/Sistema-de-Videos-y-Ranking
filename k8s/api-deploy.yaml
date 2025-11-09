@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-api
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: cloud-api }
+  template:
+    metadata:
+      labels: { app: cloud-api }
+    spec:
+      # Recomendado: IRSA con un Role que permite S3 (en vez de credenciales en env)
+      serviceAccountName: cloud-api-sa
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: api
+          image: ricardoandres97/cloud-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: api-config }
+            - secretRef: { name: api-secrets }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: { cpu: "250m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          securityContext:
+            runAsUser: 10001
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: uploads
+              mountPath: /uploads
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: uploads
+          emptyDir: {}      # si necesitas persistencia, usa PVC
+        - name: tmp
+          emptyDir: {}
+      nodeSelector:
+        kubernetes.io/arch: amd64   # garantiza compatibilidad con tu imagen

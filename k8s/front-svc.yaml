@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-front-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  selector: { app: cloud-front }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

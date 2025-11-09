@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-allow-selected
+  namespace: default
+spec:
+  podSelector:
+    matchLabels: { app: redis }
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: cloud-api } }
+        - podSelector: { matchLabels: { app: cloud-workers } }
+      ports:
+        - protocol: TCP
+          port: 6379

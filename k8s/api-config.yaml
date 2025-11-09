@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: default
+data:
+  PORT: "8080"
+  CORS_ORIGIN: "*"
+  UPLOAD_DIR: "/uploads"
+  REDIS_ADDR: "redis.default.svc.cluster.local:6379"
+  CACHE_PREFIX: "videorank:"
+  CACHE_TTL_SECONDS: "120"
+  S3_USE_PATH_STYLE: "false"
+  STATES_MACHINE_QUEUE: "states_machine_queue"
+  RABBITMQ_URL: "amqp://admin:admin@rabbitmq.default.svc.cluster.local:5672/"
+  RABBITMQ_QUEUE_MAXLEN: "1000"
