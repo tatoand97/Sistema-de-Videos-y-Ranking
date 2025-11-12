@@ -1,0 +1,29 @@
+timeStamp,elapsed,label,responseCode,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,Latency,Connect
+1762910207516,362,Auth / Login,200,true,,959,334,1,1,362,176
+1762910210073,79,Public / List videos,200,true,,806,720,1,1,79,0
+1762910212197,81,Public / Vote video (1),400,false,,471,806,1,1,81,0
+1762910213827,145,Public / Vote video (2),400,false,,471,806,1,1,145,69
+1762910215667,143,Public / Vote video (3),400,false,,471,806,1,1,143,68
+1762910218282,168,Ranking / Get rankings,200,true,,464,753,1,1,168,78
+1762910220446,223,Auth / Login,200,true,,959,825,1,1,223,69
+1762910222119,82,Public / List videos,200,true,,806,720,1,1,82,0
+1762910224724,80,Public / Vote video (1),200,true,,440,806,1,1,80,0
+1762910227509,144,Public / Vote video (2),400,false,,471,806,1,1,144,67
+1762910229345,150,Public / Vote video (3),400,false,,471,806,1,1,150,71
+1762910231317,144,Ranking / Get rankings,200,true,,464,753,1,1,144,67
+1762910233756,220,Auth / Login,200,true,,959,825,1,1,220,69
+1762910236769,76,Public / List videos,200,true,,806,720,1,1,76,0
+1762910239771,81,Public / Vote video (1),200,true,,440,806,1,1,81,0
+1762910240865,145,Public / Vote video (2),400,false,,471,806,1,1,145,68
+1762910242659,148,Public / Vote video (3),400,false,,471,806,1,1,148,71
+1762910245039,152,Ranking / Get rankings,200,true,,464,753,1,1,151,72
+1762910246546,244,Auth / Login,200,true,,959,825,1,1,244,69
+1762910249270,75,Public / List videos,200,true,,806,720,1,1,75,0
+1762910250982,80,Public / Vote video (1),200,true,,440,806,1,1,79,0
+1762910252402,148,Public / Vote video (2),400,false,,471,806,1,1,148,70
+1762910255434,148,Public / Vote video (3),400,false,,471,806,1,1,148,70
+1762910257360,147,Ranking / Get rankings,200,true,,464,753,1,1,147,69
+1762910260361,220,Auth / Login,200,true,,959,825,1,1,220,71
+1762910262141,79,Public / List videos,200,true,,806,720,1,1,79,0
+1762910263359,83,Public / Vote video (1),200,true,,440,806,1,1,83,0
+1762910264745,141,Public / Vote video (2),400,false,,471,806,1,1,141,66
