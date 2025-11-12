@@ -1,4 +1,6 @@
 # Arquitectura para implementación con EKS y colas SQS
+NOTA IMPORTANTE: la rama principal de esta entrega 4 es https://github.com/tatoand97/Sistema-de-Videos-y-Ranking/tree/feature/adjust-to-ecs 
+
 Los cambios entre la entrega 3 y la entrega 4 tienen que ver con la forma en que se dispone el back, los workers y el front en un cluster de EKS.
 A continuación se realiza una exposición aproximada de los cambios y componentes que se ven en esta entrega.
 
