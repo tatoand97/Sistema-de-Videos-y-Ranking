@@ -11,7 +11,7 @@
 
 [Entrega 3-Arquitectura, cambios y pruebas](docs/entrega3/entrega3.md#arquitectura-para-implementación-de-soluciones-escalables-en-la-nube)
 
-
+[Entrega 4-Arquitectura, cambios y pruebas](docs/entrega4/entrega4.md#arquitectura-para-implementación-con-eks-y-colas-sqs)
 
 # Sistema de Videos y Ranking
 
