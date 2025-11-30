@@ -1,5 +1,3 @@
---- START OF FILE entrega5.md ---
-
 # Arquitectura para implementación con ECS, Autoscaling y Colas SQS
 NOTA IMPORTANTE: la rama principal de esta entrega 5 se encuentra en el repositorio bajo la nomenclatura de migración a ECS: https://github.com/tatoand97/Sistema-de-Videos-y-Ranking/tree/feature/migration-to-ecs
 
