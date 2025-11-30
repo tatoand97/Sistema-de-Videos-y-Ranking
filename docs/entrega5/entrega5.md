@@ -65,7 +65,7 @@ Para ver el detalle técnico de los resultados y métricas:
 3.  **Alarmas CloudWatch** (basadas en CPU o largo de cola SQS) disparan políticas de **Auto Scaling**.
 4.  ECS lanza nuevas **Tasks de Worker** rápidamente (menor "cold start" de infraestructura) para vaciar la cola, procesando videos y actualizando RDS/S3.
 
-# Implicaciones prácticas (lo que gana/pierde tu equipo)
+# Implicaciones prácticas
 
 *   **Mejora drástica en Latencia y Estabilidad:** Como evidencian las pruebas de carga, el cambio a ECS permitió reducir la latencia extrema (p95) de ~151s a ~31s en flujos de carga de archivos. El sistema responde con mayor agilidad.
 *   **Simplificación Operativa:** El equipo deja de preocuparse por "deprecated APIs" de Kubernetes o la gestión de *taints & tolerations*. La configuración se centraliza en *Task Definitions* y *Auto Scaling Groups*.
