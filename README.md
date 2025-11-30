@@ -13,6 +13,8 @@
 
 [Entrega 4-Arquitectura, cambios y pruebas](docs/entrega4/entrega4.md#arquitectura-para-implementación-con-eks-y-colas-sqs)
 
+[Entrega 5-Arquitectura, cambios y pruebas](docs/entrega5/entrega5.md#arquitectura-para-implementación-con-ecs-y-colas-sqs)
+
 # Sistema de Videos y Ranking
 
 [![Ver el video corto en YouTube](https://img.youtube.com/vi/r4Mx1c1VJ6I/maxresdefault.jpg)](https://youtu.be/5xppYdtKH4E)
