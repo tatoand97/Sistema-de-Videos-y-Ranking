@@ -15,6 +15,8 @@
 
 # Sistema de Videos y Ranking
 
+[![Ver el video corto en YouTube](https://img.youtube.com/vi/r4Mx1c1VJ6I/maxresdefault.jpg)](https://youtu.be/5xppYdtKH4E)
+
 [![Ver el video corto en YouTube](https://img.youtube.com/vi/r4Mx1c1VJ6I/maxresdefault.jpg)](https://www.youtube.com/watch?v=r4Mx1c1VJ6I)
 
 [![Ver el video corto en YouTube](https://img.youtube.com/vi/LyWnp02K7Fs/maxresdefault.jpg)](https://www.youtube.com/watch?v=LyWnp02K7Fs)
