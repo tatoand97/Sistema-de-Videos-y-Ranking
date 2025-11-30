@@ -60,7 +60,7 @@ En la Entrega 5, la solución se despliega sobre **Amazon ECS**, reemplazando el
 
 La siguiente figura resume la arquitectura lógica de la solución en ECS:
 
-![Arquitectura ECS, autoscaling y colas](images/fig_arquitectura_ecs.png)
+![Arquitectura ECS, autoscaling y colas](images/fig_arquitectura_Entrega5.png)
 
 **Tabla 1. Infraestructura de la solución (Entrega 5, ECS)**
 
