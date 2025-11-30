@@ -1,4 +1,4 @@
-# Análisis Pruebas de Carga — Entrega 4
+# Análisis Pruebas de Carga — Entrega 5
 
 **Proyecto:** Entrega 5 — Migración a ECS y evaluación de desempeño  
 **Documento:** pruebas_de_carga_entrega5.md  
