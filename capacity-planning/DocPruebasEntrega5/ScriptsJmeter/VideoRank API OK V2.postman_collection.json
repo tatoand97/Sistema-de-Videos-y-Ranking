@@ -1,0 +1,656 @@
+{
+	"info": {
+		"_postman_id": "1bab135a-4a4c-4ca0-8533-2d3e43746ac2",
+		"name": "VideoRank API OK V2",
+		"description": "Coleccion alineada con Api/openapi.yaml: autenticacion, videos, publico, ranking y utilidades.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27004115"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}:{{port}}/health",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Auth / Signup",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"first_name\": \"user10\",\n  \"last_name\": \"Tester\",\n  \"email\": \"user10@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogotá\",\n  \"country\": \"Colombia\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}:{{port}}/api/auth/signup",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Email ya registrado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"user10\",\n  \"last_name\": \"Tester\",\n  \"email\": \"user10@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogotá\",\n  \"country\": \"Colombia\"\n}"
+						},
+						"url": {
+							"raw": "{{host}}:{{port}}/api/auth/signup",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"error\": \"email_already_in_use\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Auth / Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Guarda el token JWT en la variable de entorno 'jwt'",
+							"try {",
+							"  const data = pm.response.json();",
+							"  const token = data.access_token || data.token || data.jwt;",
+							"  if (token) { pm.environment.set('jwt', token); }",
+							"} catch(e) { console.log('Sin JSON o sin token'); }"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"Password123!\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}:{{port}}/api/auth/login",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Login exitoso",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{host}}:{{port}}/api/auth/login",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"access_token\": \"<jwt>\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Auth / Login Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Guarda el token JWT en la variable de entorno 'jwt'",
+							"try {",
+							"  const data = pm.response.json();",
+							"  const token = data.access_token || data.token || data.jwt;",
+							"  if (token) { pm.environment.set('jwt', token); }",
+							"} catch(e) { console.log('Sin JSON o sin token'); }"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"Password123!\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}:{{port}}/api/auth/login",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Login exitoso",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{host}}:{{port}}/api/auth/login",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"access_token\": \"<jwt>\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Auth / Me (protected)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/me",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Auth / Logout",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/auth/logout",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"auth",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Videos / Upload (protected)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "Example title",
+							"type": "text"
+						},
+						{
+							"key": "video_file",
+							"type": "file",
+							"src": "/C:/Users/User/Downloads/videocortico.mp4"
+						},
+						{
+							"key": "checksum",
+							"value": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "sizeBytes",
+							"value": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "mimeType",
+							"value": "video/mp4",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{host}}:{{port}}/api/videos/upload",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"videos",
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Videos / List (protected)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/videos",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"videos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Videos / Get by ID (protected)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/videos/{{video_id}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"videos",
+						"{{video_id}}"
+					],
+					"variable": [
+						{
+							"key": "video_id",
+							"value": "a1b2c3d4"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Videos / Delete by ID (protected)",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/videos/{{video_id}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"videos",
+						"{{video_id}}"
+					],
+					"variable": [
+						{
+							"key": "video_id",
+							"value": "a1b2c3d4"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Videos / Publish (protected)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/videos/{{video_id}}/publish",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"videos",
+						"{{video_id}}",
+						"publish"
+					],
+					"variable": [
+						{
+							"key": "video_id",
+							"value": "a1b2c3d4"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Public / List videos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/public/videos",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"public",
+						"videos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Public / Vote video (protected)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/public/videos/{{video_id}}/vote",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"public",
+						"videos",
+						"{{video_id}}",
+						"vote"
+					],
+					"variable": [
+						{
+							"key": "video_id",
+							"value": "29"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ranking / Get rankings",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}:{{port}}/api/public/rankings?city=&page=1&pageSize=20",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"public",
+						"rankings"
+					],
+					"query": [
+						{
+							"key": "city",
+							"value": ""
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "pageSize",
+							"value": "20"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/signup",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"first_name\": \"cristian\",\n  \"last_name\": \"Tester\",\n  \"email\": \"cristian@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogota\",\n  \"country\": \"Colombia\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/signup",
+					"host": [
+						"ec2-98-89-171-224",
+						"compute-1",
+						"amazonaws",
+						"com"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"signup"
+					]
+				},
+				"description": "Generated from cURL: curl --location 'ec2-98-89-171-224.compute-1.amazonaws.com:8080/api/auth/signup' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Tester\",\n  \"email\": \"alice@example.com\",\n  \"password1\": \"Password123!\",\n  \"password2\": \"Password123!\",\n  \"city\": \"Bogota\",\n  \"country\": \"Colombia\"\n}'"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "localhost"
+		},
+		{
+			"key": "port",
+			"value": "8080"
+		}
+	]
+}
